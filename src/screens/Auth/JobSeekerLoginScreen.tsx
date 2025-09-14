@@ -1,69 +1,52 @@
 import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { LOGO_IMG } from "../utilities/constant";
+import { LOGO_IMG } from "../../utilities/constant";
 import Checkbox from "expo-checkbox";
 import { useState } from "react";
 
-const JobSeekerRegisterScreen = () => {
+const JobSeekerLoginScreen = () => {
     const [isChecked, setChecked] = useState(false);
 
     return (
         <View style={styles.container}>
             <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
 
-            <Text style={styles.title}>Job Seeker Registration</Text>
-
-            {/* Fullname input */}
-            <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={22} color="#888" style={styles.icon} />
-                <TextInput placeholder="Enter your full name" style={styles.input} />
-            </View>
+            <Text style={styles.title}>Job Seeker Log In</Text>
 
             {/* Email input */}
             <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
-                <TextInput placeholder="Enter your email" style={styles.input} keyboardType="email-address" />
+                <TextInput placeholder="Enter your email" style={styles.input} />
             </View>
 
             {/* Password input */}
             <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
                 <TextInput
-                    placeholder="Password"
+                    placeholder="Enter your password"
                     secureTextEntry={true}
                     style={styles.input}
                 />
                 <MaterialIcons name="visibility" size={22} color="#888" style={styles.iconRight} />
             </View>
 
-            {/* Confirm Password input */}
-            <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
-                <TextInput
-                    placeholder="Confirm password"
-                    secureTextEntry={true}
-                    style={styles.input}
-                />
-                <MaterialIcons name="visibility" size={22} color="#888" style={styles.iconRight} />
+            {/* Remember & Forgot */}
+            <View style={styles.row}>
+                <View style={styles.rememberContainer}>
+                    <Checkbox
+                        value={isChecked}
+                        onValueChange={setChecked}
+                        color={isChecked ? "#1976d2" : undefined}
+                        style={styles.checkbox}
+                    />
+                    <Text style={styles.remember}>Remember me</Text>
+                </View>
+                <Text style={styles.forgot}>Forgot password?</Text>
             </View>
 
-            {/* Checkbox - Agree terms */}
-            <View style={styles.agreeContainer}>
-                <Checkbox
-                    value={isChecked}
-                    onValueChange={setChecked}
-                    color={isChecked ? "#1976d2" : undefined}
-                    style={styles.checkbox}
-                />
-                <Text style={styles.agreeText}>
-                    I agree to the processing and provision of personal data that I have read and agree to the{" "}
-                    <Text style={styles.link}>Terms & Conditions</Text>
-                </Text>
-            </View>
-
-            {/* Sign up button */}
+            {/* Sign in button */}
             <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Sign Up</Text>
+                <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
 
             {/* Divider */}
@@ -76,13 +59,14 @@ const JobSeekerRegisterScreen = () => {
             {/* Social Login */}
             <TouchableOpacity style={styles.socialButton}>
                 <Ionicons name="logo-google" size={24} color="#DB4437" />
-                <Text style={styles.socialText}>Sign up with Google</Text>
+                <Text style={styles.socialText}>Sign in with Google</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.socialButton}>
                 <Ionicons name="logo-linkedin" size={24} color="#0077B5" />
-                <Text style={styles.socialText}>Sign up with LinkedIn</Text>
+                <Text style={styles.socialText}>Sign in with LinkedIn</Text>
             </TouchableOpacity>
+
         </View>
     );
 };
@@ -128,25 +112,26 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 10,
     },
-    agreeContainer: {
+    row: {
         flexDirection: "row",
-        alignItems: "flex-start",
-        marginVertical: 12,
+        justifyContent: "space-between",
         width: "100%",
+        marginVertical: 10,
+        alignItems: "center",
+    },
+    rememberContainer: {
+        flexDirection: "row",
+        alignItems: "center",
     },
     checkbox: {
-        marginRight: 8,
-        marginTop: 3,
+        marginRight: 6,
     },
-    agreeText: {
-        flex: 1,
+    remember: {
         color: "#555",
-        fontSize: 14,
-        lineHeight: 20,
     },
-    link: {
-        color: "#1976d2",
-        fontWeight: "600",
+    forgot: {
+        color: "#007bff",
+        fontWeight: "bold",
     },
     button: {
         backgroundColor: "#1976d2",
@@ -195,4 +180,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default JobSeekerRegisterScreen;
+export default JobSeekerLoginScreen;

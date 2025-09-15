@@ -10,6 +10,9 @@ import {
   Animated
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types/navigation";
+import { useNavigation } from "@react-navigation/native";
 const logoImg = require("../../../assets/App/logoJob.png")
 const bannerImg = require("../../../assets/App/banner.jpg")
 const keywords = [
@@ -19,17 +22,26 @@ const keywords = [
   "Nghiên cứu và phát triển (R&D)",
   "Nhân viên nghiên cứu thị trường",
 ];
+type JobDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "JobSubmit"
+>;
 export default function JobDetailScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 100],  // kéo xuống 100px thì header hiện rõ
+    inputRange: [0, 100],
     outputRange: [0, 1],
     extrapolate: "clamp",
   });
+  const navigation = useNavigation<JobDetailNavigationProp>();
+  const navigation2 = useNavigation();
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.headerHide, { opacity: headerOpacity }]}>
+        <TouchableOpacity style={[styles.backBtnHide]} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Market Research Executive</Text>
       </Animated.View>
       <Animated.ScrollView
@@ -41,10 +53,19 @@ export default function JobDetailScreen() {
         scrollEventThrottle={16}
       >
         {/* Banner */}
-        <Image
-          source={bannerImg}
-          style={styles.banner}
-        />
+        <View style={{ position: "relative" }}>
+          <Image
+            source={bannerImg}
+            style={styles.banner}
+          />
+
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
         {/* Header: Logo + Công ty + Chức danh */}
         <View style={styles.infoContainerHeader}>
@@ -234,7 +255,7 @@ export default function JobDetailScreen() {
           <Text style={{ fontSize: 12, color: "#333", marginTop: 2 }}>Lưu</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.applyButton}>
+        <TouchableOpacity style={styles.applyButton} onPress={() => navigation.navigate("JobSubmit")}>
           <Text style={styles.applyText}>Nộp đơn ngay</Text>
         </TouchableOpacity>
 
@@ -245,7 +266,30 @@ export default function JobDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e1eff5ff" },
-  banner: { width: "100%", height: 120, resizeMode: "cover" },
+  banner: {
+    width: "100%",
+    height: 200, // tuỳ chỉnh chiều cao banner
+    resizeMode: "cover",
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+
+  backBtn: {
+    position: "absolute",   // đẩy xuống 1 chút cho thoát khỏi status bar
+    left: 16,
+    backgroundColor: "rgba(0,0,0,0.5)", // nền mờ để dễ nhìn
+    padding: 8,
+    borderRadius: 24,
+    borderWidth: 2,
+    marginTop: 22
+  },
+    backBtnHide: {
+    position: "absolute",   // đẩy xuống 1 chút cho thoát khỏi status bar
+    left: 16, // nền mờ để dễ nhìn
+    padding: 8,
+    borderRadius: 24,
+    marginTop: 10
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -378,7 +422,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "bold",
   },
-    headerHide: {
+  headerHide: {
     position: "absolute",
     top: 0,
     left: 0,

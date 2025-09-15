@@ -17,16 +17,13 @@ import CVScreen from "../screens/CVScreen";
 import MenuScreen from "../screens/MenuScreen";
 import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
+import JobSubmitScreen from "../screens/JobSeeker/JobSubmitScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const MainApp = () => {
     return (
-        <SafeAreaView
-            style={{ flex: 1, backgroundColor: "#000000ff" }}
-            edges={["top", "left", "right", "bottom"]}
-        >
             <Tab.Navigator
                 screenOptions={({ route }) => ({
                     headerShown: false,
@@ -73,7 +70,6 @@ const MainApp = () => {
                 <Tab.Screen name="CV" component={CVScreen} options={{ title: "Viết CV" }} />
                 <Tab.Screen name="Menu" component={MenuScreen} options={{ title: "Menu" }} />
             </Tab.Navigator>
-        </SafeAreaView>
     );
 };
 
@@ -91,6 +87,7 @@ const AppNavigator = () => {
                             <Stack.Screen name="JobSeekerLogin" component={JobSeekerLoginScreen} />
                             <Stack.Screen name="JobSeekerRegister" component={JobSeekerRegisterScreen} />
                             <Stack.Screen name="JobDetail" component={JobDetailScreen} />
+                            <Stack.Screen name="JobSubmit" component={JobSubmitScreen} />
                         </Stack.Navigator>
                     </NavigationContainer>
                 </SafeAreaView>

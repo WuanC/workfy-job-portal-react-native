@@ -146,7 +146,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#fff",
         paddingHorizontal: 8,
-        marginTop: 15,
     },
     tabRow: {
         flexDirection: "row",

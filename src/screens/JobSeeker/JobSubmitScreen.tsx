@@ -3,15 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Image 
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Checkbox from "expo-checkbox";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types/navigation";
 
 // Thay bằng logo thật của bạn
 const careerLinkLogo = require("../../../assets/App/logoJob.png")
 const vietCVLogo = require("../../../assets/App/logoJob.png")
-
+type JobSubmitSuccessNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "JobSubmitSuccess"
+>;
 export default function JobSubmitScreen() {
     const [coverSelected, setCoverSelected] = useState(false);
     const [saveChecked, setSaveChecked] = useState(false);
-    const navigation = useNavigation();
+    const navigation = useNavigation<JobSubmitSuccessNavigationProp>();
     return (
         <View style={styles.container}>
             {/* Header */}
@@ -141,7 +146,7 @@ export default function JobSubmitScreen() {
 
             {/* Submit button */}
             <View style={styles.footer}>
-                <TouchableOpacity style={styles.submitButton}>
+                <TouchableOpacity style={styles.submitButton} onPress={() => navigation.replace("JobSubmitSuccess")}>
                     <Text style={styles.submitText}>Nộp đơn ngay</Text>
                 </TouchableOpacity>
             </View>

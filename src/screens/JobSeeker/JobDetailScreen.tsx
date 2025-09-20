@@ -22,7 +22,7 @@ const keywords = [
   "Nghiên cứu và phát triển (R&D)",
   "Nhân viên nghiên cứu thị trường",
 ];
-type JobDetailNavigationProp = NativeStackNavigationProp<
+type JobSubmitNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "JobSubmit"
 >;
@@ -34,8 +34,7 @@ export default function JobDetailScreen() {
     outputRange: [0, 1],
     extrapolate: "clamp",
   });
-  const navigation = useNavigation<JobDetailNavigationProp>();
-  const navigation2 = useNavigation();
+  const navigation = useNavigation<JobSubmitNavigationProp>();
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.headerHide, { opacity: headerOpacity }]}>

@@ -7,17 +7,20 @@ import { RootStackParamList } from "../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 
 interface IJobCardProps {
-    logo_path: any; 
+    logo_path: any;
     job_title: string;
     company_name: string;
     job_location: string;
     salary_range: string;
     time_passed: string;
+    applied?: boolean;
 }
+
 type JobDetailNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "JobDetail"
+    RootStackParamList,
+    "JobDetail"
 >;
+
 const JobCard = ({
     logo_path,
     job_title,
@@ -25,35 +28,52 @@ const JobCard = ({
     job_location,
     salary_range,
     time_passed,
+    applied = false,
 }: IJobCardProps) => {
     const navigation = useNavigation<JobDetailNavigationProp>();
+
     return (
-        <TouchableOpacity style={styles.card}
-        onPress={() => navigation.navigate("JobDetail")}>
+        <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate("JobDetail")}
+        >
             <LinearGradient
-                colors={["#fff8e1", "#fceabb"]}
+                colors={["#fff", applied ? "#fff" : "#fceabb"]}
                 style={styles.gradient}
             >
                 <View style={styles.row}>
                     {/* Logo */}
                     <Image source={logo_path} style={styles.logo} />
 
-                    {/* Thông tin job */}
+                    {/* Nội dung */}
                     <View style={styles.info}>
-                        <Text style={styles.jobTitle}>{job_title}</Text>
-                        <Text style={styles.company}>{company_name}</Text>
-                        <Text style={styles.location}>{job_location}</Text>
-                        <Text style={styles.salary}>{salary_range}</Text>
-                    </View>
+                        <View style={styles.titleRow}>
+                            <Text
+                                numberOfLines={2}
+                                adjustsFontSizeToFit
+                                minimumFontScale={0.9}
+                                style={styles.jobTitle}
+                            >
+                                {job_title}
+                            </Text>
+                            <Ionicons
+                                name={applied ? "heart" : "heart-outline"}
+                                size={22}
+                                color="#E74C3C"
+                                style={styles.heartIcon}
+                            />
+                        </View>
 
-                    {/* Icon yêu thích */}
-                    <View style={styles.rightSection}>
-                        <Ionicons
-                            name="heart-outline"
-                            size={22}
-                            color="#E74C3C"
-                        />
-                        <Text style={styles.time}>{time_passed}</Text>
+                        <Text style={styles.company} numberOfLines={1}>
+                            {company_name}
+                        </Text>
+                        <Text style={styles.location}>{job_location}</Text>
+
+                        {/* Lương & Thời gian */}
+                        <View style={styles.bottomRow}>
+                            <Text style={styles.salary}>{salary_range}</Text>
+                            <Text style={styles.time}>{time_passed}</Text>
+                        </View>
                     </View>
                 </View>
             </LinearGradient>
@@ -64,56 +84,65 @@ const JobCard = ({
 const styles = StyleSheet.create({
     card: {
         borderRadius: 10,
-        marginVertical: 6,
         overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "#ff9900ff",
+        marginVertical: 6,
     },
     gradient: {
-        padding: 12,
+        borderWidth: 1,
+        borderColor: "#ff9900ff",
         borderRadius: 10,
+        padding: 10,
     },
     row: {
         flexDirection: "row",
         alignItems: "flex-start",
     },
     logo: {
-        width: 40,
-        height: 40,
+        width: 50,
+        height: 50,
         resizeMode: "contain",
         marginRight: 10,
     },
     info: {
         flex: 1,
     },
+    titleRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+    },
     jobTitle: {
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: "600",
         color: "#007AFF",
+        flex: 1,
+        marginRight: 8,
     },
     company: {
-        fontSize: 13,
+        fontSize: 14,
         color: "#000",
         marginTop: 2,
     },
     location: {
-        fontSize: 12,
+        fontSize: 13,
         color: "#666",
         marginTop: 2,
     },
-    salary: {
-        fontSize: 12,
-        color: "red",
-        marginTop: 2,
-    },
-    rightSection: {
-        alignItems: "flex-end",
+    bottomRow: {
+        flexDirection: "row",
         justifyContent: "space-between",
+        marginTop: 6,
+    },
+    salary: {
+        fontSize: 14,
+        color: "red",
     },
     time: {
-        fontSize: 10,
+        fontSize: 12,
         color: "#999",
-        marginTop: 4,
+    },
+    heartIcon: {
+        marginLeft: 6,
     },
 });
 

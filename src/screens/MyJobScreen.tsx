@@ -6,8 +6,24 @@ import SimilarJobCard from "../components/SimilarJobCard";
 import { Ionicons } from "@expo/vector-icons";
 import AppliedJobCard from "../components/AppliedJobCard";
 import JobCard from "../components/JobCard";
+import Modal from "react-native-modal";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types/navigation";
+import { useNavigation } from "@react-navigation/native";
+
+type JobDetailNavigationProp = NativeStackNavigationProp<
+    RootStackParamList,
+    "JobDetail"
+>;
+
 const MyJobScreen = () => {
     const [activeTab, setActiveTab] = useState("Thông báo");
+    const [isModalVisible, setModalVisible] = useState(false);
+
+    const toggleModal = () => {
+        setModalVisible(!isModalVisible);
+    };
+    const navigation = useNavigation<JobDetailNavigationProp>();
 
 
     const [similarJobs, setSimilarJobs] = useState([
@@ -91,6 +107,7 @@ const MyJobScreen = () => {
                                 title={item.title}
                                 location={item.location}
                                 notificationState={item.notificationState}
+                                onPressEllipsis={toggleModal}
                             />
                         )}
                         ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
@@ -104,6 +121,34 @@ const MyJobScreen = () => {
                             <Text style={styles.bottomButtonText}>Tạo thông báo việc làm</Text>
                         </TouchableOpacity>
                     </View>
+                    <Modal
+                        isVisible={isModalVisible}
+                        onBackdropPress={toggleModal}
+                        style={styles.modal}
+                    >
+                        <View style={styles.modalContent}>
+                            <TouchableOpacity style={styles.option} onPress={() => {
+                                toggleModal();
+                                navigation.navigate("JobDetail")
+                            }
+                            }>
+                                <Ionicons name="eye-outline" size={20} color="#333" />
+                                <Text style={styles.optionText}>Xem công việc gốc</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.option}>
+                                <Ionicons name="create-outline" size={20} color="#333" />
+                                <Text style={styles.optionText}>Chỉnh sửa thông báo việc làm</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.option}>
+                                <Ionicons name="trash-outline" size={20} color="red" />
+                                <Text style={[styles.optionText, { color: "red" }]}>
+                                    Xoá thông báo việc làm
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </Modal>
                 </View>
             )}
             {activeTab === "Việc đã ứng tuyển" && (
@@ -135,14 +180,14 @@ const MyJobScreen = () => {
                         data={savedJobs}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
-                             <JobCard
+                            <JobCard
                                 logo_path={item.logo_path}
                                 job_title={item.job_title}
                                 company_name={item.company_name}
                                 job_location={item.job_location}
                                 salary_range={item.slary_range}
                                 time_passed={item.time_passed}
-                                applied = {true}
+                                applied={true}
                             />
                         )}
                         ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
@@ -227,5 +272,25 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
+    },
+    modal: {
+        justifyContent: "flex-end",
+        margin: 0,
+    },
+    modalContent: {
+        backgroundColor: "white",
+        padding: 20,
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+    },
+    option: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 14,
+    },
+    optionText: {
+        marginLeft: 12,
+        fontSize: 16,
+        color: "#333",
     },
 });

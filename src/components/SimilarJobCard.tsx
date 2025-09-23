@@ -8,10 +8,11 @@ interface ISimilarJobCardProps {
     title: string,
     location: string,
     notificationState: boolean
+    onPressEllipsis?: () => void
 }
 
 
-const SimilarJobCard = ({ id, title, location, notificationState }: ISimilarJobCardProps) => {
+const SimilarJobCard = ({ id, title, location, notificationState, onPressEllipsis }: ISimilarJobCardProps) => {
     const [isEnabled, setIsEnabled] = useState(true);
     const toggleSwitch = () => setIsEnabled((prev) => !prev);
     useEffect(() => {
@@ -23,7 +24,7 @@ const SimilarJobCard = ({ id, title, location, notificationState }: ISimilarJobC
                 <Text style={styles.jobText}>
                     Việc tương tự của: <Text style={styles.link}>{title}</Text>
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={onPressEllipsis}>
                     <Ionicons name="ellipsis-horizontal" size={20} color="black" />
                 </TouchableOpacity>
             </View>

@@ -3,10 +3,16 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LOGO_IMG } from "../../utilities/constant";
 import Checkbox from "expo-checkbox";
 import { useState } from "react";
-
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types/navigation";
+import { useNavigation } from "@react-navigation/native";
+type MainNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Login"
+>;
 const JobSeekerLoginScreen = () => {
     const [isChecked, setChecked] = useState(false);
-
+    const navigation = useNavigation<MainNavigationProp>();
     return (
         <View style={styles.container}>
             <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
@@ -45,7 +51,7 @@ const JobSeekerLoginScreen = () => {
             </View>
 
             {/* Sign in button */}
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.replace("MainApp")}>
                 <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
 

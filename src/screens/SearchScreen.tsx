@@ -2,7 +2,14 @@ import React, { useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import SearchBar from "../components/SearchBar";
 import JobCard from "../components/JobCard";
-
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types/navigation";
+import { useNavigation } from "@react-navigation/native";
+type FilterNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "SearchFilter"
+>;
 const SearchScreen = () => {
     // State chứa danh sách job
     const [jobs, setJobs] = useState([
@@ -89,19 +96,20 @@ const SearchScreen = () => {
         },
 
     ]);
-
+    const navigation = useNavigation<FilterNavigationProp>();
     return (
 
-            <View style={styles.container}>
-                {/* Search bar */}
-                <SearchBar
-                    placeholder="Tìm công việc tại đây..."
-                    value=""
-                    onChangeText={() => { }}
-                    onSubmit={() => { }}
-                />
+        <View style={styles.container}>
+            {/* Search bar */}
+            <SearchBar
+                placeholder="Tìm công việc tại đây..."
+                value=""
+                onChangeText={() => { }}
+                onSubmit={() => { }}
+            />
 
-                {/* Tabs */}
+            {/* Tabs */}
+            <View style={styles.tabContainer}>
                 <View style={styles.tabRow}>
                     <TouchableOpacity style={styles.activeTab}>
                         <Text style={styles.activeTabText}>Công việc</Text>
@@ -111,32 +119,37 @@ const SearchScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Header */}
-                <View style={styles.listContainer}>
-                    <View style={styles.headerRow}>
-                        <Text style={styles.countText}>{jobs.length} việc làm</Text>
-                        <Text style={styles.notifyText}>Tạo thông báo</Text>
-                    </View>
-
-                    {/* Danh sách job */}
-                    <FlatList
-                        data={jobs}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <JobCard
-                                logo_path={item.logo_path}
-                                job_title={item.job_title}
-                                company_name={item.company_name}
-                                job_location={item.job_location}
-                                salary_range={item.slary_range}
-                                time_passed={item.time_passed}
-                            />
-                        )}
-                        contentContainerStyle={{ paddingBottom: 80 }}
-                        showsVerticalScrollIndicator={false}
-                    />
-                </View>
+                <TouchableOpacity style={styles.inactiveTab}>
+                    <Ionicons name="filter" size={25} color="black" style={styles.icon} onPress={() => navigation.navigate("SearchFilter")}/>
+                </TouchableOpacity>
             </View>
+
+            {/* Header */}
+            <View style={styles.listContainer}>
+                <View style={styles.headerRow}>
+                    <Text style={styles.countText}>{jobs.length} việc làm</Text>
+                    <Text style={styles.notifyText}>Tạo thông báo</Text>
+                </View>
+
+                {/* Danh sách job */}
+                <FlatList
+                    data={jobs}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <JobCard
+                            logo_path={item.logo_path}
+                            job_title={item.job_title}
+                            company_name={item.company_name}
+                            job_location={item.job_location}
+                            salary_range={item.slary_range}
+                            time_passed={item.time_passed}
+                        />
+                    )}
+                    contentContainerStyle={{ paddingBottom: 80 }}
+                    showsVerticalScrollIndicator={false}
+                />
+            </View>
+        </View>
 
     );
 };
@@ -146,6 +159,11 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#fff",
         paddingHorizontal: 8,
+    },
+    tabContainer: {
+        justifyContent: "space-between",
+        flexDirection: "row",
+
     },
     tabRow: {
         flexDirection: "row",
@@ -164,6 +182,10 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 6,
+    },
+    icon:{
+        paddingVertical: 6,
+        justifyContent: "center",
     },
     listContainer: {
         flex: 1,

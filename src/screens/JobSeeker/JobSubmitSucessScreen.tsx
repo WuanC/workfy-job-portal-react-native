@@ -1,8 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const JobSubmitSucessScreen = () => {
+    const navigation = useNavigation();
     return (
         <View style={styles.container}>
             {/* Header */}
@@ -36,7 +38,7 @@ const JobSubmitSucessScreen = () => {
             </View>
 
             {/* Quay lại */}
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
                 <Text style={styles.backText}>Quay lại</Text>
             </TouchableOpacity>
         </View>

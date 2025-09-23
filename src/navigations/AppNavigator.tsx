@@ -19,6 +19,7 @@ import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
 import JobSubmitScreen from "../screens/JobSeeker/JobSubmitScreen";
 import JobSubmitSucessScreen from "../screens/JobSeeker/JobSubmitSucessScreen";
+import FilterScreen from "../screens/FilterScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -84,12 +85,14 @@ const AppNavigator = () => {
                 >
                     <NavigationContainer>
                         <Stack.Navigator screenOptions={{ headerShown: false }}>
+                            <Stack.Screen name="Login" component={JobSeekerLoginScreen} />
                             <Stack.Screen name="MainApp" component={MainApp} />
                             <Stack.Screen name="JobSeekerLogin" component={JobSeekerLoginScreen} />
                             <Stack.Screen name="JobSeekerRegister" component={JobSeekerRegisterScreen} />
                             <Stack.Screen name="JobDetail" component={JobDetailScreen} />
                             <Stack.Screen name="JobSubmit" component={JobSubmitScreen} />
                             <Stack.Screen name="JobSubmitSuccess" component={JobSubmitSucessScreen}/>
+                            <Stack.Screen name="SearchFilter" component={FilterScreen} />
                         </Stack.Navigator>
                     </NavigationContainer>
                 </SafeAreaView>

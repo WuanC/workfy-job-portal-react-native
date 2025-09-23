@@ -20,6 +20,7 @@ import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
 import JobSubmitScreen from "../screens/JobSeeker/JobSubmitScreen";
 import JobSubmitSucessScreen from "../screens/JobSeeker/JobSubmitSucessScreen";
 import FilterScreen from "../screens/FilterScreen";
+import JobListScreen from "../screens/JobListScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

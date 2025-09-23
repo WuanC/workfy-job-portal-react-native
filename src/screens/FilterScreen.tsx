@@ -1,5 +1,7 @@
-import { useNavigation } from "@react-navigation/native";
-import { useState, useRef, useMemo } from "react";
+"use client"
+
+import { useNavigation } from "@react-navigation/native"
+import { useState, useRef, useMemo } from "react"
 import {
   View,
   Text,
@@ -7,67 +9,138 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import BottomSheet from "@gorhom/bottom-sheet";
+} from "react-native"
+import { Ionicons } from "@expo/vector-icons"
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet"
+import Slider from "@react-native-community/slider"
+
 
 const FilterScreen = () => {
-  const [selectedDate, setSelectedDate] = useState("1");
-  const [selectedRank, setSelectedRank] = useState<string | null>(null);
+  const navigation = useNavigation()
+const toggleSelect = (
+  id: string,
+  selected: string[],
+  setSelected: React.Dispatch<React.SetStateAction<string[]>>
+) => {
 
-  const [dateFilter] = useState([
+  setSelected((prev) =>
+    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  )
+}
+  // State chọn lọc
+  const [selectedDate, setSelectedDate] = useState("1")
+  const [selectedRank, setSelectedRank] = useState<string[]>([])
+  const [selectedExperience, setSelectedExperience] = useState<string[]>([])
+  const [selectedEducation, setSelectedEducation] = useState<string[]>([])
+  const [selectedJobType, setSelectedJobType] = useState<string[]>([])
+  const [selectedIndustry, setSelectedIndustry] = useState<string[]>([])
+  const [salaryRange, setSalaryRange] = useState(50)
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([])
+
+  // Data cho filter
+  const dateFilter = [
     { id: "1", label: "Ngày cập nhật" },
     { id: "2", label: "Ngày đăng" },
-    { id: "3", label: "Ngày hết hạn" },
-  ]);
+    { id: "3", label: "Sắp hết hạn" },
+  ]
 
-  const [location] = useState([
+  const location = [
     { id: "1", label: "Hồ Chí Minh" },
     { id: "2", label: "Hà Nội" },
     { id: "3", label: "Đà Nẵng" },
     { id: "4", label: "Hải Phòng" },
-  ]);
+  ]
 
-  const [rank] = useState([
-    { id: "1", label: "Thực tập sinh" },
+  const rank = [
+    { id: "1", label: "Sinh viên / Thực tập sinh" },
     { id: "2", label: "Mới đi làm" },
-  ]);
+    { id: "3", label: "Nhân viên" },
+    { id: "4", label: "Trưởng nhóm / Giám sát" },
+    { id: "5", label: "Quản lý / Trưởng phòng" },
+    { id: "6", label: "Giám đốc" },
+    { id: "7", label: "Quản lý cấp cao" },
+    { id: "8", label: "Điều hành cấp cao" },
+  ]
 
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [showLocationSheet, setShowLocationSheet] = useState(false);
+  const experience = [
+    { id: "1", label: "0 - 1 năm" },
+    { id: "2", label: "1 - 2 năm" },
+    { id: "3", label: "2 - 5 năm" },
+    { id: "4", label: "5 - 10 năm" },
+    { id: "5", label: "Hơn 10 năm" },
+  ]
 
-  const navigation = useNavigation();
+  const education = [
+    { id: "1", label: "Trung học phổ thông" },
+    { id: "2", label: "Trung cấp" },
+    { id: "3", label: "Cử nhân" },
+    { id: "4", label: "Thạc sĩ" },
+    { id: "5", label: "Tiến sĩ" },
+  ]
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ["50%", "90%"], []);
+  const jobTypes = [
+    { id: "1", label: "Nhân viên toàn thời gian" },
+    { id: "2", label: "Nhân viên toàn thời gian tạm thời" },
+    { id: "3", label: "Nhân viên bán thời gian" },
+  ]
 
-  const toggleLocation = (id: string) => {
-    setSelectedLocations((prev) =>
-      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]
-    );
-  };
+  const industries = [
+    { id: "1", label: "Công nghệ thông tin" },
+    { id: "2", label: "Tài chính - Ngân hàng" },
+    { id: "3", label: "Kinh doanh - Bán hàng" },
+    { id: "4", label: "Marketing - PR" },
+    { id: "5", label: "Giáo dục - Đào tạo" },
+  ]
 
+  // Bottom sheet refs
+  const bottomSheetRef = useRef<BottomSheet>(null)
+  const snapPoints = ["99%", "50%"]
+
+
+  // Hiển thị text
   const displayLocations =
     selectedLocations.length > 0
       ? location
-          .filter((l) => selectedLocations.includes(l.id))
-          .map((l) => l.label)
-          .join(", ")
-      : "Chọn địa điểm";
+        .filter((l) => selectedLocations.includes(l.id))
+        .map((l) => l.label)
+        .join(", ")
+      : "Chọn địa điểm"
+
+  const displayIndustry =
+    selectedIndustry.length > 0
+      ? industries
+        .filter((i) => selectedIndustry.includes(i.id))
+        .map((i) => i.label)
+        .join(", ")
+      : "Ngành nghề"
+
+  // Reset filter
+  const resetFilters = () => {
+    setSelectedDate("1")
+    setSelectedRank([])
+    setSelectedExperience([])
+    setSelectedEducation([])
+    setSelectedJobType([])
+    setSelectedIndustry([])
+    setSelectedLocations([])
+    setSalaryRange(50)
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.cancel} onPress={() => navigation.goBack()}>
-            Hủy
-          </Text>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.cancel}>Hủy</Text>
+          </TouchableOpacity>
           <Text style={styles.title}>Bộ lọc tìm kiếm</Text>
-          <Text style={styles.reset}>Đặt lại</Text>
+          <TouchableOpacity onPress={resetFilters}>
+            <Text style={styles.reset}>Đặt lại</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Date filter */}
+        {/* Ngày lọc */}
         <Text style={styles.sectionTitle}>Tìm kiếm theo</Text>
         <View style={styles.row}>
           {dateFilter.map((item) => (
@@ -95,15 +168,23 @@ const FilterScreen = () => {
         <Text style={styles.sectionTitle}>Nhập tỉnh, thành phố</Text>
         <TouchableOpacity
           style={styles.inputBox}
-          onPress={() => {
-            setShowLocationSheet(true);
-            console.log("pressed")
-            bottomSheetRef.current?.expand();
-          }}
+          onPress={() => bottomSheetRef.current?.expand()}
         >
           <Ionicons name="location-outline" size={20} color="#666" />
           <Text style={styles.inputText} numberOfLines={1}>
             {displayLocations}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color="#666" />
+        </TouchableOpacity>
+
+        {/* Industry */}
+        <Text style={styles.sectionTitle}>Danh mục công việc</Text>
+        <TouchableOpacity
+          style={styles.inputBox}
+          onPress={() => bottomSheetRef.current?.expand()}
+        >
+          <Text style={styles.inputText} numberOfLines={1}>
+            {displayIndustry}
           </Text>
           <Ionicons name="chevron-down" size={20} color="#666" />
         </TouchableOpacity>
@@ -116,14 +197,108 @@ const FilterScreen = () => {
               key={item.id}
               style={[
                 styles.chip,
-                selectedRank === item.id && styles.chipSelected,
+                selectedRank.includes(item.id) && styles.chipSelected,
               ]}
-              onPress={() => setSelectedRank(item.id)}
+              onPress={() => toggleSelect(item.id, selectedRank, setSelectedRank)}
             >
               <Text
                 style={[
                   styles.chipText,
-                  selectedRank === item.id && styles.chipTextSelected,
+                  selectedRank.includes(item.id) && styles.chipTextSelected,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Experience */}
+        <Text style={styles.sectionTitle}>Kinh nghiệm</Text>
+        <View style={styles.rowWrap}>
+          {experience.map((item) => (
+            <TouchableOpacity
+              //key={`exp-${item.id}`}  
+              key={item.id}
+              style={[
+                styles.chip,
+                selectedExperience.includes(item.id) && styles.chipSelected,
+              ]}
+              onPress={() => toggleSelect(item.id, selectedExperience, setSelectedExperience)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedExperience.includes(item.id) &&
+                  styles.chipTextSelected,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Salary */}
+        <Text style={styles.sectionTitle}>Mức lương</Text>
+        <View style={styles.salaryContainer}>
+          <View style={styles.salaryLabels}>
+            <Text style={styles.salaryLabel}>đ 0M</Text>
+            <Text style={styles.salaryLabel}>đ 100M</Text>
+          </View>
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={100}
+            value={salaryRange}
+            onValueChange={setSalaryRange}
+            minimumTrackTintColor="#007AFF"
+            maximumTrackTintColor="#E5E5E5"
+          />
+          <Text style={styles.salaryValue}>đ {Math.round(salaryRange)}M</Text>
+        </View>
+
+        {/* Education */}
+        <Text style={styles.sectionTitle}>Học vấn</Text>
+        <View style={styles.rowWrap}>
+          {education.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.chip,
+                selectedEducation.includes(item.id) && styles.chipSelected,
+              ]}
+              onPress={() => toggleSelect(item.id, selectedEducation, setSelectedEducation)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedEducation.includes(item.id) &&
+                  styles.chipTextSelected,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Job type */}
+        <Text style={styles.sectionTitle}>Loại công việc</Text>
+        <View style={styles.rowWrap}>
+          {jobTypes.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.chip,
+                selectedJobType.includes(item.id) && styles.chipSelected,
+              ]}
+              onPress={() => toggleSelect(item.id, selectedJobType, setSelectedJobType)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedJobType.includes(item.id) && styles.chipTextSelected,
                 ]}
               >
                 {item.label}
@@ -138,46 +313,74 @@ const FilterScreen = () => {
         <Text style={styles.applyText}>Áp dụng</Text>
       </TouchableOpacity>
 
-      {/* Bottom Sheet cho Location */}
-      {showLocationSheet && (
-        <BottomSheet
-          ref={bottomSheetRef}
-          index={1}
-          snapPoints={snapPoints}
-          onClose={() => setShowLocationSheet(false)}
-        >
-          <View style={styles.sheetContent}>
-            <Text style={styles.modalTitle}>Chọn tỉnh, thành phố</Text>
-            <FlatList
-              data={location}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => {
-                const isSelected = selectedLocations.includes(item.id);
-                return (
-                  <TouchableOpacity
-                    style={styles.modalItem}
-                    onPress={() => toggleLocation(item.id)}
-                  >
-                    <Ionicons
-                      name={isSelected ? "checkbox" : "square-outline"}
-                      size={22}
-                      color={isSelected ? "#007AFF" : "#666"}
-                      style={{ marginRight: 10 }}
-                    />
-                    <Text style={styles.modalItemText}>{item.label}</Text>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
-        </BottomSheet>
-      )}
+      {/* Bottom Sheet Location */}
+      <BottomSheet ref={bottomSheetRef} index={-1} snapPoints={snapPoints} enablePanDownToClose={true}>
+        <BottomSheetView style={styles.sheetContent}>
+          <Text style={styles.modalTitle}>Chọn tỉnh, thành phố</Text>
+          <FlatList
+            data={location}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              const isSelected = selectedLocations.includes(item.id)
+              return (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => toggleSelect(item.id, selectedLocations, setSelectedLocations)}
+                >
+                  <Ionicons
+                    name={isSelected ? "checkbox" : "square-outline"}
+                    size={22}
+                    color={isSelected ? "#007AFF" : "#666"}
+                    style={{ marginRight: 10 }}
+                  />
+                  <Text style={styles.modalItemText}>{item.label}</Text>
+                </TouchableOpacity>
+              )
+            }}
+          />
+        </BottomSheetView>
+      </BottomSheet>
+
+      {/* Bottom Sheet Industry */}
+      {/* <BottomSheet ref={industrySheetRef} index={-1} snapPoints={snapPoints}>
+        <View style={styles.sheetContent}>
+          <Text style={styles.modalTitle}>Chọn ngành nghề</Text>
+          <FlatList
+            data={industries}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => {
+              const isSelected = selectedIndustry.includes(item.id)
+              return (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => toggleSelect(item.id, selectedIndustry, setSelectedIndustry)}
+                >
+                  <Ionicons
+                    name={isSelected ? "checkbox" : "square-outline"}
+                    size={22}
+                    color={isSelected ? "#007AFF" : "#666"}
+                    style={{ marginRight: 10 }}
+                  />
+                  <Text style={styles.modalItemText}>{item.label}</Text>
+                </TouchableOpacity>
+              )
+            }}
+          />
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() => industrySheetRef.current?.close()}
+          >
+            <Text style={{ color: "#fff" }}>Lưu</Text>
+          </TouchableOpacity>
+        </View>
+      </BottomSheet> */}
     </View>
-  );
-};
+  )
+}
 
-export default FilterScreen;
+export default FilterScreen
 
+// Styles
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   scroll: { padding: 16, paddingBottom: 80 },
@@ -192,7 +395,12 @@ const styles = StyleSheet.create({
   reset: { color: "#007AFF", fontSize: 16 },
   sectionTitle: { marginVertical: 10, fontSize: 16, fontWeight: "600" },
   row: { flexDirection: "row", marginBottom: 16 },
-  rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
+  rowWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    //gap: 10,
+    marginBottom: 16,
+  },
   chip: {
     borderWidth: 1,
     borderColor: "#ccc",
@@ -229,6 +437,32 @@ const styles = StyleSheet.create({
   applyText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   sheetContent: { flex: 1, padding: 16 },
   modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 16 },
-  modalItem: { flexDirection: "row", alignItems: "center", paddingVertical: 12 },
+  modalItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
   modalItemText: { fontSize: 16, color: "#333" },
-});
+  salaryContainer: { marginBottom: 16, paddingHorizontal: 4 },
+  salaryLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  salaryLabel: { fontSize: 14, color: "#666" },
+  slider: { width: "100%", height: 40 },
+  salaryValue: {
+    textAlign: "center",
+    fontSize: 14,
+    color: "#007AFF",
+    fontWeight: "600",
+    marginTop: 8,
+  },
+  saveButton: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+  },
+})

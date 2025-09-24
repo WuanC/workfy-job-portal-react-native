@@ -9,24 +9,26 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
+  TextInput,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet"
+import BottomSheet, { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from "@gorhom/bottom-sheet"
 import Slider from "@react-native-community/slider"
+import { GestureHandlerRootView } from "react-native-gesture-handler"
 
 
 const FilterScreen = () => {
   const navigation = useNavigation()
-const toggleSelect = (
-  id: string,
-  selected: string[],
-  setSelected: React.Dispatch<React.SetStateAction<string[]>>
-) => {
+  const toggleSelect = (
+    id: string,
+    selected: string[],
+    setSelected: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
 
-  setSelected((prev) =>
-    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-  )
-}
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
   // State chọn lọc
   const [selectedDate, setSelectedDate] = useState("1")
   const [selectedRank, setSelectedRank] = useState<string[]>([])
@@ -36,7 +38,9 @@ const toggleSelect = (
   const [selectedIndustry, setSelectedIndustry] = useState<string[]>([])
   const [salaryRange, setSalaryRange] = useState(50)
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
+  const [selectedJobs, setSelectedJobs] = useState<string[]>([])
 
+  const [query, setQuery] = useState<string>()
   // Data cho filter
   const dateFilter = [
     { id: "1", label: "Ngày cập nhật" },
@@ -50,7 +54,12 @@ const toggleSelect = (
     { id: "3", label: "Đà Nẵng" },
     { id: "4", label: "Hải Phòng" },
   ]
-
+  const job = [
+    { id: "1", label: "Bác sĩ" },
+    { id: "2", label: "An ninh/ Bảo vệ" },
+    { id: "3", label: "CNTT-Phần mềm" },
+    { id: "4", label: "CNTT-phần cứng" },
+  ]
   const rank = [
     { id: "1", label: "Sinh viên / Thực tập sinh" },
     { id: "2", label: "Mới đi làm" },
@@ -93,8 +102,9 @@ const toggleSelect = (
   ]
 
   // Bottom sheet refs
-  const bottomSheetRef = useRef<BottomSheet>(null)
-  const snapPoints = ["99%", "50%"]
+  const locationSheetRef = useRef<BottomSheet>(null)
+  const jobSheetRef = useRef<BottomSheet>(null)
+  const snapPoints = ["98%"]
 
 
   // Hiển thị text
@@ -128,7 +138,7 @@ const toggleSelect = (
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll}   keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -168,7 +178,7 @@ const toggleSelect = (
         <Text style={styles.sectionTitle}>Nhập tỉnh, thành phố</Text>
         <TouchableOpacity
           style={styles.inputBox}
-          onPress={() => bottomSheetRef.current?.expand()}
+          onPress={() => locationSheetRef.current?.expand()}
         >
           <Ionicons name="location-outline" size={20} color="#666" />
           <Text style={styles.inputText} numberOfLines={1}>
@@ -181,7 +191,7 @@ const toggleSelect = (
         <Text style={styles.sectionTitle}>Danh mục công việc</Text>
         <TouchableOpacity
           style={styles.inputBox}
-          onPress={() => bottomSheetRef.current?.expand()}
+          onPress={() => jobSheetRef.current?.expand()}
         >
           <Text style={styles.inputText} numberOfLines={1}>
             {displayIndustry}
@@ -263,12 +273,15 @@ const toggleSelect = (
         <View style={styles.rowWrap}>
           {education.map((item) => (
             <TouchableOpacity
-              key={item.id}
+              key={`edu-${item.id}`}
               style={[
                 styles.chip,
                 selectedEducation.includes(item.id) && styles.chipSelected,
               ]}
-              onPress={() => toggleSelect(item.id, selectedEducation, setSelectedEducation)}
+              onPress={() => {
+                console.log("Chọn học vấn:", item.label)
+                toggleSelect(item.id, selectedEducation, setSelectedEducation)
+              }}
             >
               <Text
                 style={[
@@ -314,9 +327,40 @@ const toggleSelect = (
       </TouchableOpacity>
 
       {/* Bottom Sheet Location */}
-      <BottomSheet ref={bottomSheetRef} index={-1} snapPoints={snapPoints} enablePanDownToClose={true}>
+      <BottomSheet
+        ref={locationSheetRef}
+        index={-1}
+        snapPoints={["1%", "98%"]}
+        enablePanDownToClose
+        onChange={(index) => {
+          console.log("Index:", index);
+
+          if (index === -1) {
+            console.log("Đang đóng");
+          } else if (index === 0) {
+            console.log("Đang mở: 98%");
+          }
+        }}
+      >
         <BottomSheetView style={styles.sheetContent}>
-          <Text style={styles.modalTitle}>Chọn tỉnh, thành phố</Text>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Chọn danh mục</Text>
+            <TouchableOpacity onPress={() => setSelectedLocations([])}>
+              <Text style={{ color: "#007AFF" }}>Xóa tất cả</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.searchBox}>
+            <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 8 }} />
+            <TextInput
+              placeholder="Tìm kiếm..."
+              placeholderTextColor="#999"
+              value={query}
+              onChangeText={setQuery}
+              style={styles.searchInput}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </View>
           <FlatList
             data={location}
             keyExtractor={(item) => item.id}
@@ -324,7 +368,7 @@ const toggleSelect = (
               const isSelected = selectedLocations.includes(item.id)
               return (
                 <TouchableOpacity
-                  style={styles.modalItem}
+                  style={styles.item}
                   onPress={() => toggleSelect(item.id, selectedLocations, setSelectedLocations)}
                 >
                   <Ionicons
@@ -333,27 +377,58 @@ const toggleSelect = (
                     color={isSelected ? "#007AFF" : "#666"}
                     style={{ marginRight: 10 }}
                   />
-                  <Text style={styles.modalItemText}>{item.label}</Text>
+                  <Text>{item.label}</Text>
                 </TouchableOpacity>
               )
             }}
           />
+
+          <TouchableOpacity
+            style={styles.saveBtn}
+            onPress={() => console.log("Đã chọn:", selectedLocations)}
+          >
+            <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
+          </TouchableOpacity>
         </BottomSheetView>
       </BottomSheet>
 
       {/* Bottom Sheet Industry */}
-      {/* <BottomSheet ref={industrySheetRef} index={-1} snapPoints={snapPoints}>
-        <View style={styles.sheetContent}>
-          <Text style={styles.modalTitle}>Chọn ngành nghề</Text>
+      <BottomSheet
+        ref={jobSheetRef}
+        index={-1}
+        snapPoints={["98%"]}
+        enablePanDownToClose={true}
+        enableOverDrag={true}// ❌ không cho kéo quá mức
+        animateOnMount={false}
+      >
+        <BottomSheetView style={styles.sheetContent}>
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Chọn danh mục</Text>
+            <TouchableOpacity onPress={() => setSelectedJobs([])}>
+              <Text style={{ color: "#007AFF" }}>Xóa tất cả</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.searchBox}>
+            <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 8 }} />
+            <TextInput
+              placeholder="Tìm kiếm..."
+              placeholderTextColor="#999"
+              value={query}
+              onChangeText={setQuery}
+              style={styles.searchInput}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </View>
           <FlatList
-            data={industries}
+            data={job}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => {
-              const isSelected = selectedIndustry.includes(item.id)
+              const isSelected = selectedJobs.includes(item.id)
               return (
                 <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => toggleSelect(item.id, selectedIndustry, setSelectedIndustry)}
+                  style={styles.item}
+                  onPress={() => toggleSelect(item.id, selectedJobs, setSelectedJobs)}
                 >
                   <Ionicons
                     name={isSelected ? "checkbox" : "square-outline"}
@@ -361,19 +436,20 @@ const toggleSelect = (
                     color={isSelected ? "#007AFF" : "#666"}
                     style={{ marginRight: 10 }}
                   />
-                  <Text style={styles.modalItemText}>{item.label}</Text>
+                  <Text>{item.label}</Text>
                 </TouchableOpacity>
               )
             }}
           />
+
           <TouchableOpacity
-            style={styles.saveButton}
-            onPress={() => industrySheetRef.current?.close()}
+            style={styles.saveBtn}
+            onPress={() => console.log("Đã chọn:", setSelectedJobs)}
           >
-            <Text style={{ color: "#fff" }}>Lưu</Text>
+            <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
           </TouchableOpacity>
-        </View>
-      </BottomSheet> */}
+        </BottomSheetView>
+      </BottomSheet>
     </View>
   )
 }
@@ -409,6 +485,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginRight: 10,
     marginBottom: 10,
+
   },
   chipSelected: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
   chipText: { fontSize: 14, color: "#333" },
@@ -435,7 +512,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   applyText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  sheetContent: { flex: 1, padding: 16 },
   modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 16 },
   modalItem: {
     flexDirection: "row",
@@ -464,5 +540,41 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginTop: 16,
+  },
+  item: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  saveBtn: {
+    marginTop: 10,
+    backgroundColor: "#007AFF",
+    padding: 14,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  sheetContent: { flex: 1, paddingHorizontal: 16 },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  sheetTitle: { fontSize: 16, fontWeight: "600" },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f2f2f2",
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 8,
+    fontSize: 14,
+    color: "#333",
   },
 })

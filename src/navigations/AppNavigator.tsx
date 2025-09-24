@@ -21,58 +21,59 @@ import JobSubmitScreen from "../screens/JobSeeker/JobSubmitScreen";
 import JobSubmitSucessScreen from "../screens/JobSeeker/JobSubmitSucessScreen";
 import FilterScreen from "../screens/FilterScreen";
 import JobListScreen from "../screens/JobListScreen";
+import ChatScreen from "../screens/ChatScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const MainApp = () => {
     return (
-            <Tab.Navigator
-                screenOptions={({ route }) => ({
-                    headerShown: false,
-                    tabBarShowLabel: true,
-                    tabBarActiveTintColor: "#007AFF",
-                    tabBarInactiveTintColor: "#555",
-                    tabBarStyle: {
-                        height: 60,
-                        paddingBottom: 5,
-                        paddingTop: 5,
-                        borderTopWidth: 1,
-                        borderTopColor: "#ddd",
-                        backgroundColor: "#fff",
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                headerShown: false,
+                tabBarShowLabel: true,
+                tabBarActiveTintColor: "#007AFF",
+                tabBarInactiveTintColor: "#555",
+                tabBarStyle: {
+                    height: 60,
+                    paddingBottom: 5,
+                    paddingTop: 5,
+                    borderTopWidth: 1,
+                    borderTopColor: "#ddd",
+                    backgroundColor: "#fff",
 
-                    },
-                    tabBarButton: (props) => (
-                        <TouchableOpacity
-                            {...(props as TouchableOpacityProps)} // ép kiểu cho an toàn
-                            activeOpacity={1} // tắt hiệu ứng mờ
-                        />
-                    ),
+                },
+                tabBarButton: (props) => (
+                    <TouchableOpacity
+                        {...(props as TouchableOpacityProps)} // ép kiểu cho an toàn
+                        activeOpacity={1} // tắt hiệu ứng mờ
+                    />
+                ),
 
-                    tabBarIcon: ({ color }) => {
-                        if (route.name === "Explore") {
-                            return <Ionicons name="compass-outline" size={24} color={color} />;
-                        } else if (route.name === "Search") {
-                            return <Ionicons name="search-outline" size={24} color={color} />;
-                        } else if (route.name === "Message") {
-                            return <Ionicons name="chatbubble-outline" size={24} color={color} />;
-                        } else if (route.name === "MyJob") {
-                            return <MaterialIcons name="work-outline" size={24} color={color} />;
-                        } else if (route.name === "CV") {
-                            return <Ionicons name="document-text-outline" size={24} color={color} />;
-                        } else if (route.name === "Menu") {
-                            return <Ionicons name="menu-outline" size={24} color={color} />;
-                        }
-                    },
-                })}
-            >
-                <Tab.Screen name="Explore" component={ExploreScreen} options={{ title: "Khám phá" }} />
-                <Tab.Screen name="Search" component={SearchScreen} options={{ title: "Tìm kiếm" }} />
-                <Tab.Screen name="MyJob" component={MyJobScreen} options={{ title: "Việc của tôi" }} />
-                <Tab.Screen name="Message" component={MessageScreen} options={{ title: "Tin nhắn" }} />
-                <Tab.Screen name="CV" component={CVScreen} options={{ title: "Viết CV" }} />
-                <Tab.Screen name="Menu" component={MenuScreen} options={{ title: "Menu" }} />
-            </Tab.Navigator>
+                tabBarIcon: ({ color }) => {
+                    if (route.name === "Explore") {
+                        return <Ionicons name="compass-outline" size={24} color={color} />;
+                    } else if (route.name === "Search") {
+                        return <Ionicons name="search-outline" size={24} color={color} />;
+                    } else if (route.name === "Message") {
+                        return <Ionicons name="chatbubble-outline" size={24} color={color} />;
+                    } else if (route.name === "MyJob") {
+                        return <MaterialIcons name="work-outline" size={24} color={color} />;
+                    } else if (route.name === "CV") {
+                        return <Ionicons name="document-text-outline" size={24} color={color} />;
+                    } else if (route.name === "Menu") {
+                        return <Ionicons name="menu-outline" size={24} color={color} />;
+                    }
+                },
+            })}
+        >
+            <Tab.Screen name="Explore" component={ExploreScreen} options={{ title: "Khám phá" }} />
+            <Tab.Screen name="Search" component={SearchScreen} options={{ title: "Tìm kiếm" }} />
+            <Tab.Screen name="MyJob" component={MyJobScreen} options={{ title: "Việc của tôi" }} />
+            <Tab.Screen name="Message" component={MessageScreen} options={{ title: "Tin nhắn" }} />
+            <Tab.Screen name="CV" component={CVScreen} options={{ title: "Viết CV" }} />
+            <Tab.Screen name="Menu" component={MenuScreen} options={{ title: "Menu" }} />
+        </Tab.Navigator>
     );
 };
 
@@ -86,14 +87,16 @@ const AppNavigator = () => {
                 >
                     <NavigationContainer>
                         <Stack.Navigator screenOptions={{ headerShown: false }}>
+
                             <Stack.Screen name="Login" component={JobSeekerLoginScreen} />
                             <Stack.Screen name="MainApp" component={MainApp} />
                             <Stack.Screen name="JobSeekerLogin" component={JobSeekerLoginScreen} />
                             <Stack.Screen name="JobSeekerRegister" component={JobSeekerRegisterScreen} />
                             <Stack.Screen name="JobDetail" component={JobDetailScreen} />
                             <Stack.Screen name="JobSubmit" component={JobSubmitScreen} />
-                            <Stack.Screen name="JobSubmitSuccess" component={JobSubmitSucessScreen}/>
+                            <Stack.Screen name="JobSubmitSuccess" component={JobSubmitSucessScreen} />
                             <Stack.Screen name="SearchFilter" component={FilterScreen} />
+                            <Stack.Screen name="Chat" component={ChatScreen} />
                         </Stack.Navigator>
                     </NavigationContainer>
                 </SafeAreaView>

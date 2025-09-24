@@ -119,8 +119,8 @@ const SearchScreen = () => {
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.inactiveTab}>
-                    <Ionicons name="filter" size={25} color="black" style={styles.icon} onPress={() => navigation.navigate("SearchFilter")}/>
+                <TouchableOpacity style={styles.inactiveTab} onPress={() => navigation.navigate("SearchFilter")}>
+                    <Ionicons name="filter" size={25} color="black" style={styles.icon} />
                 </TouchableOpacity>
             </View>
 

@@ -50,8 +50,7 @@ const JobCard = ({
                         <View style={styles.titleRow}>
                             <Text
                                 numberOfLines={2}
-                                adjustsFontSizeToFit
-                                minimumFontScale={0.9}
+                                minimumFontScale={14}
                                 style={styles.jobTitle}
                             >
                                 {job_title}
@@ -86,6 +85,14 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         overflow: "hidden",
         marginVertical: 6,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     gradient: {
         borderWidth: 1,
@@ -112,11 +119,13 @@ const styles = StyleSheet.create({
         alignItems: "flex-start",
     },
     jobTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "600",
         color: "#007AFF",
         flex: 1,
         marginRight: 8,
+        lineHeight: 20,   // chiều cao mỗi dòng
+        height: 40,       // luôn đủ 2 dòng
     },
     company: {
         fontSize: 14,

@@ -7,6 +7,11 @@ export type RootStackParamList = {
   MainApp: undefined
   SearchFilter: undefined
   Chat: undefined
+
+  //Settings
+  Setting: undefined
+  ChangePassword: undefined
+  ChangeEmail: undefined
 };
 // type JobDetailNavigationProp = NativeStackNavigationProp<
 //   RootStackParamList,

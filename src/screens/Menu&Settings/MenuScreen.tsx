@@ -3,8 +3,15 @@
 import { useState } from "react"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types/navigation";
+import { useNavigation } from "@react-navigation/native";
+type MenuNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Setting"
+>;
 const MenuScreen = () => {
+  const navigation = useNavigation<MenuNavigationProp>();
   const [showMoreOptions, setShowMoreOptions] = useState(false)
 
   const toggleMoreOptions = () => {
@@ -71,7 +78,7 @@ const MenuScreen = () => {
 
         {/* Settings Section */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Setting")}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="settings" size={20} color="#666" />
               <Text style={styles.menuItemText}>Cài đặt</Text>

@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Login: undefined
   MainApp: undefined
   SearchFilter: undefined
+  Chat: undefined
 };
 // type JobDetailNavigationProp = NativeStackNavigationProp<
 //   RootStackParamList,

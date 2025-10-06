@@ -10,20 +10,26 @@ import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 // Screens
 import JobSeekerLoginScreen from "../screens/Auth/JobSeekerLoginScreen";
 import JobSeekerRegisterScreen from "../screens/Auth/JobSeekerRegisterScreen";
-import ExploreScreen from "../screens/ExploreScreen";
-import MessageScreen from "../screens/MessageScreen";
-import SearchScreen from "../screens/SearchScreen";
-import MyJobScreen from "../screens/MyJobScreen";
-import CVScreen from "../screens/CVScreen";
-import MenuScreen from "../screens/Menu&Settings/MenuScreen";
+import ExploreScreen from "../screens/JobSeeker/ExploreScreen";
+import MessageScreen from "../screens/JobSeeker/MessageScreen";
+import SearchScreen from "../screens/JobSeeker/SearchScreen";
+import MyJobScreen from "../screens/JobSeeker/MyJobScreen";
+import CVScreen from "../screens/JobSeeker/CVScreen";
+import MenuScreen from "../screens/JobSeeker/Menu&Settings/MenuScreen";
 import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
 import JobSubmitScreen from "../screens/JobSeeker/JobSubmitScreen";
 import JobSubmitSucessScreen from "../screens/JobSeeker/JobSubmitSucessScreen";
-import FilterScreen from "../screens/FilterScreen";
-import ChatScreen from "../screens/ChatScreen";
-import SettingScreen from "../screens/Menu&Settings/SettingScreen";
-import ChangePasswordScreen from "../screens/Menu&Settings/ChangePasswordScreen";
-import ChangeEmailScreen from "../screens/Menu&Settings/ChangeEmailScreen";
+import FilterScreen from "../screens/JobSeeker/FilterScreen";
+import ChatScreen from "../screens/JobSeeker/ChatScreen";
+import SettingScreen from "../screens/JobSeeker/Menu&Settings/SettingScreen";
+import ChangePasswordScreen from "../screens/JobSeeker/Menu&Settings/ChangePasswordScreen";
+import ChangeEmailScreen from "../screens/JobSeeker/Menu&Settings/ChangeEmailScreen";
+import MyOrganization from "../screens/Employer/MyOrganization";
+import Setting from "../screens/Employer/EmployerSettingScreen";
+import EmployerJobScreen from "../screens/Employer/EmployerJobScreen";
+import MyCandidate from "../screens/Employer/MyCandidate";
+import PostJobScreen from "../screens/Employer/PostJobScreen";
+import EmployerSettingScreen from "../screens/Employer/EmployerSettingScreen";
 
 const RootStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -72,8 +78,15 @@ const MenuStackScreen = () => (
     </MenuStack.Navigator>
 );
 
+
+const EmployerJobStackScreen = () => (
+    <MenuStack.Navigator screenOptions={{ headerShown: false }}>
+        <MenuStack.Screen name="EmployerJob" component={EmployerJobScreen} />
+        <MenuStack.Screen name="PostJob" component={PostJobScreen} />
+    </MenuStack.Navigator>
+);
 /** Tab Navigator */
-const MainApp = () => (
+const MainAppEmployee = () => (
     <Tab.Navigator
         screenOptions={({ route }) => ({
             headerShown: false,
@@ -119,7 +132,46 @@ const MainApp = () => (
         <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: "Menu" }} />
     </Tab.Navigator>
 );
-
+const MainAppEmployer = () => (
+    <Tab.Navigator
+        screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarShowLabel: true,
+            tabBarActiveTintColor: "#007AFF",
+            tabBarInactiveTintColor: "#555",
+            tabBarStyle: {
+                height: 60,
+                paddingBottom: 5,
+                paddingTop: 5,
+                borderTopWidth: 1,
+                borderTopColor: "#ddd",
+                backgroundColor: "#fff",
+            },
+            tabBarButton: (props) => (
+                <TouchableOpacity
+                    {...(props as TouchableOpacityProps)}
+                    activeOpacity={1}
+                />
+            ),
+            tabBarIcon: ({ color }) => {
+                if (route.name === "EmployerMyJobStack") {
+                    return <MaterialIcons name="work-outline" size={24} color={color} />;
+                } else if (route.name === "MyCandidate") {
+                    return <Ionicons name="document-text-outline" size={24} color={color} />;
+                } else if (route.name === "EmployerSetting") {
+                    return <Ionicons name="menu-outline" size={24} color={color} />;
+                } else if (route.name === "MyOrganizationScreen") {
+                    return <MaterialIcons name="work-outline" size={24} color={color} />;
+                }
+            },
+        })}
+    >
+        <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
+        <Tab.Screen name="MyCandidate" component={MyCandidate} options={{ title: "Ứng viên" }} />
+        <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
+        <Tab.Screen name="MyOrganizationScreen" component={MyOrganization} options={{ title: "Tổ chức" }} />
+    </Tab.Navigator>
+);
 /** Root Navigator */
 const AppNavigator = () => (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -132,7 +184,8 @@ const AppNavigator = () => (
                         <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
 
                         {/* Main app với tab bar */}
-                        <RootStack.Screen name="MainApp" component={MainApp} />
+                        <RootStack.Screen name="MainApp" component={MainAppEmployee} />
+                        <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
                     </RootStack.Navigator>
                 </NavigationContainer>
             </SafeAreaView>

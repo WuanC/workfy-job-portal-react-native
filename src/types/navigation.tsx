@@ -5,6 +5,7 @@ export type RootStackParamList = {
   JobSubmitSuccess: undefined
   Login: undefined
   MainApp: undefined
+  MainAppEmployer: undefined
   SearchFilter: undefined
   Chat: undefined
 
@@ -12,6 +13,9 @@ export type RootStackParamList = {
   Setting: undefined
   ChangePassword: undefined
   ChangeEmail: undefined
+
+  //Employer
+  PostJob : undefined
 };
 // type JobDetailNavigationProp = NativeStackNavigationProp<
 //   RootStackParamList,

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../types/navigation";
+import { RootStackParamList } from "../../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 type MenuNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

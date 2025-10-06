@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../../types/navigation";
+import { RootStackParamList } from "../../../types/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 type MenuNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

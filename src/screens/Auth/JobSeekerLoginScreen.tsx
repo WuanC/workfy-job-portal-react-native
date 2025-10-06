@@ -51,7 +51,7 @@ const JobSeekerLoginScreen = () => {
             </View>
 
             {/* Sign in button */}
-            <TouchableOpacity style={styles.button} onPress={() => navigation.replace("MainApp")}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.replace("MainAppEmployer")}>
                 <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
 

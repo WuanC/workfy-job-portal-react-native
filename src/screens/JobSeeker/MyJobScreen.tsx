@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView } from "react-native";
 
 import { FlatList } from "react-native-gesture-handler";
-import SimilarJobCard from "../components/SimilarJobCard";
+import SimilarJobCard from "../../components/SimilarJobCard";
 import { Ionicons } from "@expo/vector-icons";
-import AppliedJobCard from "../components/AppliedJobCard";
-import JobCard from "../components/JobCard";
+import AppliedJobCard from "../../components/AppliedJobCard";
+import JobCard from "../../components/JobCard";
 import Modal from "react-native-modal";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types/navigation";
+import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 
 type JobDetailNavigationProp = NativeStackNavigationProp<
@@ -35,16 +35,16 @@ const MyJobScreen = () => {
     ])
 
     const [appliedJobs, setAppliedJobs] = useState([
-        { id: "1", title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../assets/App/logoJob.png"), },
-        { id: "2", title: "Backend Developer", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../assets/App/logoJob.png") },
-        { id: "3", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../assets/App/logoJob.png") },
-        { id: "4", title: "Market Research Executive", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../assets/App/logoJob.png") },
-        { id: "5", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../assets/App/logoJob.png") },
+        { id: "1", title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png"), },
+        { id: "2", title: "Backend Developer", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
+        { id: "3", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
+        { id: "4", title: "Market Research Executive", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
+        { id: "5", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
     ])
     const [savedJobs, setSavedJobs] = useState([
         {
             id: "1",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "Market Research Executive",
             company_name: "Công ty TNHH Became Tokyu",
             job_location: "Bình Dương",
@@ -53,7 +53,7 @@ const MyJobScreen = () => {
         },
         {
             id: "2",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng",
             company_name: "Công ty TNHH ABC",
             job_location: "Hồ Chí Minh",
@@ -62,7 +62,7 @@ const MyJobScreen = () => {
         },
         {
             id: "3",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",

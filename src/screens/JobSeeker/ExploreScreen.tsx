@@ -17,9 +17,9 @@ import {
     FlatList,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import SearchBar from "../components/SearchBar"
-import JobCard from "../components/JobCard"
-import FeaturedJobsSection from "../components/FeatureJobsSection"
+import SearchBar from "../../components/SearchBar"
+import JobCard from "../../components/JobCard"
+import FeaturedJobsSection from "../../components/FeatureJobsSection"
 
 const { width } = Dimensions.get("window")
 
@@ -82,7 +82,7 @@ const ExploreScreen = () => {
     const featuredJobs = [
         {
             id: 1,
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "Tenant Management Staff",
             company_name: "Công Ty TNHH Becamex Tokyu",
             job_location: "Bình Dương",
@@ -92,7 +92,7 @@ const ExploreScreen = () => {
         },
         {
             id: 2,
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "[HCM - CẦN THƠ- ĐÀ NẴNG] NHÂN VIÊN TELESALE - ĐI LÀM NGAY",
             company_name: "Công Ty Cổ Phần Dược Tâm Dược",
             job_location: "Cần Thơ, Đà Nẵng, Hồ Chí Minh",
@@ -102,7 +102,7 @@ const ExploreScreen = () => {
         },
         {
             id: 3,
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "Nhân Viên Sales",
             company_name: "Công ty TNHH DK Vina",
             job_location: "Hồ Chí Minh",
@@ -112,7 +112,7 @@ const ExploreScreen = () => {
         },
         {
             id: 4,
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "3D Game Designer (Thiết Kế Đồ Họa Game 3D) - Thu Nhập Lên Đến 35...",
             company_name: "Beetechsoft",
             job_location: "Hồ Chí Minh, Hà Nội",
@@ -122,7 +122,7 @@ const ExploreScreen = () => {
         },
         {
             id: 5,
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "[HN] Intern Tester (Tiếng Nhật N3 Trở Lên)",
             company_name: "CÔNG TY CỔ PHẦN VNEXT SOFTWARE",
             job_location: "Hà Nội",
@@ -138,16 +138,16 @@ const ExploreScreen = () => {
             name: "Công Ty TNHH Vietnam Concentrix Service",
             jobCount: "Đang tuyển 226 công việc",
             location: "Hồ Chí Minh",
-            logo: require("../../assets/App/logoJob.png"),
-            bgImage: require("../../assets/App/banner.jpg"),
+            logo: require("../../../assets/App/logoJob.png"),
+            bgImage: require("../../../assets/App/banner.jpg"),
         },
         {
             id: 2,
             name: "Công Ty TNHH Aeon Việt Nam",
             jobCount: "Đang tuyển 19 công việc",
             location: "Hà Nội",
-            logo: require("../../assets/App/logoJob.png"),
-            bgImage: require("../../assets/App/banner.jpg"),
+            logo: require("../../../assets/App/logoJob.png"),
+            bgImage: require("../../../assets/App/banner.jpg"),
         },
     ]
 
@@ -157,14 +157,14 @@ const ExploreScreen = () => {
             title: "PQC Là Gì? Tất Tần Tật Về Công Việc Nhân Viên Kiểm Soát Quy Trình",
             category: "Tư vấn nghề nghiệp",
             date: "Th09 23, 2025",
-            image: require("../../assets/App/banner.jpg"),
+            image: require("../../../assets/App/banner.jpg"),
         },
         {
             id: 2,
             title: "Top Kỹ Năng Của Nhân Viên Kỹ Thuật",
             category: "Tư vấn nghề nghiệp",
             date: "Th09 23, 2025",
-            image: require("../../assets/App/banner.jpg"),
+            image: require("../../../assets/App/banner.jpg"),
         },
     ]
 
@@ -241,7 +241,7 @@ const ExploreScreen = () => {
                         },
                     ]}
                 >
-                    <Image source={require("../../assets/App/logo.png")} style={styles.logo} />
+                    <Image source={require("../../../assets/App/logo.png")} style={styles.logo} />
                     <Text style={styles.headerTitle}>Workify Job Portal</Text>
                     <Text style={styles.headerSubtitle}>
                         Ứng Dụng Tuyển Dụng dành cho <Text style={styles.highlightText}>Mọi Người</Text>

@@ -75,7 +75,7 @@ const ChatScreen = () => {
     return (
       <View style={styles.messageRow}>
         <Image
-          source={require("../../assets/App/logoJob.png")}
+          source={require("../../../assets/App/logoJob.png")}
           style={styles.avatar}
         />
         <View style={[styles.messageBubble, styles.receivedBubble]}>
@@ -93,7 +93,7 @@ const ChatScreen = () => {
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
         <Image
-          source={require("../../assets/App/logoJob.png")}
+          source={require("../../../assets/App/logoJob.png")}
           style={styles.logo}
         />
         <View style={styles.headerTextContainer}>

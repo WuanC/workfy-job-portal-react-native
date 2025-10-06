@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, StatusBar } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import MessageCard from "../components/MessageCard"
+import MessageCard from "../../components/MessageCard"
 import { use, useState } from "react"
 
 

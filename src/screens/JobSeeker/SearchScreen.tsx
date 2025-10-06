@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import SearchBar from "../components/SearchBar";
-import JobCard from "../components/JobCard";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../types/navigation";
+import SearchBar from "../../components/SearchBar";
+import JobCard from "../../components/JobCard";
 type FilterNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "SearchFilter"
@@ -15,7 +15,7 @@ const SearchScreen = () => {
     const [jobs, setJobs] = useState([
         {
             id: "1",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "Market Research Executive",
             company_name: "Công ty TNHH Became Tokyu",
             job_location: "Bình Dương",
@@ -24,7 +24,7 @@ const SearchScreen = () => {
         },
         {
             id: "2",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "Software Engineer",
             company_name: "Công ty TNHH ABC",
             job_location: "Hồ Chí Minh",
@@ -33,7 +33,7 @@ const SearchScreen = () => {
         },
         {
             id: "3",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",
@@ -42,7 +42,7 @@ const SearchScreen = () => {
         },
         {
             id: "4",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",
@@ -51,7 +51,7 @@ const SearchScreen = () => {
         },
         {
             id: "5",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",
@@ -60,7 +60,7 @@ const SearchScreen = () => {
         },
         {
             id: "6",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",
@@ -69,7 +69,7 @@ const SearchScreen = () => {
         },
         {
             id: "7",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",
@@ -78,7 +78,7 @@ const SearchScreen = () => {
         },
         {
             id: "8",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",
@@ -87,7 +87,7 @@ const SearchScreen = () => {
         },
         {
             id: "9",
-            logo_path: require("../../assets/App/logoJob.png"),
+            logo_path: require("../../../assets/App/logoJob.png"),
             job_title: "UI/UX Designer",
             company_name: "Công ty TNHH XYZ",
             job_location: "Hà Nội",

@@ -30,6 +30,7 @@ import EmployerJobScreen from "../screens/Employer/EmployerJobScreen";
 import MyCandidate from "../screens/Employer/MyCandidate";
 import PostJobScreen from "../screens/Employer/PostJobScreen";
 import EmployerSettingScreen from "../screens/Employer/EmployerSettingScreen";
+import CandidateFilter from "../screens/Employer/CandidateFilter";
 
 const RootStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -85,6 +86,13 @@ const EmployerJobStackScreen = () => (
         <MenuStack.Screen name="PostJob" component={PostJobScreen} />
     </MenuStack.Navigator>
 );
+const EmployerCandidateStackScreen = () => (
+    <MenuStack.Navigator screenOptions={{ headerShown: false }}>
+        <MenuStack.Screen name="MyCandidate" component={MyCandidate} />
+        <MenuStack.Screen name="EmployerSearchFilter" component={CandidateFilter} />
+    </MenuStack.Navigator>
+);
+
 /** Tab Navigator */
 const MainAppEmployee = () => (
     <Tab.Navigator
@@ -156,20 +164,18 @@ const MainAppEmployer = () => (
             tabBarIcon: ({ color }) => {
                 if (route.name === "EmployerMyJobStack") {
                     return <MaterialIcons name="work-outline" size={24} color={color} />;
-                } else if (route.name === "MyCandidate") {
+                } else if (route.name === "MyCandidateStack") {
                     return <Ionicons name="document-text-outline" size={24} color={color} />;
                 } else if (route.name === "EmployerSetting") {
                     return <Ionicons name="menu-outline" size={24} color={color} />;
-                } else if (route.name === "MyOrganizationScreen") {
-                    return <MaterialIcons name="work-outline" size={24} color={color} />;
-                }
+                } 
             },
         })}
     >
         <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
-        <Tab.Screen name="MyCandidate" component={MyCandidate} options={{ title: "Ứng viên" }} />
+        <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} />
         <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
-        <Tab.Screen name="MyOrganizationScreen" component={MyOrganization} options={{ title: "Tổ chức" }} />
+    
     </Tab.Navigator>
 );
 /** Root Navigator */

@@ -8,14 +8,12 @@ import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { loginUser } from "../../services/authService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuth } from "../../context/AuthContext";
 type MainNavigationProp = NativeStackNavigationProp<
-    RootStackParamList,
-    "Login"
+  RootStackParamList,
+  "Login"
 >;
-const JobSeekerLoginScreen = () => {
+const EmployerLoginScreen = () => {
     const [isChecked, setChecked] = useState(false);
-    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -29,12 +27,14 @@ const JobSeekerLoginScreen = () => {
 
         try {
             setLoading(true);
-            await login(email, password);
-
+            const result = await loginUser({ email, password });
+            console.log(result)
+            
+            await AsyncStorage.setItem('accessToken', result.accessToken);
+            await AsyncStorage.setItem('refreshToken', result.refreshToken);
+            
             // Navigate to main app
-            setTimeout(() => {
-                navigation.replace("MainApp");
-            }, 100);
+            navigation.replace("MainApp");
         } catch (error: any) {
             Alert.alert('Lỗi', error.message || 'Đăng nhập thất bại');
             console.error(error);
@@ -46,13 +46,13 @@ const JobSeekerLoginScreen = () => {
         <View style={styles.container}>
             <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
 
-            <Text style={styles.title}>Job Seeker Log In</Text>
+            <Text style={styles.title}>Employer Log In</Text>
 
             {/* Email input */}
             <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
-                <TextInput
-                    placeholder="Enter your email"
+                <TextInput 
+                    placeholder="Enter your email" 
                     style={styles.input}
                     value={email}
                     onChangeText={setEmail}
@@ -90,8 +90,8 @@ const JobSeekerLoginScreen = () => {
             </View>
 
             {/* Sign in button */}
-            <TouchableOpacity
-                style={styles.button}
+            <TouchableOpacity 
+                style={styles.button} 
                 onPress={handleLogin}
                 disabled={loading}
             >
@@ -231,4 +231,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default JobSeekerLoginScreen;
+export default EmployerLoginScreen;

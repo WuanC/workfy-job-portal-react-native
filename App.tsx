@@ -4,12 +4,36 @@ import JobSeekerRegisterScreen from './src/screens/Auth/JobSeekerRegisterScreen'
 import JobSeekerLoginScreen from './src/screens/Auth/JobSeekerLoginScreen';
 import React from 'react';
 import AppNavigator from './src/navigations/AppNavigator';
+import { AuthProvider } from './src/context/AuthContext';
+import { NavigationContainer } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
+import CVScreen from './src/screens/JobSeeker/CVScreen';
 
 
 
 export default function App() {
+  const showSuccess = () => {
+    Toast.show({
+      type: "success",
+      text1: "Đăng nhập thành công!",
+      text2: "Chào mừng bạn quay lại 🎉",
+    });
+  };
+
+  const showError = () => {
+    Toast.show({
+      type: "error",
+      text1: "Lỗi đăng nhập!",
+      text2: "Sai email hoặc mật khẩu.",
+    });
+  };
+
+
   return (
-    <AppNavigator />
+    <AuthProvider>
+      <AppNavigator />
+      <Toast />
+    </AuthProvider>
   );
 }
 

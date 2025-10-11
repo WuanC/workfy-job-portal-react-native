@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import {
     View,
     Text,
@@ -15,14 +15,23 @@ import {
     type NativeScrollEvent,
     ImageBackground,
     FlatList,
+    Button,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import SearchBar from "../../components/SearchBar"
 import JobCard from "../../components/JobCard"
 import FeaturedJobsSection from "../../components/FeatureJobsSection"
+import { useAuth } from "../../context/AuthContext"
+import { getLatestPosts } from "../../services/postService"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { RootStackParamList } from "../../types/navigation"
+import { useNavigation } from "@react-navigation/native"
 
 const { width } = Dimensions.get("window")
-
+type ExploreNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Blog"
+>;
 const ExploreScreen = () => {
     const [searchValue, setSearchValue] = useState("")
     const scrollY = useRef(new Animated.Value(0)).current
@@ -150,23 +159,32 @@ const ExploreScreen = () => {
             bgImage: require("../../../assets/App/banner.jpg"),
         },
     ]
+    const [careerAdvice, setCareerAdvice] = useState<any[]>([]);
 
-    const careerAdvice = [
-        {
-            id: 1,
-            title: "PQC Là Gì? Tất Tần Tật Về Công Việc Nhân Viên Kiểm Soát Quy Trình",
-            category: "Tư vấn nghề nghiệp",
-            date: "Th09 23, 2025",
-            image: require("../../../assets/App/banner.jpg"),
-        },
-        {
-            id: 2,
-            title: "Top Kỹ Năng Của Nhân Viên Kỹ Thuật",
-            category: "Tư vấn nghề nghiệp",
-            date: "Th09 23, 2025",
-            image: require("../../../assets/App/banner.jpg"),
-        },
-    ]
+    useEffect(() => {
+        const fetchPosts = async () => {
+            const data = await getLatestPosts(5);
+            setCareerAdvice(data);
+        };
+
+        fetchPosts();
+    }, []);
+    // const careerAdvice = [
+    //     {
+    //         id: 1,
+    //         title: "PQC Là Gì? Tất Tần Tật Về Công Việc Nhân Viên Kiểm Soát Quy Trình",
+    //         category: "Tư vấn nghề nghiệp",
+    //         date: "Th09 23, 2025",
+    //         image: require("../../../assets/App/banner.jpg"),
+    //     },
+    //     {
+    //         id: 2,
+    //         title: "Top Kỹ Năng Của Nhân Viên Kỹ Thuật",
+    //         category: "Tư vấn nghề nghiệp",
+    //         date: "Th09 23, 2025",
+    //         image: require("../../../assets/App/banner.jpg"),
+    //     },
+    // ]
 
     const renderJobCategory = (category: any) => (
         <TouchableOpacity key={category.id} style={[styles.categoryCard, { backgroundColor: category.color }]}>
@@ -214,7 +232,9 @@ const ExploreScreen = () => {
             </ScrollView>
         )
     }
+    const { user, logout } = useAuth();
 
+    const navigation = useNavigation<ExploreNavigationProp>();
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#cbd6f1ff" />
@@ -311,7 +331,7 @@ const ExploreScreen = () => {
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Cẩm nang tìm việc</Text>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate("Blog")}>
                             <Text style={styles.seeAllText}>Xem tất cả</Text>
                         </TouchableOpacity>
                     </View>

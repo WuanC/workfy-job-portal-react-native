@@ -17,6 +17,12 @@ export type RootStackParamList = {
   //Employer
   PostJob : undefined
   EmployerSearchFilter: undefined
+
+  //Auth
+  ConfirmEmail: undefined
+
+  Blog: undefined
+  ArticleDetail: { id: number }
 };
 // type JobDetailNavigationProp = NativeStackNavigationProp<
 //   RootStackParamList,

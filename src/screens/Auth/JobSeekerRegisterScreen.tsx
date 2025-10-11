@@ -1,28 +1,72 @@
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LOGO_IMG } from "../../utilities/constant";
 import Checkbox from "expo-checkbox";
 import { useState } from "react";
+import { registerUser } from "../../services/authService";
 
-const JobSeekerRegisterScreen = () => {
+const JobSeekerRegisterScreen = ({ navigation }: any) => {
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [isChecked, setChecked] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleRegister = async () => {
+        console.log("Registering user:", { fullName, email, password, confirmPassword, isChecked });
+        if (!fullName || !email || !password || !confirmPassword) {
+            Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp.");
+            return;
+        }
+
+        if (!isChecked) {
+            Alert.alert("Thông báo", "Bạn cần đồng ý với điều khoản trước khi đăng ký.");
+            return;
+        }
+        try {
+            setLoading(true);
+            const res = await registerUser({ fullName, email, password, confirmPassword });
+            Alert.alert("Thành công", res.message || "Đăng ký thành công!");
+            navigation.replace("ConfirmEmail");
+        } catch (err: any) {
+            Alert.alert("Đăng ký thất bại", err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
             <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-
             <Text style={styles.title}>Job Seeker Registration</Text>
 
             {/* Fullname input */}
             <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={22} color="#888" style={styles.icon} />
-                <TextInput placeholder="Enter your full name" style={styles.input} />
+                <TextInput
+                    placeholder="Enter your full name"
+                    value={fullName}
+                    onChangeText={setFullName}
+                    style={styles.input}
+                />
             </View>
 
             {/* Email input */}
             <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
-                <TextInput placeholder="Enter your email" style={styles.input} keyboardType="email-address" />
+                <TextInput
+                    placeholder="Enter your email"
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={setEmail}
+                    style={styles.input}
+                />
             </View>
 
             {/* Password input */}
@@ -30,10 +74,11 @@ const JobSeekerRegisterScreen = () => {
                 <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
                 <TextInput
                     placeholder="Password"
-                    secureTextEntry={true}
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
                     style={styles.input}
                 />
-                <MaterialIcons name="visibility" size={22} color="#888" style={styles.iconRight} />
             </View>
 
             {/* Confirm Password input */}
@@ -41,10 +86,11 @@ const JobSeekerRegisterScreen = () => {
                 <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
                 <TextInput
                     placeholder="Confirm password"
-                    secureTextEntry={true}
+                    secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
                     style={styles.input}
                 />
-                <MaterialIcons name="visibility" size={22} color="#888" style={styles.iconRight} />
             </View>
 
             {/* Checkbox - Agree terms */}
@@ -56,40 +102,24 @@ const JobSeekerRegisterScreen = () => {
                     style={styles.checkbox}
                 />
                 <Text style={styles.agreeText}>
-                    I agree to the processing and provision of personal data that I have read and agree to the{" "}
+                    I agree to the{" "}
                     <Text style={styles.link}>Terms & Conditions</Text>
                 </Text>
             </View>
 
             {/* Sign up button */}
-            <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Sign Up</Text>
+            <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+                <Text style={styles.buttonText}>
+                    {loading ? "Registering..." : "Sign Up"}
+                </Text>
             </TouchableOpacity>
-
-            {/* Divider */}
-            <View style={styles.divider}>
-                <View style={styles.line} />
-                <Text style={styles.or}>or</Text>
-                <View style={styles.line} />
-            </View>
-
-            {/* Social Login */}
-            <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-google" size={24} color="#DB4437" />
-                <Text style={styles.socialText}>Sign up with Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.socialButton}>
-                <Ionicons name="logo-linkedin" size={24} color="#0077B5" />
-                <Text style={styles.socialText}>Sign up with LinkedIn</Text>
-            </TouchableOpacity>
-        </View>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         justifyContent: "center",
         alignItems: "center",
         padding: 20,
@@ -115,39 +145,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginVertical: 8,
         width: "100%",
-        backgroundColor: "#fff",
         height: 50,
     },
-    icon: {
-        marginRight: 8,
-    },
-    iconRight: {
-        marginLeft: "auto",
-    },
-    input: {
-        flex: 1,
-        paddingVertical: 10,
-    },
+    icon: { marginRight: 8 },
+    input: { flex: 1, paddingVertical: 10 },
     agreeContainer: {
         flexDirection: "row",
         alignItems: "flex-start",
         marginVertical: 12,
         width: "100%",
     },
-    checkbox: {
-        marginRight: 8,
-        marginTop: 3,
-    },
-    agreeText: {
-        flex: 1,
-        color: "#555",
-        fontSize: 14,
-        lineHeight: 20,
-    },
-    link: {
-        color: "#1976d2",
-        fontWeight: "600",
-    },
+    checkbox: { marginRight: 8, marginTop: 3 },
+    agreeText: { flex: 1, color: "#555", fontSize: 14, lineHeight: 20 },
+    link: { color: "#1976d2", fontWeight: "600" },
     button: {
         backgroundColor: "#1976d2",
         paddingVertical: 16,
@@ -156,43 +166,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 10,
     },
-    buttonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "bold",
-    },
-    divider: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginVertical: 16,
-        width: "100%",
-    },
-    line: {
-        flex: 1,
-        height: 1,
-        backgroundColor: "#ccc",
-    },
-    or: {
-        marginHorizontal: 8,
-        fontSize: 14,
-        color: "#555",
-    },
-    socialButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-        height: 50,
-        backgroundColor: "#f5f5f5",
-        borderRadius: 10,
-        marginVertical: 6,
-    },
-    socialText: {
-        marginLeft: 10,
-        fontSize: 16,
-        fontWeight: "500",
-        color: "#333",
-    },
+    buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });
 
 export default JobSeekerRegisterScreen;

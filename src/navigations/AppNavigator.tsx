@@ -44,6 +44,9 @@ import BlogScreen from "../screens/BlogScreen";
 import ArticleDetailScreen from "../screens/ArticleDetailScreen";
 import EmployerLoginScreen from "../screens/Auth/EmployerLoginScreen";
 import EmployerRegisterScreen from "../screens/Auth/EmployerRegisterScreen";
+import MyCompany from "../screens/Employer/MyCompany";
+import UpdateCompanyInfo from "../screens/Employer/UpdateCompanyInfo";
+import UpdateCompanyMedia from "../screens/Employer/UpdateCompanyMedia";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -174,12 +177,15 @@ const MainAppEmployer = () => (
           return <Ionicons name="document-text-outline" size={24} color={color} />;
         if (route.name === "EmployerSetting")
           return <Ionicons name="menu-outline" size={24} color={color} />;
+        if (route.name === "MyCompany")
+          return <Ionicons name="menu-outline" size={24} color={color} />;
       },
     })}
   >
     <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
     <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} />
     <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
+    <Tab.Screen name="MyCompany" component={MyCompany} options={{ title: "Công ty" }} />
   </Tab.Navigator>
 );
 
@@ -210,13 +216,13 @@ const AppNavigator = () => {
     return () => subscription.remove();
   }, []);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+  //       <ActivityIndicator size="large" />
+  //     </View>
+  //   );
+  // }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -238,9 +244,12 @@ const AppNavigator = () => {
             //initialRouteName={isAuthenticated ? "MainApp" : "Login"}
             >
               {/* Auth */}
+              <RootStack.Screen name="UpdateCompanyInfo" component={UpdateCompanyInfo} />
+              <RootStack.Screen name="UpdateCompanyMedia" component={UpdateCompanyMedia} />
+
               <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
               <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
-
+              <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
 
               <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
               <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
@@ -248,20 +257,19 @@ const AppNavigator = () => {
 
               <RootStack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
 
-              <RootStack.Screen name="MainApp" component={MainAppEmployee} />
 
 
 
 
 
-              <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
+
 
               {/* <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} /> */}
 
               <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
 
               {/* Main */}
-
+              <RootStack.Screen name="MainApp" component={MainAppEmployee} />
               <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
             </RootStack.Navigator>
           </NavigationContainer>

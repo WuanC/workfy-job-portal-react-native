@@ -6,7 +6,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import JobCard from "../../components/JobCard";
@@ -45,16 +47,19 @@ const CompanyDetailScreen = () => {
             source={require("../../../assets/App/banner.jpg")}
             style={styles.banner}
           />
+
           {/* Back button */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={26} color="#fff" />
-          </TouchableOpacity>
+          <SafeAreaView style={styles.safeArea}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="chevron-back" size={26} color="#fff" />
+            </TouchableOpacity>
+          </SafeAreaView>
         </View>
 
-        {/* Company info section (overlay style) */}
+        {/* Company info */}
         <View style={styles.headerContainer}>
           <Image
             source={require("../../../assets/App/logoJob.png")}
@@ -103,9 +108,10 @@ const CompanyDetailScreen = () => {
           <View style={styles.contentContainer}>
             <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
             <Text style={styles.description}>
-              DEAIR là công ty công nghệ phát triển các giải pháp phần mềm hiện đại cho doanh nghiệp Việt Nam và quốc tế.
-              Với đội ngũ nhân sự trẻ trung, sáng tạo, chúng tôi tập trung vào việc tạo ra các sản phẩm chất lượng cao,
-              mang lại giá trị thiết thực cho khách hàng.
+              DEAIR là công ty công nghệ phát triển các giải pháp phần mềm hiện đại
+              cho doanh nghiệp Việt Nam và quốc tế. Với đội ngũ nhân sự trẻ trung,
+              sáng tạo, chúng tôi tập trung vào việc tạo ra các sản phẩm chất lượng
+              cao, mang lại giá trị thiết thực cho khách hàng.
             </Text>
 
             <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
@@ -176,19 +182,28 @@ const styles = StyleSheet.create({
     height: 180,
     resizeMode: "cover",
   },
-  backButton: {
+  safeArea: {
     position: "absolute",
-    top: 40, // để không bị che bởi notch
-    left: 15,
+    top: -40,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  backButton: {
+    marginTop: Platform.OS === "ios" ? 10 : 30,
+    marginLeft: 15,
     backgroundColor: "rgba(0,0,0,0.5)",
     borderRadius: 20,
-    padding: 4,
+    padding: 6,
+    alignSelf: "flex-start",
+    zIndex: 10,
+    elevation: 10,
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 15,
-    marginTop: 30, // đè nhẹ lên banner
+    marginTop: 25,
   },
   logo: {
     width: 70,

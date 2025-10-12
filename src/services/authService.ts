@@ -80,14 +80,20 @@ export const registerUser = async (payload: {
 };
 export const confirmEmail = async (token: string) => {
     try {
-        const res = await apiInstance.post(
+        const res = await apiInstance.patch(
             "/auth/users/verify-email",
-            {},
-            { headers: { "C-Token": token } }
+            {}, // hoặc bỏ luôn nếu server không yêu cầu body
+            {
+                headers: { "C-Token": token },
+            }
         );
         return res.data;
     } catch (err: any) {
-        if (err.response?.data?.message) throw new Error(err.response.data.message);
+        console.log("ConfirmEmail error:", err.response?.data || err.message);
+
+        if (err.response?.data?.message)
+            throw new Error(err.response.data.message);
+
         throw new Error("Xác nhận email thất bại.");
     }
 };

@@ -1,5 +1,14 @@
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { 
+    View, 
+    Text, 
+    Image, 
+    TextInput, 
+    TouchableOpacity, 
+    StyleSheet, 
+    Alert, 
+    ScrollView 
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { LOGO_IMG } from "../../utilities/constant";
 import Checkbox from "expo-checkbox";
 import { useState } from "react";
@@ -14,7 +23,6 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
 
     const handleRegister = async () => {
-        console.log("Registering user:", { fullName, email, password, confirmPassword, isChecked });
         if (!fullName || !email || !password || !confirmPassword) {
             Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
             return;
@@ -29,6 +37,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
             Alert.alert("Thông báo", "Bạn cần đồng ý với điều khoản trước khi đăng ký.");
             return;
         }
+
         try {
             setLoading(true);
             const res = await registerUser({ fullName, email, password, confirmPassword });
@@ -113,6 +122,16 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                     {loading ? "Registering..." : "Sign Up"}
                 </Text>
             </TouchableOpacity>
+
+            {/* 🆕 Login link */}
+            <View style={styles.bottomLinks}>
+                <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                    <Text style={styles.linkText}>
+                        Already have an account?{" "}
+                        <Text style={styles.linkHighlight}>Log In</Text>
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </ScrollView>
     );
 };
@@ -167,6 +186,18 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+    bottomLinks: {
+        marginTop: 20,
+        alignItems: "center",
+    },
+    linkText: {
+        color: "#555",
+        fontSize: 14,
+    },
+    linkHighlight: {
+        color: "#1976d2",
+        fontWeight: "bold",
+    },
 });
 
 export default JobSeekerRegisterScreen;

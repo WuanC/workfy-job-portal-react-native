@@ -42,6 +42,8 @@ import CompanyDetailScreen from "../screens/JobSeeker/CompanyDetailScreen";
 import { useAuth } from "../context/AuthContext";
 import BlogScreen from "../screens/BlogScreen";
 import ArticleDetailScreen from "../screens/ArticleDetailScreen";
+import EmployerLoginScreen from "../screens/Auth/EmployerLoginScreen";
+import EmployerRegisterScreen from "../screens/Auth/EmployerRegisterScreen";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -184,37 +186,37 @@ const MainAppEmployer = () => (
 // ========== Root Stack ==========
 const AppNavigator = () => {
   const { isAuthenticated, loading } = useAuth();
-  // 📬 Xử lý deep link xác nhận email
-  // useEffect(() => {
-  //   const handleDeepLink = async (event: { url: string }) => {
-  //     const parsed = Linking.parse(event.url);
-  //     const token = parsed.queryParams?.token;
+  useEffect(() => {
+    const handleDeepLink = async (event: { url: string }) => {
+      const parsed = Linking.parse(event.url);
+      const token = parsed.queryParams?.token;
 
-  //     if (token) {
-  //       try {
-  //         await confirmEmail(token as string);
-  //         navigationRef.current?.navigate("ConfirmEmail");
-  //       } catch (err: any) {
-  //         Alert.alert("Xác nhận thất bại", err.message || "Token không hợp lệ hoặc đã hết hạn.");
-  //       }
-  //     }
-  //   };
+      if (token) {
+        try {
+          await confirmEmail(token as string);
+          console.log("Deep Link URL");
+          navigationRef.current?.navigate("ConfirmEmail");
+        } catch (err: any) {
+          Alert.alert("Xác nhận thất bại", err.message || "Token không hợp lệ hoặc đã hết hạn.");
+        }
+      }
+    };
 
-  //   const subscription = Linking.addEventListener("url", handleDeepLink);
-  //   Linking.getInitialURL().then((url) => {
-  //     if (url) handleDeepLink({ url });
-  //   });
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
+    });
 
-  //   return () => subscription.remove();
-  // }, []);
+    return () => subscription.remove();
+  }, []);
 
-  // if (loading) {
-  //   return (
-  //     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-  //       <ActivityIndicator size="large" />
-  //     </View>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -231,13 +233,21 @@ const AppNavigator = () => {
             }}
           >
             <RootStack.Navigator
-              key={isAuthenticated ? "user" : "guest"}
+              //key={isAuthenticated ? "user" : "guest"}
               screenOptions={{ headerShown: false }}
-              initialRouteName={isAuthenticated ? "MainApp" : "Login"}
+            //initialRouteName={isAuthenticated ? "MainApp" : "Login"}
             >
               {/* Auth */}
-              <RootStack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
+              <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
               <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
+
+
+              <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
+              <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
+
+
+              <RootStack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
+
               <RootStack.Screen name="MainApp" component={MainAppEmployee} />
 
 
@@ -246,7 +256,7 @@ const AppNavigator = () => {
 
               <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
 
-              <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
+              {/* <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} /> */}
 
               <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
 

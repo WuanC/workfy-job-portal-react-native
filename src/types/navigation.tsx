@@ -3,7 +3,6 @@ export type RootStackParamList = {
   JobDetail: undefined
   JobSubmit: undefined
   JobSubmitSuccess: undefined
-  Login: undefined
   MainApp: undefined
   MainAppEmployer: undefined
   SearchFilter: undefined
@@ -20,6 +19,11 @@ export type RootStackParamList = {
 
   //Auth
   ConfirmEmail: undefined
+  Login: undefined
+  Register: undefined
+  EmployerLogin: undefined
+  EmployerRegister: undefined
+
 
   Blog: undefined
   ArticleDetail: { id: number }

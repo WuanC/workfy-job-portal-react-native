@@ -11,7 +11,7 @@ import {
 import Checkbox from "expo-checkbox";
 import RNPickerSelect from "react-native-picker-select";
 import { useEffect, useState } from "react";
-import { registerUser } from "../../services/authService";
+import { registerEmployer } from "../../services/authService"; // ✅ đổi import
 import apiInstance from "../../api/apiInstance";
 
 interface Province {
@@ -55,7 +55,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 if (res.data?.data) {
                     const provinceList = res.data.data.map((item: Province) => ({
                         label: item.name,
-                        value: item.id.toString(), // dùng id để lấy quận/huyện
+                        value: item.id.toString(),
                         id: item.id,
                     }));
                     setProvinces(provinceList);
@@ -104,22 +104,23 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
             Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp.");
             return;
         }
+
         try {
             setLoading(true);
-            await registerUser({
+
+            // ✅ Gọi API đúng theo backend yêu cầu
+            await registerEmployer({
                 email,
                 password,
-                confirmPassword,
                 companyName,
-                employeeCount,
+                companySize: employeeCount,
                 contactPerson,
-                phone,
-                country,
-                province,
-                district,
-                address,
-                receiveJobNews,
+                phoneNumber: phone,
+                provinceId: province ? Number(province) : 0,
+                districtId: district ? Number(district) : 0,
+                detailAddress: address || undefined,
             });
+
             Alert.alert("Thành công", "Đăng ký nhà tuyển dụng thành công!");
             navigation.replace("ConfirmEmail");
         } catch (err: any) {
@@ -172,13 +173,26 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 onChangeText={setCompanyName}
             />
 
-            <TextInput
-                style={styles.input}
-                placeholder="Số nhân viên"
-                keyboardType="numeric"
-                value={employeeCount}
-                onChangeText={setEmployeeCount}
-            />
+            <View style={styles.dropdown}>
+                <RNPickerSelect
+                    onValueChange={setEmployeeCount}
+                    items={[
+                        { label: "Dưới 10 nhân viên", value: "LESS_THAN_10" },
+                        { label: "10 - 24 nhân viên", value: "FROM_10_TO_24" },
+                        { label: "25 - 99 nhân viên", value: "FROM_25_TO_99" },
+                        { label: "100 - 499 nhân viên", value: "FROM_100_TO_499" },
+                        { label: "500 - 999 nhân viên", value: "FROM_500_TO_999" },
+                        { label: "1000 - 4999 nhân viên", value: "FROM_1000_TO_4999" },
+                        { label: "5000 - 9999 nhân viên", value: "FROM_5000_TO_9999" },
+                        { label: "10000 - 19999 nhân viên", value: "FROM_10000_TO_19999" },
+                        { label: "20000 - 49999 nhân viên", value: "FROM_20000_TO_49999" },
+                        { label: "Trên 50000 nhân viên", value: "MORE_THAN_50000" },
+                    ]}
+                    placeholder={{ label: "Chọn quy mô công ty", value: null }}
+                    value={employeeCount}
+                    style={pickerSelectStyles}
+                />
+            </View>
 
             <View style={styles.row}>
                 <TextInput
@@ -198,10 +212,8 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
 
             <Text style={styles.sectionTitle}>Địa chỉ</Text>
 
-            {/* Quốc gia */}
             <TextInput style={styles.input} value={country} editable={false} />
 
-            {/* Province */}
             <View style={styles.dropdown}>
                 {loadingProvince ? (
                     <ActivityIndicator size="small" color="#1976d2" />
@@ -216,7 +228,6 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 )}
             </View>
 
-            {/* District */}
             <View style={styles.dropdown}>
                 {loadingDistrict ? (
                     <ActivityIndicator size="small" color="#1976d2" />
@@ -239,7 +250,6 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 onChangeText={setAddress}
             />
 
-            {/* Checkbox */}
             <View style={styles.checkboxRow}>
                 <Checkbox
                     value={receiveJobNews}
@@ -250,14 +260,12 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 <Text style={styles.checkboxText}>Nhận bản tin việc làm</Text>
             </View>
 
-            {/* Button */}
             <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
                 <Text style={styles.buttonText}>
                     {loading ? "Đang đăng ký..." : "Đăng ký ngay"}
                 </Text>
             </TouchableOpacity>
 
-            {/* Login */}
             <View style={styles.bottomLinks}>
                 <TouchableOpacity onPress={() => navigation.navigate("EmployerLogin")}>
                     <Text style={styles.linkText}>

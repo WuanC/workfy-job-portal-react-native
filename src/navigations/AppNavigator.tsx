@@ -37,7 +37,7 @@ import MyCandidate from "../screens/Employer/MyCandidate";
 import PostJobScreen from "../screens/Employer/PostJobScreen";
 import EmployerSettingScreen from "../screens/Employer/EmployerSettingScreen";
 import CandidateFilter from "../screens/Employer/CandidateFilter";
-import { confirmEmail } from "../services/authService";
+import { confirmEmail, confirmEmailEmployer } from "../services/authService";
 import CompanyDetailScreen from "../screens/JobSeeker/CompanyDetailScreen";
 import { useAuth } from "../context/AuthContext";
 import BlogScreen from "../screens/BlogScreen";
@@ -194,12 +194,13 @@ const AppNavigator = () => {
   const { isAuthenticated, loading } = useAuth();
   useEffect(() => {
     const handleDeepLink = async (event: { url: string }) => {
+      console.log("Handling deep link:", event.url);
       const parsed = Linking.parse(event.url);
       const token = parsed.queryParams?.token;
 
       if (token) {
         try {
-          await confirmEmail(token as string);
+          await confirmEmailEmployer(token as string);
           console.log("Deep Link URL");
           navigationRef.current?.navigate("ConfirmEmail");
         } catch (err: any) {
@@ -244,11 +245,10 @@ const AppNavigator = () => {
             //initialRouteName={isAuthenticated ? "MainApp" : "Login"}
             >
               {/* Auth */}
-              <RootStack.Screen name="UpdateCompanyInfo" component={UpdateCompanyInfo} />
-              <RootStack.Screen name="UpdateCompanyMedia" component={UpdateCompanyMedia} />
+              <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
 
               <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
-              <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
+
               <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
 
               <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
@@ -258,7 +258,8 @@ const AppNavigator = () => {
               <RootStack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
 
 
-
+              <RootStack.Screen name="UpdateCompanyInfo" component={UpdateCompanyInfo} />
+              <RootStack.Screen name="UpdateCompanyMedia" component={UpdateCompanyMedia} />
 
 
 

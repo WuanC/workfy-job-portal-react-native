@@ -2,12 +2,14 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import JobSeekerRegisterScreen from './src/screens/Auth/JobSeekerRegisterScreen';
 import JobSeekerLoginScreen from './src/screens/Auth/JobSeekerLoginScreen';
-import React from 'react';
+import React, { useEffect } from 'react';
 import AppNavigator from './src/navigations/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import { NavigationContainer } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import CVScreen from './src/screens/JobSeeker/CVScreen';
+import * as Linking from 'expo-linking';
+import { confirmEmail } from './src/services/authService';
 
 
 

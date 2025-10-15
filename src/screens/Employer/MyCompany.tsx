@@ -2,250 +2,312 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
+  Image,
   StyleSheet,
+  TouchableOpacity,
   ScrollView,
   Alert,
 } from "react-native";
-import RNPickerSelect from "react-native-picker-select";
-import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
+import JobCard from "../../components/JobCard";
 
-const UpdateCompanyInfo = () => {
+const MyCompany = () => {
   const navigation = useNavigation();
+  const [activeTab, setActiveTab] = useState<"about" | "jobs">("about");
 
-  const [companyName, setCompanyName] = useState("NPT Software");
-  const [employeeCount, setEmployeeCount] = useState("10 - 24");
-  const [province, setProvince] = useState("Bình Thuận");
-  const [city, setCity] = useState("Thành phố Phan Thiết");
-  const [address, setAddress] = useState("34 Trần Hưng Đạo");
-  const [contactName, setContactName] = useState("AB");
-  const [phone, setPhone] = useState("0827555534");
-  const [fax, setFax] = useState("");
-  const [email, setEmail] = useState("a@gmail.com");
-  const [representative, setRepresentative] = useState("Lê Hữu Nam");
-  const [contactPhone, setContactPhone] = useState("");
+  // Ảnh banner & logo
+  const [bannerUri, setBannerUri] = useState<string | null>(null);
+  const [logoUri, setLogoUri] = useState<string | null>(null);
 
-  const handleUpdate = () => {
-    Alert.alert("✅ Thành công", "Thông tin công ty đã được cập nhật!");
+  const jobs = [
+    {
+      id: "1",
+      logo_path: require("../../../assets/App/logoJob.png"),
+      job_title: "UI/UX Designer",
+      company_name: "Công ty Cổ phần Deair",
+      job_location: "Hà Nội",
+      salary_range: "15-25 triệu",
+      time_passed: "2 giờ trước",
+    },
+    {
+      id: "2",
+      logo_path: require("../../../assets/App/logoJob.png"),
+      job_title: "Frontend Developer",
+      company_name: "Công ty Cổ phần Deair",
+      job_location: "TP. Hồ Chí Minh",
+      salary_range: "20-30 triệu",
+      time_passed: "5 giờ trước",
+    },
+  ];
+
+  // 📸 Mở thư viện ảnh
+  const pickImage = async (onPicked: (uri: string) => void) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Quyền truy cập bị từ chối", "Vui lòng cấp quyền truy cập ảnh.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      onPicked(result.assets[0].uri);
+    }
   };
 
-  const handleCancel = () => {
-    navigation.goBack();
+  const onEditBanner = () => {
+    pickImage((uri) => setBannerUri(uri));
+  };
+
+  const onEditLogo = () => {
+    pickImage((uri) => setLogoUri(uri));
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#ffffffff" }}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cập nhậ thông tin công ty</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <ScrollView style={styles.container}>
-        <Text style={styles.title}>Thông tin công ty</Text>
-
-        {/* Tên công ty */}
-        <Text style={styles.label}>Tên công ty *</Text>
-        <TextInput
-          style={styles.input}
-          value={companyName}
-          onChangeText={setCompanyName}
-          placeholder="Nhập tên công ty"
-        />
-
-        {/* Số nhân viên */}
-        <Text style={styles.label}>Số lượng nhân viên *</Text>
-        <View style={styles.dropdown}>
-          <RNPickerSelect
-            onValueChange={setEmployeeCount}
-            items={[
-              { label: "1 - 9", value: "1 - 9" },
-              { label: "10 - 24", value: "10 - 24" },
-              { label: "25 - 50", value: "25 - 50" },
-              { label: "51 - 150", value: "51 - 150" },
-              { label: "150+", value: "150+" },
-            ]}
-            value={employeeCount}
-            placeholder={{ label: "Chọn số lượng nhân viên", value: null }}
-            style={pickerSelectStyles}
-            useNativeAndroidPickerStyle={false}
+    <View style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Banner */}
+        <View style={styles.bannerContainer}>
+          <Image
+            source={
+              bannerUri
+                ? { uri: bannerUri }
+                : require("../../../assets/App/banner.jpg")
+            }
+            style={styles.banner}
           />
-        </View>
-
-        {/* Địa chỉ liên hệ */}
-        <Text style={styles.label}>Địa chỉ liên hệ *</Text>
-        <View style={styles.row}>
-          <View style={[styles.dropdown, { flex: 1, marginRight: 5 }]}>
-            <RNPickerSelect
-              onValueChange={setProvince}
-              items={[
-                { label: "Bình Thuận", value: "Bình Thuận" },
-                { label: "Hà Nội", value: "Hà Nội" },
-                { label: "TP. Hồ Chí Minh", value: "TP. Hồ Chí Minh" },
-              ]}
-              value={province}
-              placeholder={{ label: "Chọn tỉnh/thành", value: null }}
-              style={pickerSelectStyles}
-              useNativeAndroidPickerStyle={false}
-            />
-          </View>
-          <View style={[styles.dropdown, { flex: 1, marginLeft: 5 }]}>
-            <RNPickerSelect
-              onValueChange={setCity}
-              items={[
-                { label: "Thành phố Phan Thiết", value: "Thành phố Phan Thiết" },
-                { label: "Quận 1", value: "Quận 1" },
-                { label: "Quận 3", value: "Quận 3" },
-              ]}
-              value={city}
-              placeholder={{ label: "Chọn quận/huyện", value: null }}
-              style={pickerSelectStyles}
-              useNativeAndroidPickerStyle={false}
-            />
-          </View>
-        </View>
-
-        <TextInput
-          style={styles.input}
-          value={address}
-          onChangeText={setAddress}
-          placeholder="Nhập địa chỉ liên hệ"
-        />
-
-        <Text style={styles.note}>
-          *Thông tin bạn điền vào bên dưới sẽ được sử dụng làm liên hệ mặc định cho mỗi mục công việc.
-        </Text>
-
-        {/* Thông tin liên hệ */}
-        <Text style={styles.label}>Tên liên hệ</Text>
-        <TextInput style={styles.input} value={contactName} onChangeText={setContactName} />
-
-        <Text style={styles.label}>Điện thoại</Text>
-        <TextInput
-          style={styles.input}
-          value={phone}
-          keyboardType="phone-pad"
-          onChangeText={setPhone}
-        />
-
-        <Text style={styles.label}>Fax</Text>
-        <TextInput style={styles.input} value={fax} onChangeText={setFax} />
-
-        <Text style={styles.label}>Email liên hệ *</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          keyboardType="email-address"
-          onChangeText={setEmail}
-        />
-
-        <Text style={styles.label}>Tên người liên hệ *</Text>
-        <TextInput style={styles.input} value={representative} onChangeText={setRepresentative} />
-
-        <Text style={styles.label}>Điện thoại liên hệ</Text>
-        <TextInput
-          style={styles.input}
-          value={contactPhone}
-          keyboardType="phone-pad"
-          onChangeText={setContactPhone}
-        />
-
-        {/* Nút */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelText}>Hủy</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
-            <Text style={styles.updateText}>Cập nhật</Text>
+          <TouchableOpacity style={styles.editBannerButton} onPress={onEditBanner}>
+            <Ionicons name="create-outline" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
+
+        {/* Company info */}
+        <View style={styles.headerContainer}>
+          <View style={{ position: "relative" }}>
+            <Image
+              source={
+                logoUri
+                  ? { uri: logoUri }
+                  : require("../../../assets/App/logoJob.png")
+              }
+              style={styles.logo}
+            />
+            <TouchableOpacity style={styles.editLogoButton} onPress={onEditLogo}>
+              <Ionicons name="create-outline" size={16} color="#007bff" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flex: 1, marginLeft: 10 }}>
+            <Text style={styles.companyName}>CÔNG TY CỔ PHẦN DEAIR</Text>
+            <Text style={styles.companyLocation}>Hà Nội, Việt Nam</Text>
+            <Text style={styles.companySize}>Quy mô: 51 - 150 nhân viên</Text>
+          </View>
+
+          <TouchableOpacity style={styles.editIcon}>
+            <Ionicons name="create-outline" size={20} color="#007bff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === "about" && styles.activeTab]}
+            onPress={() => setActiveTab("about")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "about" && styles.activeTabText,
+              ]}
+            >
+              About us
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabButton, activeTab === "jobs" && styles.activeTab]}
+            onPress={() => setActiveTab("jobs")}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "jobs" && styles.activeTabText,
+              ]}
+            >
+              Opening jobs
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content */}
+        {activeTab === "about" ? (
+          <View style={styles.contentContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
+              <TouchableOpacity style={styles.editSmallButton}>
+                <Ionicons name="create-outline" size={18} color="#007bff" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.description}>
+              DEAIR là công ty công nghệ phát triển các giải pháp phần mềm hiện đại
+              cho doanh nghiệp Việt Nam và quốc tế. Với đội ngũ nhân sự trẻ trung,
+              sáng tạo, chúng tôi tập trung vào việc tạo ra các sản phẩm chất lượng
+              cao, mang lại giá trị thiết thực cho khách hàng.
+            </Text>
+
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
+              <TouchableOpacity style={styles.editSmallButton}>
+                <Ionicons name="create-outline" size={18} color="#007bff" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons name="globe-outline" size={18} color="#007bff" />
+              <Text style={styles.infoText}>www.deair.vn</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="logo-facebook" size={18} color="#007bff" />
+              <Text style={styles.infoText}>facebook.com/deair.vn</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="logo-linkedin" size={18} color="#007bff" />
+              <Text style={styles.infoText}>linkedin.com/company/deair</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="logo-youtube" size={18} color="#007bff" />
+              <Text style={styles.infoText}>youtube.com/@deair</Text>
+            </View>
+
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Hình ảnh</Text>
+              <TouchableOpacity style={styles.editSmallButton}>
+                <Ionicons name="create-outline" size={18} color="#007bff" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.photoRow}>
+              <Image
+                source={require("../../../assets/App/logo.png")}
+                style={styles.photo}
+              />
+              <Image
+                source={require("../../../assets/App/logo.png")}
+                style={styles.photo}
+              />
+              <Image
+                source={require("../../../assets/App/logo.png")}
+                style={styles.photo}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.contentContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Việc làm đang tuyển</Text>
+              <TouchableOpacity style={styles.editSmallButton}>
+                <Ionicons name="create-outline" size={18} color="#007bff" />
+              </TouchableOpacity>
+            </View>
+
+            {jobs.map((item) => (
+              <JobCard
+                key={item.id}
+                logo_path={item.logo_path}
+                job_title={item.job_title}
+                company_name={item.company_name}
+                job_location={item.job_location}
+                salary_range={item.salary_range}
+                time_passed={item.time_passed}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
+  container: { flex: 1, backgroundColor: "#fff" },
+  bannerContainer: { position: "relative" },
+  banner: { width: "100%", height: 180, resizeMode: "cover" },
+  editBannerButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 16,
+    padding: 6,
+  },
+  headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#000000ff",
-    paddingTop: 50,
-    paddingBottom: 15,
-    paddingHorizontal: 10,
-    justifyContent: "space-between",
+    paddingHorizontal: 15,
+    marginTop: 15,
   },
-  backButton: { padding: 8 },
-  headerTitle: { color: "#fff", fontSize: 18, fontWeight: "600" },
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#222" },
-  label: { fontSize: 14, color: "#333", marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 50,
-    marginTop: 5,
-    fontSize: 15,
-  },
-  dropdown: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    height: 50,
-    justifyContent: "center",
-    marginTop: 5,
+  logo: {
+    width: 70,
+    height: 70,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#fff",
     backgroundColor: "#fff",
-    overflow: "hidden",
-    paddingHorizontal: 10,
   },
-  row: { flexDirection: "row", justifyContent: "space-between", marginTop: 5 },
-  note: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 8,
-    fontStyle: "italic",
+  editLogoButton: {
+    position: "absolute",
+    bottom: 0,
+    right: -5,
+    borderRadius: 12,
+    padding: 4,
   },
-  buttonRow: {
+  companyName: { fontSize: 18, fontWeight: "bold", color: "#333" },
+  companyLocation: { fontSize: 14, color: "#555", marginTop: 2 },
+  companySize: { fontSize: 13, color: "#777", marginTop: 2 },
+  editIcon: { padding: 5 },
+  tabContainer: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 25,
-    marginBottom: 100,
-    gap: 10,
+    justifyContent: "space-around",
+    marginVertical: 15,
   },
-  cancelButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-    backgroundColor: "#eee",
+  tabButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 25,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
   },
-  cancelText: { color: "#333", fontWeight: "500" },
-  updateButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-    backgroundColor: "#007bff",
+  activeTab: { backgroundColor: "#007bff20" },
+  tabText: { color: "#333", fontWeight: "500" },
+  activeTabText: { color: "#007bff", fontWeight: "700" },
+  contentContainer: { paddingHorizontal: 15, paddingBottom: 30 },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
   },
-  updateText: { color: "#fff", fontWeight: "600" },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#333" },
+  editSmallButton: { padding: 5 },
+  description: {
+    fontSize: 14,
+    color: "#444",
+    lineHeight: 20,
+    textAlign: "justify",
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  infoText: { marginLeft: 8, color: "#007bff" },
+  photoRow: { flexDirection: "row", gap: 10, marginTop: 8 },
+  photo: { width: 100, height: 70, borderRadius: 8 },
 });
 
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 15,
-    color: "#333",
-    paddingVertical: 12,
-  },
-  inputAndroid: {
-    fontSize: 15,
-    color: "#333",
-    paddingVertical: 10,
-  },
-  placeholder: { color: "#999" },
-});
-
-export default UpdateCompanyInfo;
+export default MyCompany;

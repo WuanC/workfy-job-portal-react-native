@@ -97,3 +97,65 @@ export const confirmEmail = async (token: string) => {
         throw new Error("Xác nhận email thất bại.");
     }
 };
+export const confirmEmailEmployer = async (token: string) => {
+    try {
+        const res = await apiInstance.patch(
+            "/auth/employers/verify-email",
+            {}, // hoặc bỏ luôn nếu server không yêu cầu body
+            {
+                headers: { "C-Token": token },
+            }
+        );
+        return res.data;
+    } catch (err: any) {
+        console.log("ConfirmEmail error:", err.response?.data || err.message);
+
+        if (err.response?.data?.message)
+            throw new Error(err.response.data.message);
+
+        throw new Error("Xác nhận email thất bại.");
+    }
+};
+
+export interface EmployerRegisterRequest {
+    email: string;
+    password: string;
+    companyName: string;
+    companySize: string;
+    contactPerson: string;
+    phoneNumber: string;
+    provinceId: number;
+    districtId: number;
+    detailAddress?: string;
+}
+
+export const registerEmployer = async (payload: EmployerRegisterRequest) => {
+    try {
+        const res = await apiInstance.post("/employers/sign-up", payload);
+        return res.data; // trả về data để UI hiển thị message
+    } catch (err: any) {
+        // Nếu có phản hồi từ server (status 400 / 409 / 500)
+        if (err.response && err.response.data) {
+            const data = err.response.data;
+
+            // Nếu có danh sách lỗi cụ thể (400 Bad Request)
+            if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                const firstError = data.errors[0];
+                throw new Error(`${firstError.fieldName}: ${firstError.message}`);
+            }
+
+            // Nếu có message chung (409 hoặc 500)
+            if (data.message) {
+                throw new Error(data.message);
+            }
+        }
+
+        // Nếu request được gửi nhưng không nhận phản hồi
+        if (err.request) {
+            throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại server.");
+        }
+
+        // Lỗi khác (do code hoặc axios)
+        throw new Error(err.message || "Đăng ký nhà tuyển dụng thất bại, vui lòng thử lại.");
+    }
+};

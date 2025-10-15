@@ -7,13 +7,23 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "workify", 
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.workifyjobportalreactnative",
+      "associatedDomains": ["applinks:workify"],
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["workify"]
+          }
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,13 +37,11 @@
           "data": [
             {
               "scheme": "workify",
-              "host": "verify-email"
+              "host": "*",
+              "pathPrefix": "/verify-email"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "package": "com.anonymous.workifyjobportalreactnative"

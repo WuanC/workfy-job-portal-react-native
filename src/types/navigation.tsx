@@ -16,6 +16,8 @@ export type RootStackParamList = {
   //Employer
   PostJob : undefined
   EmployerSearchFilter: undefined
+  UpdateCompanyInfo: { id: number }
+  UpdateCompanyMedia: undefined
 
   //Auth
   ConfirmEmail: undefined

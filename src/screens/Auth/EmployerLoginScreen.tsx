@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
+import { loginEmployer } from "../../services/authService";
 
 type MainNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -31,24 +32,30 @@ const EmployerLoginScreen = () => {
     const navigation = useNavigation<MainNavigationProp>();
 
     const handleLogin = async () => {
-        // if (!email || !password) {
-        //   Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
-        //   return;
-        // }
-        console.log("Employer logged in");
-        navigation.replace("MainAppEmployer");
+        if (!email || !password) {
+            Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
+            return;
+        }
+        try {
+             await loginEmployer({email, password});
+            
+            navigation.replace("MainAppEmployer");
+
+
+        }
+        catch (error: any) {
+            Alert.alert('Lỗi', error.message || 'Đăng nhập thất bại');
+            console.error(error);
+        } finally {
+            //setLoading(false);
+        }
         // try {
         //     setLoading(true);
         //     //await login(email, password);
         //     setTimeout(() => {
 
         //     }, 100);
-        // } catch (error: any) {
-        //     Alert.alert('Lỗi', error.message || 'Đăng nhập thất bại');
-        //     console.error(error);
-        // } finally {
-        //     setLoading(false);
-        // }
+
     };
 
     return (

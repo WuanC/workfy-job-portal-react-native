@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,24 +11,138 @@ import {
 import RNPickerSelect from "react-native-picker-select";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { getEmployerById, getEmployerProfile, updateEmployerProfile } from "../../services/employerService";
+import apiInstance from "../../api/apiInstance";
+import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor";
 
-const UpdateCompanyInfo = () => {
+const UpdateCompanyInfo = ({ route }: any) => {
+  const { id } = route.params as { id: number };
   const navigation = useNavigation();
 
   const [companyName, setCompanyName] = useState("NPT Software");
-  const [employeeCount, setEmployeeCount] = useState("10 - 24");
-  const [province, setProvince] = useState("Bình Thuận");
-  const [city, setCity] = useState("Thành phố Phan Thiết");
+  const [employeeCount, setEmployeeCount] = useState("");
+  const [province, setProvince] = useState<Number>();
+  const [district, setDistrict] = useState<Number>();
   const [address, setAddress] = useState("34 Trần Hưng Đạo");
-  const [contactName, setContactName] = useState("AB");
-  const [phone, setPhone] = useState("0827555534");
   const [fax, setFax] = useState("");
   const [email, setEmail] = useState("a@gmail.com");
-  const [representative, setRepresentative] = useState("Lê Hữu Nam");
+  const [contactPerson, setContactPerson] = useState("Lê Hữu Nam");
   const [contactPhone, setContactPhone] = useState("");
+  const [description, setDescription] = useState("");
 
-  const handleUpdate = () => {
-    Alert.alert("✅ Thành công", "Thông tin công ty đã được cập nhật!");
+  const [provinces, setProvinces] = useState<{ label: string; value: string; id: number }[]>([]);
+  const [districts, setDistricts] = useState<{ label: string; value: string }[]>([]);
+  interface Province {
+    id: number;
+    code: string;
+    name: string;
+    engName: string;
+  }
+
+  interface District {
+    id: number;
+    code: string;
+    name: string;
+  }
+  interface ProvincePicker {
+
+  }
+  const richDesc = useRef<RichEditor>(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [provinceRes, employerData] = await Promise.all([
+          apiInstance.get("/provinces"),
+          getEmployerProfile(),
+        ]);
+
+        // --- provinces ---
+        if (provinceRes.data?.data) {
+          const provinceList = provinceRes.data.data.map((item: Province) => ({
+            label: item.name,
+            value: item.id,
+            id: item.id,
+          }));
+          setProvinces(provinceList);
+        }
+
+        // --- company info ---
+        setCompanyName(employerData.companyName || "");
+        setEmployeeCount(employerData.companySize || "");
+        setProvince(employerData.province?.id || "");
+        setAddress(employerData.detailAddress || "");
+        setContactPhone(employerData.phoneNumber || "");
+        setEmail(employerData.email || "");
+        setContactPerson(employerData.contactPerson || "");
+        setDescription(employerData.aboutCompany || "");
+
+        // --- districts ---
+        if (employerData.province?.id) {
+          const res = await apiInstance.get(`/districts/province/${employerData.province.id}`);
+          if (res.data?.data) {
+            const districtList = res.data.data.map((d: District) => ({
+              label: d.name,
+              value: d.id,
+              id: d.id,
+            }));
+            setDistricts(districtList);
+            setDistrict(employerData.district?.id || "");
+          }
+        }
+      } catch (error) {
+        Alert.alert("Lỗi", "Không thể tải thông tin công ty");
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const handleSelectProvince = async (provinceId: Number) => {
+    setProvince(provinceId);
+    setDistrict(-1);
+    setDistricts([]);
+
+    if (!provinceId) return;
+
+    try {
+      //setLoadingDistrict(true);
+      const res = await apiInstance.get(`/districts/province/${provinceId}`);
+      if (res.data?.data) {
+        const districtList = res.data.data.map((d: District) => ({
+          label: d.name,
+          value: d.id,
+          id: d.id,
+        }));
+        setDistricts(districtList);
+      }
+    } catch (err: any) {
+      console.error("Lỗi lấy quận/huyện:", err.message);
+      Alert.alert("Lỗi", "Không thể tải danh sách quận/huyện.");
+    } finally {
+      //setLoadingDistrict(false);
+    }
+  };
+  const handleUpdate = async () => {
+    try {
+      const payload = {
+        companyName,
+        companySize: employeeCount, // giá trị enum như "FROM_100_TO_499"
+        contactPerson,
+        phoneNumber: contactPhone,
+        provinceId: province ? Number(province) : 0,
+        districtId: district ? Number(district) : 0,
+        detailAddress: address,
+        aboutCompany: description || "",
+
+      };
+      await updateEmployerProfile(payload);
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert("Lỗi", "Cập nhật thông tin công ty thất bại.");
+    }
+    finally {
+
+    }
   };
 
   const handleCancel = () => {
@@ -64,11 +178,17 @@ const UpdateCompanyInfo = () => {
           <RNPickerSelect
             onValueChange={setEmployeeCount}
             items={[
-              { label: "1 - 9", value: "1 - 9" },
-              { label: "10 - 24", value: "10 - 24" },
-              { label: "25 - 50", value: "25 - 50" },
-              { label: "51 - 150", value: "51 - 150" },
-              { label: "150+", value: "150+" },
+              { label: "Dưới 10", value: "LESS_THAN_10" },
+              { label: "10 - 24", value: "FROM_10_TO_24" },
+              { label: "25 - 99", value: "FROM_25_TO_99" },
+              { label: "100 - 499", value: "FROM_100_TO_499" },
+              { label: "500 - 999", value: "FROM_500_TO_999" },
+              { label: "1.000 - 1.999", value: "FROM_1000_TO_1999" },
+              { label: "2.000 - 4.999", value: "FROM_2000_TO_4999" },
+              { label: "5.000 - 9.999", value: "FROM_5000_TO_9999" },
+              { label: "10.000 - 19.999", value: "FROM_10000_TO_19999" },
+              { label: "20.000 - 49.999", value: "FROM_20000_TO_49999" },
+              { label: "Trên 50.000", value: "MORE_THAN_50000" },
             ]}
             value={employeeCount}
             placeholder={{ label: "Chọn số lượng nhân viên", value: null }}
@@ -76,18 +196,31 @@ const UpdateCompanyInfo = () => {
             useNativeAndroidPickerStyle={false}
           />
         </View>
-
+        <Text style={styles.label}>
+          Sơ lược công ty<Text style={styles.label}>*</Text>
+        </Text>
+        <View style={styles.richContainer}>
+          <RichToolbar
+            editor={richDesc}
+            actions={[actions.setBold, actions.setItalic, actions.setUnderline, actions.insertBulletsList]}
+            style={styles.toolbar}
+          />
+          <RichEditor
+            ref={richDesc}
+            placeholder="Giới thiệu ngắn gọn về công ty..."
+            style={styles.richEditor}
+            initialContentHTML={description}
+            initialHeight={150}
+            onChange={setDescription}
+          />
+        </View>
         {/* Địa chỉ liên hệ */}
         <Text style={styles.label}>Địa chỉ liên hệ *</Text>
         <View style={styles.row}>
           <View style={[styles.dropdown, { flex: 1, marginRight: 5 }]}>
             <RNPickerSelect
-              onValueChange={setProvince}
-              items={[
-                { label: "Bình Thuận", value: "Bình Thuận" },
-                { label: "Hà Nội", value: "Hà Nội" },
-                { label: "TP. Hồ Chí Minh", value: "TP. Hồ Chí Minh" },
-              ]}
+              onValueChange={handleSelectProvince}
+              items={provinces}
               value={province}
               placeholder={{ label: "Chọn tỉnh/thành", value: null }}
               style={pickerSelectStyles}
@@ -96,13 +229,12 @@ const UpdateCompanyInfo = () => {
           </View>
           <View style={[styles.dropdown, { flex: 1, marginLeft: 5 }]}>
             <RNPickerSelect
-              onValueChange={setCity}
-              items={[
-                { label: "Thành phố Phan Thiết", value: "Thành phố Phan Thiết" },
-                { label: "Quận 1", value: "Quận 1" },
-                { label: "Quận 3", value: "Quận 3" },
-              ]}
-              value={city}
+              onValueChange={(value, index) => {
+                setDistrict(value)
+
+              }}
+              items={districts}
+              value={district}
               placeholder={{ label: "Chọn quận/huyện", value: null }}
               style={pickerSelectStyles}
               useNativeAndroidPickerStyle={false}
@@ -121,20 +253,7 @@ const UpdateCompanyInfo = () => {
           *Thông tin bạn điền vào bên dưới sẽ được sử dụng làm liên hệ mặc định cho mỗi mục công việc.
         </Text>
 
-        {/* Thông tin liên hệ */}
-        <Text style={styles.label}>Tên liên hệ</Text>
-        <TextInput style={styles.input} value={contactName} onChangeText={setContactName} />
 
-        <Text style={styles.label}>Điện thoại</Text>
-        <TextInput
-          style={styles.input}
-          value={phone}
-          keyboardType="phone-pad"
-          onChangeText={setPhone}
-        />
-
-        <Text style={styles.label}>Fax</Text>
-        <TextInput style={styles.input} value={fax} onChangeText={setFax} />
 
         <Text style={styles.label}>Email liên hệ *</Text>
         <TextInput
@@ -145,7 +264,7 @@ const UpdateCompanyInfo = () => {
         />
 
         <Text style={styles.label}>Tên người liên hệ *</Text>
-        <TextInput style={styles.input} value={representative} onChangeText={setRepresentative} />
+        <TextInput style={styles.input} value={contactPerson} onChangeText={setContactPerson} />
 
         <Text style={styles.label}>Điện thoại liên hệ</Text>
         <TextInput
@@ -232,6 +351,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#007bff",
   },
   updateText: { color: "#fff", fontWeight: "600" },
+  placeholder: { color: "#999" },
+  richContainer: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    overflow: "hidden",
+    marginHorizontal: 1,
+  },
+  toolbar: { borderBottomWidth: 1, borderColor: "#ddd", backgroundColor: "#f5f5f5" },
+  richEditor: { padding: 10, minHeight: 150, backgroundColor: "#fff" },
 });
 
 const pickerSelectStyles = StyleSheet.create({
@@ -245,7 +375,7 @@ const pickerSelectStyles = StyleSheet.create({
     color: "#333",
     paddingVertical: 10,
   },
-  placeholder: { color: "#999" },
+
 });
 
 export default UpdateCompanyInfo;

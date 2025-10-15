@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,47 +12,81 @@ import {
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
+import apiInstance from "../../api/apiInstance"; // ✅ đảm bảo đúng đường dẫn
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import { getEmployerProfile, updateEmployerWebsiteUrls } from "../../services/employerService";
 
 const UpdateCompanyMedia = () => {
   const navigation = useNavigation();
 
   const [websiteLinks, setWebsiteLinks] = useState([""]);
-  const [socialLinks, setSocialLinks] = useState({
-    facebook: "",
-    youtube: "",
-    google: "",
-    linkedin: "",
-    twitter: "",
-  });
+  const [linkedinUrl, setLinkedinUrl] = useState("");
   const [companyImage, setCompanyImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleAddWebsite = () => {
-    setWebsiteLinks([...websiteLinks, ""]);
-  };
+  /** 🧠 Lấy dữ liệu từ API /me */
+  useEffect(() => {
+    const fetchEmployerData = async () => {
+      try {
+        const data = await getEmployerProfile();
+        if (data) {
+          setWebsiteLinks(data.websiteUrls && data.websiteUrls.length > 0 ? data.websiteUrls : [""]);
+          setLinkedinUrl(data.linkedinUrl || "");
+          setCompanyImage(data.backgroundUrl || null);
+        }
+      } catch (error) {
+        console.log("❌ Lỗi khi lấy employer:", error);
+      }
+    };
 
+    fetchEmployerData();
+  }, []);
+
+  /** ➕ Thêm website */
+  const handleAddWebsite = () => setWebsiteLinks((prev) => [...prev, ""]);
+
+  /** ✏️ Thay đổi website */
   const handleWebsiteChange = (index: number, text: string) => {
     const updated = [...websiteLinks];
     updated[index] = text;
     setWebsiteLinks(updated);
   };
 
+  /** 🗑️ Xóa website */
+  const handleRemoveWebsite = (index: number) => {
+    setWebsiteLinks((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  /** 📷 Chọn ảnh công ty */
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
     });
+    if (!result.canceled) setCompanyImage(result.assets[0].uri);
+  };
 
-    if (!result.canceled) {
-      setCompanyImage(result.assets[0].uri);
+  /** 🔙 Quay lại */
+  const handleCancel = () => navigation.goBack();
+
+  /** 💾 Cập nhật */
+  const handleUpdate = async () => {
+    try {
+      setLoading(true);
+      const payload = {
+        websiteUrls: websiteLinks.filter((url) => url.trim() !== ""),
+        linkedinUrl,
+      };
+
+      await updateEmployerWebsiteUrls(payload);
+      Alert.alert("✅ Thành công", "Cập nhật liên kết và hình ảnh công ty thành công!");
+      navigation.goBack();
+    } catch (error) {
+      console.log("❌ Lỗi khi cập nhật:", error);
+      Alert.alert("❌ Lỗi", "Không thể cập nhật thông tin.");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    navigation.goBack();
-  };
-
-  const handleUpdate = () => {
-    Alert.alert("✅ Thành công", "Hình ảnh và mạng xã hội công ty đã được cập nhật!");
   };
 
   return (
@@ -62,60 +96,46 @@ const UpdateCompanyMedia = () => {
         <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Hình ảnh & mạng xã hội</Text>
+        <Text style={styles.headerTitle}>Liên kết & hình ảnh</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Hình ảnh và mạng xã hội công ty</Text>
+        <Text style={styles.title}>Website & Liên kết mạng xã hội</Text>
 
         {/* Website */}
-        <Text style={styles.label}>Trang web</Text>
+        <Text style={styles.label}>Trang web công ty</Text>
         {websiteLinks.map((link, index) => (
           <View key={index} style={styles.inputRow}>
             <Ionicons name="globe-outline" size={20} color="#666" style={{ marginRight: 8 }} />
             <TextInput
               style={styles.input}
-              placeholder="Nhập liên kết"
+              placeholder="https://example.com"
               value={link}
               onChangeText={(text) => handleWebsiteChange(index, text)}
             />
+            {index > 0 && (
+              <TouchableOpacity onPress={() => handleRemoveWebsite(index)}>
+                <Ionicons name="remove-circle" size={22} color="red" />
+              </TouchableOpacity>
+            )}
           </View>
         ))}
         <TouchableOpacity style={styles.addLinkBtn} onPress={handleAddWebsite}>
-          <Text style={styles.addLinkText}>+ Thêm mới</Text>
+          <Text style={styles.addLinkText}>+ Thêm website</Text>
         </TouchableOpacity>
 
-        {/* Mạng xã hội */}
-        <Text style={[styles.label, { marginTop: 20 }]}>Mạng xã hội</Text>
-        {Object.entries(socialLinks).map(([key, value]) => (
-          <View key={key} style={styles.inputRow}>
-            <FontAwesome
-              name={
-                key === "facebook"
-                  ? "facebook"
-                  : key === "youtube"
-                  ? "youtube-play"
-                  : key === "google"
-                  ? "google"
-                  : key === "linkedin"
-                  ? "linkedin"
-                  : "twitter"
-              }
-              size={20}
-              color="#1877F2"
-              style={{ marginRight: 8 }}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập liên kết"
-              value={value}
-              onChangeText={(text) =>
-                setSocialLinks((prev) => ({ ...prev, [key]: text }))
-              }
-            />
-          </View>
-        ))}
+        {/* LinkedIn */}
+        <Text style={[styles.label, { marginTop: 20 }]}>LinkedIn</Text>
+        <View style={styles.inputRow}>
+          <FontAwesome name="linkedin" size={20} color="#1877F2" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.input}
+            placeholder="https://linkedin.com/company/your-company"
+            value={linkedinUrl}
+            onChangeText={setLinkedinUrl}
+          />
+        </View>
 
         {/* Hình ảnh công ty */}
         <Text style={[styles.label, { marginTop: 20 }]}>Hình ảnh công ty</Text>
@@ -135,8 +155,8 @@ const UpdateCompanyMedia = () => {
           <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
             <Text style={styles.cancelText}>Hủy</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
-            <Text style={styles.updateText}>Cập nhật</Text>
+          <TouchableOpacity style={styles.updateButton} onPress={handleUpdate} disabled={loading}>
+            <Text style={styles.updateText}>{loading ? "Đang lưu..." : "Cập nhật"}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -144,6 +164,7 @@ const UpdateCompanyMedia = () => {
   );
 };
 
+/** 🎨 Giao diện gốc giữ nguyên */
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",

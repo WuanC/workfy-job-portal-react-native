@@ -1,6 +1,7 @@
 // services/authService.ts
 //const BASE_URL = "http://localhost:8080/workify/api/v1/auth";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiInstance from "../api/apiInstance";
 
 export interface LoginRequest {
@@ -35,6 +36,11 @@ export const loginUser = async (payload: LoginRequest) => {
 export const loginEmployer = async (payload: LoginRequest) => {
     try {
         const res = await apiInstance.post("/auth/employers/sign-in", payload);
+         const { accessToken } = res.data?.data || {};
+         console.log("Access Token:", accessToken);
+         if (accessToken) {
+              await AsyncStorage.setItem("accessToken", accessToken);
+         }
         return res.data.data as TokenResponse;
     } catch (err: any) {
         if (err.response) {

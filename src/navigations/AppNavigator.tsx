@@ -107,6 +107,15 @@ const EmployerCandidateStackScreen = () => (
     <MenuStack.Screen name="EmployerSearchFilter" component={CandidateFilter} />
   </MenuStack.Navigator>
 );
+const EmployerMyCompanyStackScreen = () => (
+  <MenuStack.Navigator screenOptions={{ headerShown: false }}>
+    <MenuStack.Screen name="MyCompany" component={MyCompany} />
+    <MenuStack.Screen name="UpdateCompanyInfo" component={UpdateCompanyInfo} />
+    <MenuStack.Screen name="UpdateCompanyMedia" component={UpdateCompanyMedia} />
+
+  </MenuStack.Navigator>
+);
+
 
 // ========== Bottom Tabs ==========
 const MainAppEmployee = () => (
@@ -177,7 +186,7 @@ const MainAppEmployer = () => (
           return <Ionicons name="document-text-outline" size={24} color={color} />;
         if (route.name === "EmployerSetting")
           return <Ionicons name="menu-outline" size={24} color={color} />;
-        if (route.name === "MyCompany")
+        if (route.name === "MyCompanStack")
           return <Ionicons name="menu-outline" size={24} color={color} />;
       },
     })}
@@ -185,7 +194,7 @@ const MainAppEmployer = () => (
     <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
     <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} />
     <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
-    <Tab.Screen name="MyCompany" component={MyCompany} options={{ title: "Công ty" }} />
+    <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: "Công ty" }} />
   </Tab.Navigator>
 );
 

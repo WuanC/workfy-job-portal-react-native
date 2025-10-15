@@ -10,18 +10,20 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { updateEmployerPassword } from "../../services/employerService"; // 👈 thêm import
 
 const EmployerSettingScreen = () => {
   const [activeTab, setActiveTab] = useState<"profile" | "notification">("profile");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("bo11082007@gmail.com");
-  const [showEmailForm, setShowEmailForm] = useState(false); // 👈 Thêm state này
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false); // 👈 loading state
 
-  // Chọn ảnh đại diện
+  // 📸 Chọn ảnh đại diện
   const pickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -39,15 +41,38 @@ const EmployerSettingScreen = () => {
     }
   };
 
+  // 🔐 Đổi mật khẩu
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await updateEmployerPassword(currentPassword, newPassword);
+      Alert.alert("✅ Thành công", res.message || "Cập nhật mật khẩu thành công.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      Alert.alert("❌ Lỗi", err.message || "Cập nhật mật khẩu thất bại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* ---------- HEADER ---------- */}
       <Text style={styles.header}>Cài đặt</Text>
-      <Text style={styles.subHeader}>
-        Quản lý cài đặt cá nhân và tổ chức của bạn.
-      </Text>
+      <Text style={styles.subHeader}>Quản lý cài đặt cá nhân và tổ chức của bạn.</Text>
 
-      {/* ---------- TAB ---------- */}
+      {/* TAB */}
       <View style={styles.tabRow}>
         <TouchableOpacity
           onPress={() => setActiveTab("profile")}
@@ -61,9 +86,7 @@ const EmployerSettingScreen = () => {
           onPress={() => setActiveTab("notification")}
           style={[styles.tabButton, activeTab === "notification" && styles.activeTab]}
         >
-          <Text
-            style={[styles.tabText, activeTab === "notification" && styles.activeText]}
-          >
+          <Text style={[styles.tabText, activeTab === "notification" && styles.activeText]}>
             Thông báo
           </Text>
         </TouchableOpacity>
@@ -72,7 +95,7 @@ const EmployerSettingScreen = () => {
       <ScrollView style={styles.scroll}>
         {activeTab === "profile" ? (
           <>
-            {/* ---------- HỒ SƠ ---------- */}
+            {/* Hồ sơ */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Hồ sơ</Text>
               <Text style={styles.sectionDesc}>
@@ -103,46 +126,10 @@ const EmployerSettingScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {/* ---------- EMAIL ---------- */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Email</Text>
-              <Text style={styles.sectionDesc}>
-                Quản lý và thay đổi địa chỉ email cá nhân của bạn.
-              </Text>
-              <Text style={styles.emailText}>
-                Email hiện tại: <Text style={styles.email}>{email}</Text>
-              </Text>
-
-              <TouchableOpacity
-                style={styles.outlineBtn}
-                onPress={() => setShowEmailForm(!showEmailForm)} // 👈 Toggle form
-              >
-                <Text style={styles.outlineText}>Cập nhật email</Text>
-              </TouchableOpacity>
-
-              {/* 👇 Thêm form xổ ra */}
-              {showEmailForm && (
-                <View style={styles.expandArea}>
-                  <TextInput
-                    placeholder="Nhập mật khẩu hiện tại"
-                    secureTextEntry
-                    style={styles.input}
-                  />
-                  <TextInput placeholder="Nhập email mới" style={styles.input} />
-                  <TextInput placeholder="Nhập xác nhận email mới" style={styles.input} />
-                  <TouchableOpacity style={styles.primaryBtn}>
-                    <Text style={styles.primaryText}>Cập nhật email</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-
-            {/* ---------- MẬT KHẨU ---------- */}
+            {/* Mật khẩu */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Mật khẩu</Text>
-              <Text style={styles.sectionDesc}>
-                Thay đổi mật khẩu hiện tại của bạn.
-              </Text>
+              <Text style={styles.sectionDesc}>Thay đổi mật khẩu hiện tại của bạn.</Text>
 
               <TextInput
                 style={styles.input}
@@ -166,8 +153,14 @@ const EmployerSettingScreen = () => {
                 onChangeText={setConfirmPassword}
               />
 
-              <TouchableOpacity style={styles.primaryBtn}>
-                <Text style={styles.primaryText}>Cập nhật mật khẩu</Text>
+              <TouchableOpacity
+                style={[styles.primaryBtn, loading && { opacity: 0.6 }]}
+                onPress={handleChangePassword}
+                disabled={loading}
+              >
+                <Text style={styles.primaryText}>
+                  {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                </Text>
               </TouchableOpacity>
             </View>
           </>
@@ -183,6 +176,7 @@ const EmployerSettingScreen = () => {
 };
 
 export default EmployerSettingScreen;
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f9fafb" },

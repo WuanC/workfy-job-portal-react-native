@@ -24,7 +24,7 @@ export default function EmployerJobCard({
   };
 
   return (
-    <TouchableOpacity style={styles.card}>
+    <View style={styles.card}>
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={[styles.statusTag, { backgroundColor: getStatusColor() }]}>
@@ -62,7 +62,7 @@ export default function EmployerJobCard({
           <Ionicons name="person-circle-outline" size={22} color="#bbb" />
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 

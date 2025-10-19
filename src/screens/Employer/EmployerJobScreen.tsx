@@ -16,6 +16,7 @@ import EmployerJobCard from "../../components/Employer/EmployerJobCard";
 import { RootStackParamList } from "../../types/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
+import { getMyJobs } from "../../services/jobService";
 
 type EmployerJobNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -40,52 +41,23 @@ export default function EmployerJobScreen() {
     const [careerOptions, setCareerOptions] = useState<{ id: number; name: string }[]>([]);
     const [locationOptions, setLocationOptions] = useState<{ id: number; name: string }[]>([]);
 
-    useEffect(() => {
-        // Giả lập gọi API
-        setLoading(true);
-        setTimeout(() => {
-            setStatusOptions([
-                { id: 1, name: "Bản tạm" },
-                { id: 2, name: "Đang chờ" },
-                { id: 3, name: "Kích hoạt" },
-                { id: 4, name: "Hết hạn" },
-                { id: 5, name: "Ẩn" },
-            ]);
-            setCareerOptions([
-                { id: 1, name: "IT - Phần mềm" },
-                { id: 2, name: "Kinh doanh" },
-                { id: 3, name: "Thiết kế" },
-                { id: 4, name: "Kế toán" },
-            ]);
-            setLocationOptions([
-                { id: 1, name: "TP. Hồ Chí Minh" },
-                { id: 2, name: "Hà Nội" },
-                { id: 3, name: "Đà Nẵng" },
-            ]);
 
-            // Dữ liệu job giả
-            setJobs([
-                {
-                    id: 1,
-                    status: "Bản tạm",
-                    title: "(Chưa có tiêu đề)",
-                    duration: "60 ngày",
-                    dateRange: "9 thg 9 2025 - 9 thg 11 2025",
-                    applications: 0,
-                    views: 0,
-                },
-                {
-                    id: 2,
-                    status: "Kích hoạt",
-                    title: "Nhân viên kinh doanh",
-                    duration: "30 ngày",
-                    dateRange: "1 thg 10 2025 - 30 thg 10 2025",
-                    applications: 5,
-                    views: 47,
-                },
-            ]);
-            setLoading(false);
-        }, 800);
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                setLoading(true);
+                const res = await getMyJobs();
+                if (res.status === 200) {
+                    setJobs(res.data.items);
+                }
+            } catch (err) {
+                console.error("Lỗi khi lấy danh sách công việc:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchJobs();
     }, []);
 
     // Chọn / Bỏ chọn filter
@@ -179,18 +151,21 @@ export default function EmployerJobScreen() {
             ) : (
                 <FlatList
                     data={jobs.filter((j) =>
-                        j.title.toLowerCase().includes(search.toLowerCase())
+                        j?.jobTitle?.toLowerCase().includes(search.toLowerCase())
                     )}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                         <EmployerJobCard
-                            status={item.status === "Bản tạm" ? "draft" : "active"}
-                            title={item.title}
-                            duration={item.duration}
-                            dateRange={item.dateRange}
-                            applications={item.applications}
-                            views={item.views}
+                            status={item.status?.toLowerCase() || "pending"}
+                            title={item.jobTitle}
+                            duration={"60 ngày"}
+                            dateRange={`${new Date(item.createdAt).toLocaleDateString("vi-VN")} - ${new Date(
+                                item.expirationDate
+                            ).toLocaleDateString("vi-VN")}`}
+                            applications={0}
+                            views={0}
                         />
+
                     )}
                     contentContainerStyle={{ paddingBottom: 40 }}
                 />
@@ -251,4 +226,5 @@ const styles = StyleSheet.create({
     },
     optionRow: { flexDirection: "row", alignItems: "center", padding: 10 },
     optionText: { fontSize: 15 },
-});
+})
+

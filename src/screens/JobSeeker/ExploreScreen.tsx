@@ -26,11 +26,12 @@ import { getLatestPosts } from "../../services/postService"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { RootStackParamList } from "../../types/navigation"
 import { useNavigation } from "@react-navigation/native"
+import { getPopularIndustries } from "../../services/jobService"
 
 const { width } = Dimensions.get("window")
 type ExploreNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Blog"
+    RootStackParamList,
+    "Blog"
 >;
 const ExploreScreen = () => {
     const [searchValue, setSearchValue] = useState("")
@@ -77,17 +78,28 @@ const ExploreScreen = () => {
         extrapolate: "clamp",
     })
 
-    const jobCategories = [
-        { id: 1, title: "An Ninh / Bảo Vệ", count: "72 Việc làm", color: "#B3D9FF" },
-        { id: 2, title: "An Toàn Lao Động", count: "254 Việc làm", color: "#FFE4B3" },
-        { id: 3, title: "Bán hàng / Kinh doanh", count: "15098 Việc làm", color: "#FFD1DC" },
-        { id: 4, title: "Bán lẻ", count: "3083 Việc làm", color: "#D1FFD1" },
-        { id: 5, title: "Mới tốt nghiệp / Thực tập", count: "2131 Việc làm", color: "#B3FFE6" },
-        { id: 6, title: "Ngân hàng / Chứng khoán", count: "928 Việc làm", color: "#E6D1FF" },
-        { id: 7, title: "Nghệ thuật / Thiết kế / Giải trí", count: "626 Việc làm", color: "#D1E6FF" },
-        { id: 8, title: "Người giúp việc", count: "4 Việc làm", color: "#FFEBB3" },
-    ]
+    // const jobCategories = [
+    //     { id: 1, title: "An Ninh / Bảo Vệ", count: "72 Việc làm", color: "#B3D9FF" },
+    //     { id: 2, title: "An Toàn Lao Động", count: "254 Việc làm", color: "#FFE4B3" },
+    //     { id: 3, title: "Bán hàng / Kinh doanh", count: "15098 Việc làm", color: "#FFD1DC" },
+    //     { id: 4, title: "Bán lẻ", count: "3083 Việc làm", color: "#D1FFD1" },
+    //     { id: 5, title: "Mới tốt nghiệp / Thực tập", count: "2131 Việc làm", color: "#B3FFE6" },
+    //     { id: 6, title: "Ngân hàng / Chứng khoán", count: "928 Việc làm", color: "#E6D1FF" },
+    //     { id: 7, title: "Nghệ thuật / Thiết kế / Giải trí", count: "626 Việc làm", color: "#D1E6FF" },
+    //     { id: 8, title: "Người giúp việc", count: "4 Việc làm", color: "#FFEBB3" },
+    // ]
+    const [industries, setIndustries] = useState<any[]>([]);
 
+    const colorPalette = [
+        "#B3D9FF",
+        "#FFE4B3",
+        "#FFD1DC",
+        "#D1FFD1",
+        "#B3FFE6",
+        "#E6D1FF",
+        "#D1E6FF",
+        "#FFEBB3",
+    ];
     const featuredJobs = [
         {
             id: 1,
@@ -166,7 +178,25 @@ const ExploreScreen = () => {
             const data = await getLatestPosts(5);
             setCareerAdvice(data);
         };
+        const fetchIndustries = async () => {
+            try {
+                const data = await getPopularIndustries(10); // data là mảng luôn rồi
 
+                if (Array.isArray(data)) {
+                    const coloredIndustries = data.map((item: any, index: number) => ({
+                        ...item,
+                        color: colorPalette[index % colorPalette.length],
+                    }));
+
+                    setIndustries(coloredIndustries);
+                } else {
+                    console.warn("⚠️ Dữ liệu ngành nghề không phải mảng:", data);
+                }
+            } catch (error) {
+                console.error("❌ Lỗi khi load ngành nghề phổ biến:", error);
+            }
+        };
+        fetchIndustries();
         fetchPosts();
     }, []);
     // const careerAdvice = [
@@ -188,8 +218,8 @@ const ExploreScreen = () => {
 
     const renderJobCategory = (category: any) => (
         <TouchableOpacity key={category.id} style={[styles.categoryCard, { backgroundColor: category.color }]}>
-            <Text style={styles.categoryTitle}>{category.title}</Text>
-            <Text style={styles.categoryCount}>{category.count}</Text>
+            <Text style={styles.categoryTitle}>{category.name}</Text>
+            <Text style={styles.categoryCount}>{category.jobCount} Việc làm</Text>
         </TouchableOpacity>
     )
 
@@ -220,8 +250,8 @@ const ExploreScreen = () => {
 
 
     const renderJobCategoriesGrid = () => {
-        const firstRow = jobCategories.slice(0, Math.ceil(jobCategories.length / 2))
-        const secondRow = jobCategories.slice(Math.ceil(jobCategories.length / 2))
+        const firstRow = industries.slice(0, Math.ceil(industries.length / 2))
+        const secondRow = industries.slice(Math.ceil(industries.length / 2))
 
         return (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
@@ -304,7 +334,7 @@ const ExploreScreen = () => {
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Công việc hấp dẫn</Text>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate("SearchMain", {initialTab: "industries"})}>
                             <Text style={styles.seeAllText}>Xem tất cả</Text>
                         </TouchableOpacity>
                     </View>

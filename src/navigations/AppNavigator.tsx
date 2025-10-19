@@ -47,6 +47,7 @@ import EmployerRegisterScreen from "../screens/Auth/EmployerRegisterScreen";
 import MyCompany from "../screens/Employer/MyCompany";
 import UpdateCompanyInfo from "../screens/Employer/UpdateCompanyInfo";
 import UpdateCompanyMedia from "../screens/Employer/UpdateCompanyMedia";
+import UpdateJobScreen from "../screens/Employer/UpdateJobScreen";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -64,6 +65,8 @@ const ExploreStackScreen = () => (
     <ExploreStack.Screen name="JobSubmit" component={JobSubmitScreen} />
     <ExploreStack.Screen name="JobSubmitSuccess" component={JobSubmitSucessScreen} />
     <RootStack.Screen name="Blog" component={BlogScreen} />
+    <SearchStack.Screen name="SearchMain" component={SearchScreen} />
+        <SearchStack.Screen name="SearchFilter" component={FilterScreen} />
   </ExploreStack.Navigator>
 );
 
@@ -98,6 +101,7 @@ const EmployerJobStackScreen = () => (
   <MenuStack.Navigator screenOptions={{ headerShown: false }}>
     <MenuStack.Screen name="EmployerJob" component={EmployerJobScreen} />
     <MenuStack.Screen name="PostJob" component={PostJobScreen} />
+    <MenuStack.Screen name="UpdateJob" component={UpdateJobScreen} />
   </MenuStack.Navigator>
 );
 

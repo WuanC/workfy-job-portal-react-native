@@ -5,6 +5,7 @@ export type RootStackParamList = {
   JobSubmitSuccess: undefined
   MainApp: undefined
   MainAppEmployer: undefined
+  SearchMain: {initialTab: string} | undefined
   SearchFilter: undefined
   Chat: undefined
 
@@ -15,6 +16,7 @@ export type RootStackParamList = {
 
   //Employer
   PostJob : undefined
+  UpdateJob: {id: number}
   EmployerSearchFilter: undefined
   UpdateCompanyInfo: { id: number }
   UpdateCompanyMedia: undefined

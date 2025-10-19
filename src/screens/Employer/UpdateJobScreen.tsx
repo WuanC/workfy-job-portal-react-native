@@ -18,10 +18,12 @@ import { Dropdown } from "react-native-element-dropdown";
 import { getAllIndustries, Industry } from "../../services/industryService";
 import { getAllProvince, Province } from "../../services/provinceService";
 import { District, getDistrictById, getDistrictsByProvince } from "../../services/districtService";
-import { createJob, JobRequest } from "../../services/jobService";
+import { createJob, getJobById, JobRequest, updateJob } from "../../services/jobService";
 import { JobLocation } from "../../types/type";
 
-const PostJobScreen = () => {
+const UpdateJobScreen = ({ route }: any) => {
+
+  const { id } = route.params as { id: number };
   const navigation = useNavigation();
   //-- Province
   const [listProvinces, setListProvinces] = useState<Province[]>([])
@@ -88,7 +90,26 @@ const PostJobScreen = () => {
   const richContact = useRef<RichEditor>(null);
   const richRequirement = useRef<RichEditor>(null);
   const richJobDescription = useRef<RichEditor>(null);
-
+  useEffect(() => {
+    if (richAboutCompany.current && aboutCompany) {
+      richAboutCompany.current.setContentHTML(aboutCompany);
+    }
+  }, [aboutCompany]);
+  useEffect(() => {
+    if (richContact.current && description) {
+      richContact.current.setContentHTML(description);
+    }
+  }, [description]);
+  useEffect(() => {
+    if (richRequirement.current && requirement) {
+      richRequirement.current.setContentHTML(requirement);
+    }
+  }, [requirement]);
+  useEffect(() => {
+    if (richJobDescription.current && jobDescription) {
+      richJobDescription.current.setContentHTML(jobDescription);
+    }
+  }, [jobDescription]);
 
   // --- Hàm submit ---
   const handleSubmit = async () => {
@@ -181,7 +202,7 @@ const PostJobScreen = () => {
       };
       // ======== 3️⃣ GỌI API ========
       console.log("📦 jobData gửi lên:", JSON.stringify(jobData, null, 2));
-      const res = await createJob(jobData);
+      const res = await updateJob(id, jobData);
       if (res.status === 200) {
         Alert.alert("🎉 Thành công", "Công việc đã được đăng!");
         navigation.goBack()
@@ -223,12 +244,67 @@ const PostJobScreen = () => {
 
     const load = async () => {
       try {
+        const job = await getJobById(id);
         const data = await getAllIndustries();
         const listProvinces = await getAllProvince(); // gọi service bạn đã viết
         if (cancelled) return;
 
         setIndustries(data);
         setListProvinces(listProvinces)
+
+        setCompanyName(job.companyName || "");
+        setCompanySize(job.companySize || "");
+        setCompanyWebSite(job.companyWebsite || "");
+        setAboutCompany(job.aboutCompany || "");
+
+        setJobTitle(job.jobTitle || "");
+        setSalaryType(job.salaryType || "");
+        setMinSalary(job.minSalary || null);
+        setMaxSalary(job.maxSalary || null);
+        setSalaryUnit(job.salaryUnit || "");
+
+        setJobDescription(job.jobDescription || "");
+        setRequirement(job.requirement || "");
+
+        setEducation(job.educationLevel || "");
+        setExperience(job.experienceLevel || "");
+        setJobLevel(job.jobLevel || "");
+        setJobType(job.jobType || "");
+        setJobGender(job.gender || "");
+        setJobCode(job.jobCode || "");
+        setAgeType(job.ageType || "");
+        setMinAge(job.minAge || null);
+        setMaxAge(job.maxAge || null);
+        setDescription(job.description || "");
+
+        // --- Ngành nghề ---
+        if (job.industries && job.industries.length > 0) {
+          setSelectIndustryList(job.industries.map((i: any) => i.id));
+        }
+
+
+        // --- Địa chỉ làm việc ---
+        if (job.jobLocations && job.jobLocations.length > 0) {
+          const loc = job.jobLocations[0];
+          setJobProvinceId(loc.province?.id || null);
+          setJobDistrictId(loc.district?.id || null);
+          setJobDetailAddress(loc.detailAddress || "");
+        }
+
+        // --- Liên hệ ---
+        setContactName(job.contactPerson || "");
+        setContactPhone(job.phoneNumber || "");
+        if (job.contactLocation) {
+          setContactProvinceId(job.contactLocation.province?.id || null);
+          setContactDistrictId(job.contactLocation.district?.id || null);
+          setContactDetailAddress(job.contactLocation.detailAddress || "");
+        }
+
+        // --- Ngày hết hạn ---
+        if (job.expirationDate) {
+          // Backend trả ISO date → chuyển sang Date object
+          setExpiryDate(new Date(job.expirationDate));
+        }
       } catch (err: any) {
         if (cancelled) return;
         console.error("Lỗi load", err);
@@ -285,7 +361,7 @@ const PostJobScreen = () => {
       {/* ---------- HEADER ---------- */}
       <View style={styles.header}>
         <Ionicons name="arrow-back" size={24} color="#000000ff" onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>Đăng tin tuyển dụng</Text>
+        <Text style={styles.headerTitle}>Sửa tin tuyển dụng</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -883,7 +959,7 @@ const PostJobScreen = () => {
   );
 };
 
-export default PostJobScreen;
+export default UpdateJobScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },

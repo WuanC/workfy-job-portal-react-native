@@ -36,9 +36,7 @@
           "action": "VIEW",
           "data": [
             {
-              "scheme": "workify",
-              "host": "*",
-              "pathPrefix": "/verify-email"
+              "scheme": "workify"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

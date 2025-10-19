@@ -3,36 +3,62 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 interface Props {
-  status?: "draft" | "active" | "exprired";
+  status?: "draft" | "active" | "expired";
   title: string;
   duration: string;
   dateRange: string;
   views?: number;
   applications?: number;
+  onOptionsPress?: () => void;
 }
 
-export default function EmployerJobCard({
+export const EmployerJobCard = ({
   status = "draft",
   title,
   duration,
   dateRange,
   views = 0,
   applications = 0,
-}: Props) {
+  onOptionsPress,
+}: Props) => {
   const getStatusColor = () => {
-    return status === "draft" ? "#607d8b" : "#4caf50";
+    switch (status) {
+      case "active":
+        return "#4caf50";
+      case "expired":
+        return "#f44336";
+      default:
+        return "#607d8b";
+    }
   };
+
+  // const getStatusText = () => {
+  //   switch (status) {
+  //     case "active":
+  //       return "ĐANG DUYỆT";
+  //     case "expired":
+  //       return "HẾT HẠN";
+  //     default:
+  //       return "BẢN TẠM";
+  //   }
+  // };
 
   return (
     <View style={styles.card}>
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={[styles.statusTag, { backgroundColor: getStatusColor() }]}>
-          <Text style={styles.statusText}>
-            {status === "draft" ? "BẢN TẠM" : "ĐANG DUYỆT"}
-          </Text>
+          <Text style={styles.statusText}>{status}</Text>
         </View>
-        <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
+
+        {/* 👇 Thêm TouchableOpacity để click dấu ba chấm */}
+        <TouchableOpacity
+          onPress={onOptionsPress}
+          activeOpacity={0.6}
+          style={styles.iconButton}
+        >
+          <Ionicons name="ellipsis-horizontal" size={22} color="#555" />
+        </TouchableOpacity>
       </View>
 
       {/* Title */}
@@ -57,14 +83,14 @@ export default function EmployerJobCard({
           <Text style={styles.footerText}>{views}</Text>
         </View>
 
-        <View style={{ marginLeft: "auto" }}>
+        <View style={{ marginLeft: "auto", alignItems: "center" }}>
           <Text style={styles.createdBy}>Được tạo bởi</Text>
           <Ionicons name="person-circle-outline" size={22} color="#bbb" />
         </View>
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -92,6 +118,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "600",
+  },
+  iconButton: {
+    padding: 4,
   },
   title: {
     fontSize: 16,

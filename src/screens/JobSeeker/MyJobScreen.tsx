@@ -129,7 +129,7 @@ const MyJobScreen = () => {
                         <View style={styles.modalContent}>
                             <TouchableOpacity style={styles.option} onPress={() => {
                                 toggleModal();
-                                navigation.navigate("JobDetail")
+                                navigation.navigate("JobDetail", {id: 1})
                             }
                             }>
                                 <Ionicons name="eye-outline" size={20} color="#333" />
@@ -181,6 +181,7 @@ const MyJobScreen = () => {
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
                             <JobCard
+                                id = {1}
                                 logo_path={item.logo_path}
                                 job_title={item.job_title}
                                 company_name={item.company_name}

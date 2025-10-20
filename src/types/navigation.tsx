@@ -1,12 +1,16 @@
+import { AdvancedJobQuery } from "../services/jobService";
 
 export type RootStackParamList = {
-  JobDetail: undefined
+  JobDetail: {id: number}
   JobSubmit: undefined
   JobSubmitSuccess: undefined
   MainApp: undefined
   MainAppEmployer: undefined
-  SearchMain: {initialTab: string} | undefined
-  SearchFilter: undefined
+  SearchMain: { initialTab: string } | undefined | { advanceFilter: AdvancedJobQuery }
+  SearchFilter: {
+    currentFilter?: any;
+    onApply?: (filter: any) => void;
+  };
   Chat: undefined
 
   //Settings
@@ -15,8 +19,8 @@ export type RootStackParamList = {
   ChangeEmail: undefined
 
   //Employer
-  PostJob : undefined
-  UpdateJob: {id: number}
+  PostJob: undefined
+  UpdateJob: { id: number }
   EmployerSearchFilter: undefined
   UpdateCompanyInfo: { id: number }
   UpdateCompanyMedia: undefined

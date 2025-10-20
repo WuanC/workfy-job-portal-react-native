@@ -15,6 +15,7 @@ import { RootStackParamList } from "../../types/navigation";
 import SearchBar from "../../components/SearchBar";
 import JobCard from "../../components/JobCard";
 import { getAllIndustries, Industry } from "../../services/industryService"; // 👈 import đúng API của bạn
+import { AdvancedJobQuery, getAdvancedJobs } from "../../services/jobService";
 
 type FilterNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -25,31 +26,13 @@ const SearchScreen = ({ route }: any) => {
     const initialTab = (route.params as any)?.initialTab || "jobs";
 
 
-
+    const [advanceFilter, setAdvanceFilter] = useState<AdvancedJobQuery | null>(null);
     const navigation = useNavigation<FilterNavigationProp>();
     const [activeTab, setActiveTab] = useState<"jobs" | "industries">(initialTab);
 
     // --- Jobs demo ---
-    const [jobs, setJobs] = useState([
-        {
-            id: "1",
-            logo_path: require("../../../assets/App/logoJob.png"),
-            job_title: "Market Research Executive",
-            company_name: "Công ty TNHH Became Tokyu",
-            job_location: "Bình Dương",
-            slary_range: "Thương lượng",
-            time_passed: "1 giờ trước",
-        },
-        {
-            id: "2",
-            logo_path: require("../../../assets/App/logoJob.png"),
-            job_title: "Software Engineer",
-            company_name: "Công ty TNHH ABC",
-            job_location: "Hồ Chí Minh",
-            slary_range: "20-30 triệu",
-            time_passed: "2 giờ trước",
-        },
-    ]);
+    const [searchText, setSearchText] = useState<string>("")
+    const [jobs, setJobs] = useState<any[]>([]);
 
     // --- Industries ---
     const [industries, setIndustries] = useState<Industry[]>([]);
@@ -59,7 +42,22 @@ const SearchScreen = ({ route }: any) => {
             fetchIndustries();
         }
     }, [activeTab]);
-
+    useEffect(() => {
+        if (advanceFilter) {
+            fetchFilteredJobs(advanceFilter);
+        }
+    }, [advanceFilter]);
+    const fetchFilteredJobs = async (filter: any) => {
+        try {
+            setLoading(true);
+            const data = await getAdvancedJobs(filter);
+            setJobs(data.items);
+        } catch (error) {
+            console.error("❌ Lỗi khi lấy danh sách công việc đã lọc:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
     const fetchIndustries = async () => {
         try {
             setLoading(true);
@@ -77,9 +75,17 @@ const SearchScreen = ({ route }: any) => {
             {/* 🔍 Thanh tìm kiếm */}
             <SearchBar
                 placeholder="Tìm kiếm công việc, công ty..."
-                value=""
-                onChangeText={() => { }}
-                onSubmit={() => { }}
+                value={searchText}
+                onChangeText={(text) => {
+                    setSearchText(text)
+                    setAdvanceFilter((prev) => ({
+                        ...prev,
+                        keyword: text,
+                    }));
+                }}
+                onSubmit={() => {
+                    if (advanceFilter) fetchFilteredJobs(advanceFilter);
+                }}
             />
 
             {/* Tabs */}
@@ -122,7 +128,14 @@ const SearchScreen = ({ route }: any) => {
 
                 <TouchableOpacity
                     style={styles.inactiveTab}
-                    onPress={() => navigation.navigate("SearchFilter")}
+                    onPress={() =>
+                        navigation.navigate("SearchFilter", {
+                            currentFilter: advanceFilter,
+                            onApply: (newFilter: any) => {
+                                setAdvanceFilter(newFilter);
+                            },
+                        })
+                    }
                 >
                     <Ionicons name="filter" size={25} color="black" style={styles.icon} />
                 </TouchableOpacity>
@@ -141,12 +154,23 @@ const SearchScreen = ({ route }: any) => {
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
                             <JobCard
-                                logo_path={item.logo_path}
-                                job_title={item.job_title}
-                                company_name={item.company_name}
-                                job_location={item.job_location}
-                                salary_range={item.slary_range}
-                                time_passed={item.time_passed}
+                                id = {item.id}
+                                logo_path={item.avatarUrl}
+                                job_title={item.jobTitle}
+                                company_name={item.companyName}
+                                job_location={item.jobLocations[0].province.name}
+                                salary_range={
+                                    item.salaryType === "RANGE"
+                                        ? `${item.minSalary?.toLocaleString()} ${item.salaryUnit}  - ${item.maxSalary?.toLocaleString()} ${item.salaryUnit} `
+                                        : item.salaryType === "GREATER_THAN"
+                                            ? `Trên ${item.minSalary?.toLocaleString()}`
+                                            : item.salaryType === "NEGOTIABLE"
+                                                ? "Thỏa thuận"
+                                                : item.salaryType === "COMPETITIVE"
+                                                    ? "Cạnh tranh"
+                                                    : "Không rõ"
+                                }
+                                time_passed={item.expirationDate}
                             />
                         )}
                         contentContainerStyle={{ paddingBottom: 80 }}
@@ -165,7 +189,16 @@ const SearchScreen = ({ route }: any) => {
                             <TouchableOpacity
                                 key={item.id}
                                 style={styles.industryCard}
-                                onPress={() => console.log("🔹 Nhấn ngành:", item.name)}
+                                onPress={() => {
+                                    const newFilter = {
+                                        ...advanceFilter,
+                                        industryIds: [item.id], // ✅ chỉ giữ 1 industry được chọn
+                                    };
+
+                                    setAdvanceFilter(newFilter);
+                                    setActiveTab("jobs");     // ✅ chuyển về tab "Công việc"
+                                    fetchFilteredJobs(newFilter); // ✅ gọi lại API lấy danh sách việc làm
+                                }}
                             >
                                 <View style={styles.iconBox}>
                                     <Ionicons name="briefcase-outline" size={22} color="#007bff" />

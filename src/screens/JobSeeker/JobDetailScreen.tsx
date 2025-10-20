@@ -26,7 +26,9 @@ type JobSubmitNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "JobSubmit"
 >;
-export default function JobDetailScreen() {
+
+const JobDetailScreen = ({ route }: any) => {
+  const { id } = route.params as { id: number };
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const headerOpacity = scrollY.interpolate({
@@ -262,7 +264,7 @@ export default function JobDetailScreen() {
     </View>
   );
 }
-
+export default JobDetailScreen;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e1eff5ff" },
   banner: {
@@ -282,7 +284,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginTop: 22
   },
-    backBtnHide: {
+  backBtnHide: {
     position: "absolute",   // đẩy xuống 1 chút cho thoát khỏi status bar
     left: 16, // nền mờ để dễ nhìn
     padding: 8,

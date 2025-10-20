@@ -84,6 +84,12 @@ export const JobStatus = {
   CLOSED: "Đã đóng",
   EXPIRED: "Hết hạn",
 };
+export const Sort = {
+  createdAt: "Ngày đăng",
+  updateAt: "Ngày cập nhật",
+  expirationDate: "Sắp hết hạn"
+
+}
 
 // ===== UTILS =====
 

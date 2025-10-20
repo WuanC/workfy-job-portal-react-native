@@ -1,460 +1,605 @@
-"use client"
+"use client";
 
-import { useNavigation } from "@react-navigation/native"
-import { useState, useRef, useMemo } from "react"
+import { useNavigation } from "@react-navigation/native";
+import { useState, useRef, useMemo, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  FlatList,
   TextInput,
-} from "react-native"
-import { Ionicons } from "@expo/vector-icons"
-import BottomSheet, { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from "@gorhom/bottom-sheet"
-import Slider from "@react-native-community/slider"
-import { GestureHandlerRootView } from "react-native-gesture-handler"
-
-
-const FilterScreen = () => {
-  const navigation = useNavigation()
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import BottomSheet, {
+  BottomSheetModalProvider,
+  BottomSheetFlatList,
+  BottomSheetModal,
+} from "@gorhom/bottom-sheet";
+import {
+  EducationLevel,
+  ExperienceLevel,
+  getEnumOptions,
+  JobLevel,
+  JobType,
+  Sort,
+} from "../../utilities/constant";
+import { getAllProvince, Province } from "../../services/provinceService";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { getAllIndustries, Industry } from "../../services/industryService";
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
+import { AdvancedJobQuery, getAdvancedJobs, getAllJobsAdmin, updateJobStatus } from "../../services/jobService";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../../types/navigation";
+type FilterNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "SearchMain"
+>;
+const FilterScreen = ({ route }: any) => {
+  const navigation = useNavigation<FilterNavigationProp>()
+  const { currentFilter, onApply } = route.params;
+  useEffect(() => {
+    if (currentFilter) {
+      setSelectedSort(currentFilter.sort || "");
+      setSelectedIndustry(currentFilter.industryIds || []);
+      setSelectedLocations(currentFilter.provinceIds || []);
+      setSelectedJobLevels(currentFilter.jobLevels || []);
+      setSelectedJobType(currentFilter.jobTypes || []);
+      setSelectedExperienceLevels(currentFilter.experienceLevels || []);
+      setSelectedEducationLevels(currentFilter.educationLevels || []);
+      if (currentFilter.minSalary && currentFilter.maxSalary) {
+        setSalaryRange([
+          currentFilter.minSalary / 100, 
+          currentFilter.maxSalary / 100,
+        ]);
+      }
+    }
+  }, [currentFilter]);
   const toggleSelect = (
     id: string,
     selected: string[],
     setSelected: React.Dispatch<React.SetStateAction<string[]>>
   ) => {
-
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    )
-  }
-  // State chọn lọc
-  const [selectedDate, setSelectedDate] = useState("1")
-  const [selectedRank, setSelectedRank] = useState<string[]>([])
-  const [selectedExperience, setSelectedExperience] = useState<string[]>([])
-  const [selectedEducation, setSelectedEducation] = useState<string[]>([])
-  const [selectedJobType, setSelectedJobType] = useState<string[]>([])
-  const [selectedIndustry, setSelectedIndustry] = useState<string[]>([])
-  const [salaryRange, setSalaryRange] = useState(50)
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([])
-  const [selectedJobs, setSelectedJobs] = useState<string[]>([])
+    );
+  };
+  const toggleSelectNumber = (
+    id: number,
+    selected: number[],
+    setSelected: React.Dispatch<React.SetStateAction<number[]>>
+  ) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
-  const [query, setQuery] = useState<string>()
-  // Data cho filter
-  const dateFilter = [
-    { id: "1", label: "Ngày cập nhật" },
-    { id: "2", label: "Ngày đăng" },
-    { id: "3", label: "Sắp hết hạn" },
-  ]
+  const handleSearch = async () => {
+    try {
+      // console.log("🧩 [DEBUG] Giá trị filter hiện tại:");
+      // console.log("selectedSort:", selectedSort);
+      // console.log("selectedIndustry:", selectedIndustry);
+      // console.log("selectedLocations:", selectedLocations);
+      // console.log("selectedJobLevels:", selectedJobLevels);
+      //console.log("selectedJobType:", selectedJobType);
+      // console.log("selectedExperienceLevels:", selectedExperienceLevels);
+      // console.log("selectedEducationLevels:", selectedEducationLevels);
+      // console.log("salaryRange:", salaryRange);
+      const filter: AdvancedJobQuery = {
+        keyword: currentFilter.keyword, // bạn có thể thêm ô nhập keyword nếu cần
+        industryIds: selectedIndustry,
+        provinceIds: selectedLocations,
+        jobLevels: selectedJobLevels,
+        jobTypes: selectedJobType,
+        experienceLevels: selectedExperienceLevels,
+        educationLevels: selectedEducationLevels,
+        //postedWithinDays: Number(selectedDate),
+        minSalary: salaryRange[0] * 100,  // convert từ triệu
+        maxSalary: salaryRange[1] * 100,
+        //salaryUnit: "VND",
+        sort: selectedSort,
+        pageNumber: 1,
+        pageSize: 10,
+      }
+      //await updateJobStatus(1, "APPROVED");
+      //const res = await getAdvancedJobs(filter);
 
-  const location = [
-    { id: "1", label: "Hồ Chí Minh" },
-    { id: "2", label: "Hà Nội" },
-    { id: "3", label: "Đà Nẵng" },
-    { id: "4", label: "Hải Phòng" },
-  ]
-  const job = [
-    { id: "1", label: "Bác sĩ" },
-    { id: "2", label: "An ninh/ Bảo vệ" },
-    { id: "3", label: "CNTT-Phần mềm" },
-    { id: "4", label: "CNTT-phần cứng" },
-  ]
-  const rank = [
-    { id: "1", label: "Sinh viên / Thực tập sinh" },
-    { id: "2", label: "Mới đi làm" },
-    { id: "3", label: "Nhân viên" },
-    { id: "4", label: "Trưởng nhóm / Giám sát" },
-    { id: "5", label: "Quản lý / Trưởng phòng" },
-    { id: "6", label: "Giám đốc" },
-    { id: "7", label: "Quản lý cấp cao" },
-    { id: "8", label: "Điều hành cấp cao" },
-  ]
-
-  const experience = [
-    { id: "1", label: "0 - 1 năm" },
-    { id: "2", label: "1 - 2 năm" },
-    { id: "3", label: "2 - 5 năm" },
-    { id: "4", label: "5 - 10 năm" },
-    { id: "5", label: "Hơn 10 năm" },
-  ]
-
-  const education = [
-    { id: "1", label: "Trung học phổ thông" },
-    { id: "2", label: "Trung cấp" },
-    { id: "3", label: "Cử nhân" },
-    { id: "4", label: "Thạc sĩ" },
-    { id: "5", label: "Tiến sĩ" },
-  ]
-
-  const jobTypes = [
-    { id: "1", label: "Nhân viên toàn thời gian" },
-    { id: "2", label: "Nhân viên toàn thời gian tạm thời" },
-    { id: "3", label: "Nhân viên bán thời gian" },
-  ]
-
-  const industries = [
-    { id: "1", label: "Công nghệ thông tin" },
-    { id: "2", label: "Tài chính - Ngân hàng" },
-    { id: "3", label: "Kinh doanh - Bán hàng" },
-    { id: "4", label: "Marketing - PR" },
-    { id: "5", label: "Giáo dục - Đào tạo" },
-  ]
-
-  // Bottom sheet refs
-  const locationSheetRef = useRef<BottomSheet>(null)
-  const jobSheetRef = useRef<BottomSheet>(null)
-  const snapPoints = ["98%"]
+      if (onApply) {
+        onApply(filter); // ✅ Gọi callback để gửi dữ liệu ngược về
+      }
+      navigation.goBack();
 
 
-  // Hiển thị text
+    } catch (error) {
+      console.error("Lỗi tìm kiếm nâng cao:", error);
+    }
+  };
+  const [listProvinces, setListProvinces] = useState<Province[]>([]);
+  const [listIndustries, setListIndustries] = useState<Industry[]>([]);
+
+  const [selectedSort, setSelectedSort] = useState("");
+  const [selectedIndustry, setSelectedIndustry] = useState<number[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<number[]>([]);
+  const [selectedJobLevels, setSelectedJobLevels] = useState<string[]>([]);
+  const [selectedJobType, setSelectedJobType] = useState<string[]>([]);
+  const [selectedExperienceLevels, setSelectedExperienceLevels] = useState<string[]>([]);
+  const [selectedEducationLevels, setSelectedEducationLevels] = useState<string[]>([]);
+  const [salaryRange, setSalaryRange] = useState<[number, number]>([10, 70]);
+  const [query, setQuery] = useState<string>("");
+
+
+
+
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const listIndustries = await getAllIndustries();
+        const listProvinces = await getAllProvince();
+        if (cancelled) return
+        setListProvinces(listProvinces);
+        setListIndustries(listIndustries);
+      } catch (err: any) {
+        console.error("Lỗi load:", err);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const locationSheetRef = useRef<BottomSheetModal>(null);
+  const industrySheetRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["100%"], []);
+
+
+
   const displayLocations =
     selectedLocations.length > 0
-      ? location
+      ? listProvinces
         .filter((l) => selectedLocations.includes(l.id))
-        .map((l) => l.label)
+        .map((l) => l.name)
         .join(", ")
-      : "Chọn địa điểm"
+      : "Chọn địa điểm";
 
   const displayIndustry =
     selectedIndustry.length > 0
-      ? industries
+      ? listIndustries
         .filter((i) => selectedIndustry.includes(i.id))
-        .map((i) => i.label)
+        .map((i) => i.name)
         .join(", ")
-      : "Ngành nghề"
+      : "Danh mục công việc";
 
-  // Reset filter
   const resetFilters = () => {
-    setSelectedDate("1")
-    setSelectedRank([])
-    setSelectedExperience([])
-    setSelectedEducation([])
-    setSelectedJobType([])
-    setSelectedIndustry([])
-    setSelectedLocations([])
-    setSalaryRange(50)
-  }
+    setSelectedSort("");
+    setSelectedJobLevels([]);
+    setSelectedExperienceLevels([]);
+    setSelectedEducationLevels([]);
+    setSelectedJobType([]);
+    setSelectedIndustry([]);
+    setSelectedLocations([]);
+  };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}   keyboardShouldPersistTaps="handled">
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.cancel}>Hủy</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Bộ lọc tìm kiếm</Text>
-          <TouchableOpacity onPress={resetFilters}>
-            <Text style={styles.reset}>Đặt lại</Text>
-          </TouchableOpacity>
-        </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <View style={styles.container}>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Text style={styles.cancel}>Hủy</Text>
+              </TouchableOpacity>
+              <Text style={styles.title}>Bộ lọc tìm kiếm</Text>
+              <TouchableOpacity onPress={resetFilters}>
+                <Text style={styles.reset}>Đặt lại</Text>
+              </TouchableOpacity>
+            </View>
 
-        {/* Ngày lọc */}
-        <Text style={styles.sectionTitle}>Tìm kiếm theo</Text>
-        <View style={styles.row}>
-          {dateFilter.map((item) => (
+            {/* Sort */}
+            <Text style={styles.sectionTitle}>Tìm kiếm theo</Text>
+            <View style={styles.row}>
+              {getEnumOptions(Sort).map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.chip,
+                    selectedSort === item.value && styles.chipSelected,
+                  ]}
+                  onPress={() => setSelectedSort(item.value)}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      selectedSort === item.value && styles.chipTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Location */}
+            <Text style={styles.sectionTitle}>Tỉnh/Thành phố</Text>
             <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.chip,
-                selectedDate === item.id && styles.chipSelected,
-              ]}
-              onPress={() => setSelectedDate(item.id)}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedDate === item.id && styles.chipTextSelected,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Location */}
-        <Text style={styles.sectionTitle}>Nhập tỉnh, thành phố</Text>
-        <TouchableOpacity
-          style={styles.inputBox}
-          onPress={() => locationSheetRef.current?.expand()}
-        >
-          <Ionicons name="location-outline" size={20} color="#666" />
-          <Text style={styles.inputText} numberOfLines={1}>
-            {displayLocations}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color="#666" />
-        </TouchableOpacity>
-
-        {/* Industry */}
-        <Text style={styles.sectionTitle}>Danh mục công việc</Text>
-        <TouchableOpacity
-          style={styles.inputBox}
-          onPress={() => jobSheetRef.current?.expand()}
-        >
-          <Text style={styles.inputText} numberOfLines={1}>
-            {displayIndustry}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color="#666" />
-        </TouchableOpacity>
-
-        {/* Rank */}
-        <Text style={styles.sectionTitle}>Cấp bậc</Text>
-        <View style={styles.rowWrap}>
-          {rank.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.chip,
-                selectedRank.includes(item.id) && styles.chipSelected,
-              ]}
-              onPress={() => toggleSelect(item.id, selectedRank, setSelectedRank)}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedRank.includes(item.id) && styles.chipTextSelected,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Experience */}
-        <Text style={styles.sectionTitle}>Kinh nghiệm</Text>
-        <View style={styles.rowWrap}>
-          {experience.map((item) => (
-            <TouchableOpacity
-              //key={`exp-${item.id}`}  
-              key={item.id}
-              style={[
-                styles.chip,
-                selectedExperience.includes(item.id) && styles.chipSelected,
-              ]}
-              onPress={() => toggleSelect(item.id, selectedExperience, setSelectedExperience)}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedExperience.includes(item.id) &&
-                  styles.chipTextSelected,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Salary */}
-        <Text style={styles.sectionTitle}>Mức lương</Text>
-        <View style={styles.salaryContainer}>
-          <View style={styles.salaryLabels}>
-            <Text style={styles.salaryLabel}>đ 0M</Text>
-            <Text style={styles.salaryLabel}>đ 100M</Text>
-          </View>
-          <Slider
-            style={styles.slider}
-            minimumValue={0}
-            maximumValue={100}
-            value={salaryRange}
-            onValueChange={setSalaryRange}
-            minimumTrackTintColor="#007AFF"
-            maximumTrackTintColor="#E5E5E5"
-          />
-          <Text style={styles.salaryValue}>đ {Math.round(salaryRange)}M</Text>
-        </View>
-
-        {/* Education */}
-        <Text style={styles.sectionTitle}>Học vấn</Text>
-        <View style={styles.rowWrap}>
-          {education.map((item) => (
-            <TouchableOpacity
-              key={`edu-${item.id}`}
-              style={[
-                styles.chip,
-                selectedEducation.includes(item.id) && styles.chipSelected,
-              ]}
+              style={styles.inputBox}
               onPress={() => {
-                console.log("Chọn học vấn:", item.label)
-                toggleSelect(item.id, selectedEducation, setSelectedEducation)
+                setQuery("")
+                locationSheetRef.current?.present()
               }}
             >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedEducation.includes(item.id) &&
-                  styles.chipTextSelected,
-                ]}
-              >
-                {item.label}
+              <Ionicons name="location-outline" size={20} color="#666" />
+              <Text style={styles.inputText} numberOfLines={1}>
+                {displayLocations}
               </Text>
+              <Ionicons name="chevron-down" size={20} color="#666" />
             </TouchableOpacity>
-          ))}
-        </View>
 
-        {/* Job type */}
-        <Text style={styles.sectionTitle}>Loại công việc</Text>
-        <View style={styles.rowWrap}>
-          {jobTypes.map((item) => (
+            {/* Industry */}
+            <Text style={styles.sectionTitle}>Ngành nghề</Text>
             <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.chip,
-                selectedJobType.includes(item.id) && styles.chipSelected,
-              ]}
-              onPress={() => toggleSelect(item.id, selectedJobType, setSelectedJobType)}
+              style={styles.inputBox}
+              onPress={() => {
+                setQuery("")
+                industrySheetRef.current?.present()
+              }}
             >
-              <Text
-                style={[
-                  styles.chipText,
-                  selectedJobType.includes(item.id) && styles.chipTextSelected,
-                ]}
-              >
-                {item.label}
+              <Text style={styles.inputText} numberOfLines={1}>
+                {displayIndustry}
               </Text>
+              <Ionicons name="chevron-down" size={20} color="#666" />
             </TouchableOpacity>
-          ))}
+
+            {/* Rank */}
+            <Text style={styles.sectionTitle}>Cấp bậc</Text>
+            <View style={styles.rowWrap}>
+              {getEnumOptions(JobLevel).map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.chip,
+                    selectedJobLevels.includes(item.value) && styles.chipSelected,
+                  ]}
+                  onPress={() =>
+                    toggleSelect(item.value, selectedJobLevels, setSelectedJobLevels)
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      selectedJobLevels.includes(item.value) &&
+                      styles.chipTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Experience */}
+            <Text style={styles.sectionTitle}>Kinh nghiệm</Text>
+            <View style={styles.rowWrap}>
+              {getEnumOptions(ExperienceLevel).map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.chip,
+                    selectedExperienceLevels.includes(item.value) &&
+                    styles.chipSelected,
+                  ]}
+                  onPress={() =>
+                    toggleSelect(
+                      item.value,
+                      selectedExperienceLevels,
+                      setSelectedExperienceLevels
+                    )
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      selectedExperienceLevels.includes(item.value) &&
+                      styles.chipTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Experience */}
+            <Text style={styles.sectionTitle}>Loại công việc</Text>
+            <View style={styles.rowWrap}>
+              {getEnumOptions(JobType).map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.chip,
+                    selectedJobType.includes(item.value) &&
+                    styles.chipSelected,
+                  ]}
+                  onPress={() =>
+                    toggleSelect(
+                      item.value,
+                      selectedJobType,
+                      setSelectedJobType
+                    )
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      selectedJobType.includes(item.value) &&
+                      styles.chipTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {/* Experience */}
+            <Text style={styles.sectionTitle}>Học vấn</Text>
+            <View style={styles.rowWrap}>
+              {getEnumOptions(EducationLevel).map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.chip,
+                    selectedEducationLevels.includes(item.value) &&
+                    styles.chipSelected,
+                  ]}
+                  onPress={() =>
+                    toggleSelect(
+                      item.value,
+                      selectedEducationLevels,
+                      setSelectedEducationLevels
+                    )
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      selectedEducationLevels.includes(item.value) &&
+                      styles.chipTextSelected,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {/* Salary */}
+            <Text style={styles.sectionTitle}>Mức lương mong muốn</Text>
+            <View style={styles.salaryBox}>
+              <View style={styles.salaryRangeBox}>
+                <View style={styles.salaryValueBox}>
+                  <Text style={styles.salaryValueText}>₫{salaryRange[0]}M</Text>
+                </View>
+                <View style={styles.salaryValueBox}>
+                  <Text style={styles.salaryValueText}>₫{salaryRange[1]}M</Text>
+                </View>
+              </View>
+
+              <MultiSlider
+                values={[salaryRange[0], salaryRange[1]]}
+                onValuesChange={(values) => setSalaryRange(values as [number, number])}
+                min={0}
+                max={100}
+                step={1}
+                sliderLength={300}
+                selectedStyle={{ backgroundColor: "#007AFF" }}
+                unselectedStyle={{ backgroundColor: "#D6E4FF" }}
+                trackStyle={{ height: 6, borderRadius: 8 }}
+                markerStyle={{
+                  backgroundColor: "#007AFF",
+                  height: 22,
+                  width: 22,
+                  borderRadius: 11,
+                  borderWidth: 3,
+                  borderColor: "#fff",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 3,
+                }}
+                containerStyle={{ alignSelf: "center", marginTop: 10 }}
+              />
+            </View>
+          </ScrollView>
+
+          {/* Apply Button */}
+          <TouchableOpacity style={styles.applyBtn} onPress={() => handleSearch()}>
+            <Text style={styles.applyText}>Áp dụng</Text>
+          </TouchableOpacity>
+
+          {/* ✅ Location Sheet */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={{ flex: 1 }}
+          >
+            <BottomSheetModal
+              ref={locationSheetRef}
+              snapPoints={snapPoints}
+              enablePanDownToClose
+              // keyboardBehavior="extend"
+              // keyboardBlurBehavior="restore"
+              style={{ paddingHorizontal: 10 }}
+              keyboardBehavior="interactive"      // 👈 giữ nguyên full height khi gõ
+              keyboardBlurBehavior="none"
+              enableDynamicSizing={false}
+            >
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>Chọn địa điểm</Text>
+                <TouchableOpacity onPress={() => {
+                  setQuery("")
+                  setSelectedLocations([])
+                }}>
+                  <Text style={{ color: "#007AFF", fontSize: 18 }}>Xóa tất cả</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.searchBox}>
+                <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 10 }} />
+                <TextInput
+                  placeholder="Tìm kiếm..."
+                  placeholderTextColor="#999"
+                  value={query}
+                  onChangeText={setQuery}
+                  style={styles.searchInput}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+              <BottomSheetFlatList
+                data={listProvinces.filter((p) =>
+                  p.name.toLowerCase().includes(query.toLowerCase())
+                )}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => {
+                  const isSelected = selectedLocations.includes(item.id);
+                  return (
+                    <TouchableOpacity
+                      style={styles.item}
+                      onPress={() =>
+                        toggleSelectNumber(
+                          item.id,
+                          selectedLocations,
+                          setSelectedLocations
+                        )
+                      }
+                    >
+                      <Ionicons
+                        name={isSelected ? "checkbox" : "square-outline"}
+                        size={22}
+                        color={isSelected ? "#007AFF" : "#666"}
+                        style={{ marginRight: 10 }}
+                      />
+                      <Text>{item.name}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={() => (
+                  <View style={styles.emptyBox}>
+                    <Text style={styles.emptyText}>Không tìm thấy kết quả</Text>
+                  </View>
+                )}
+                contentContainerStyle={{ flexGrow: 100, paddingBottom: 80 }}
+                style={{ flex: 1 }}
+              />
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={() => locationSheetRef.current?.dismiss()} // ✅ dismiss() để đóng
+              >
+                <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
+              </TouchableOpacity>
+            </BottomSheetModal>
+          </KeyboardAvoidingView>
+
+          {/* ✅ Industry Sheet */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={{ flex: 1 }}
+          >
+            <BottomSheetModal
+              ref={industrySheetRef}
+              snapPoints={snapPoints}
+              enablePanDownToClose
+              keyboardBehavior="extend"
+              keyboardBlurBehavior="restore"
+              style={{ paddingHorizontal: 10 }}
+              enableDynamicSizing={false}
+            >
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>Chọn danh mục</Text>
+                <TouchableOpacity onPress={() => {
+                  setQuery("")
+                  setSelectedIndustry([])
+                }}>
+                  <Text style={{ color: "#007AFF", fontSize: 18 }}>Xóa tất cả</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.searchBox}>
+                <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 10 }} />
+                <TextInput
+                  placeholder="Tìm kiếm..."
+                  placeholderTextColor="#999"
+                  value={query}
+                  onChangeText={setQuery}
+                  style={styles.searchInput}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <BottomSheetFlatList
+                data={listIndustries.filter((p) =>
+                  p.name.toLowerCase().includes(query.toLowerCase())
+                )}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => {
+                  const isSelected = selectedIndustry.includes(item.id);
+                  return (
+                    <TouchableOpacity
+                      style={styles.item}
+                      onPress={() =>
+                        toggleSelectNumber(
+                          item.id,
+                          selectedIndustry,
+                          setSelectedIndustry
+                        )
+                      }
+                    >
+                      <Ionicons
+                        name={isSelected ? "checkbox" : "square-outline"}
+                        size={22}
+                        color={isSelected ? "#007AFF" : "#666"}
+                        style={{ marginRight: 10 }}
+                      />
+                      <Text>{item.name}</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={() => (
+                  <View style={styles.emptyBox}>
+                    <Text style={styles.emptyText}>Không tìm thấy kết quả</Text>
+                  </View>
+                )}
+                contentContainerStyle={{ flexGrow: 100, paddingBottom: 80 }}
+                style={{ flex: 1 }}
+              />
+
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={() => {
+                  setQuery("")
+                  industrySheetRef.current?.dismiss()
+                }} // ✅ dismiss() để đóng
+              >
+                <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
+              </TouchableOpacity>
+            </BottomSheetModal>
+          </KeyboardAvoidingView>
         </View>
-      </ScrollView>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
+  );
+};
 
-      {/* Apply button */}
-      <TouchableOpacity style={styles.applyBtn}>
-        <Text style={styles.applyText}>Áp dụng</Text>
-      </TouchableOpacity>
+export default FilterScreen;
 
-      {/* Bottom Sheet Location */}
-      <BottomSheet
-        ref={locationSheetRef}
-        index={-1}
-        snapPoints={["1%", "98%"]}
-        enablePanDownToClose
-        onChange={(index) => {
-          console.log("Index:", index);
-
-          if (index === -1) {
-            console.log("Đang đóng");
-          } else if (index === 0) {
-            console.log("Đang mở: 98%");
-          }
-        }}
-      >
-        <BottomSheetView style={styles.sheetContent}>
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Chọn danh mục</Text>
-            <TouchableOpacity onPress={() => setSelectedLocations([])}>
-              <Text style={{ color: "#007AFF" }}>Xóa tất cả</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 8 }} />
-            <TextInput
-              placeholder="Tìm kiếm..."
-              placeholderTextColor="#999"
-              value={query}
-              onChangeText={setQuery}
-              style={styles.searchInput}
-              returnKeyType="search"
-              clearButtonMode="while-editing"
-            />
-          </View>
-          <FlatList
-            data={location}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-              const isSelected = selectedLocations.includes(item.id)
-              return (
-                <TouchableOpacity
-                  style={styles.item}
-                  onPress={() => toggleSelect(item.id, selectedLocations, setSelectedLocations)}
-                >
-                  <Ionicons
-                    name={isSelected ? "checkbox" : "square-outline"}
-                    size={22}
-                    color={isSelected ? "#007AFF" : "#666"}
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text>{item.label}</Text>
-                </TouchableOpacity>
-              )
-            }}
-          />
-
-          <TouchableOpacity
-            style={styles.saveBtn}
-            onPress={() => console.log("Đã chọn:", selectedLocations)}
-          >
-            <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
-          </TouchableOpacity>
-        </BottomSheetView>
-      </BottomSheet>
-
-      {/* Bottom Sheet Industry */}
-      <BottomSheet
-        ref={jobSheetRef}
-        index={-1}
-        snapPoints={["98%"]}
-        enablePanDownToClose={true}
-        enableOverDrag={true}// ❌ không cho kéo quá mức
-        animateOnMount={false}
-      >
-        <BottomSheetView style={styles.sheetContent}>
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Chọn danh mục</Text>
-            <TouchableOpacity onPress={() => setSelectedJobs([])}>
-              <Text style={{ color: "#007AFF" }}>Xóa tất cả</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 8 }} />
-            <TextInput
-              placeholder="Tìm kiếm..."
-              placeholderTextColor="#999"
-              value={query}
-              onChangeText={setQuery}
-              style={styles.searchInput}
-              returnKeyType="search"
-              clearButtonMode="while-editing"
-            />
-          </View>
-          <FlatList
-            data={job}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-              const isSelected = selectedJobs.includes(item.id)
-              return (
-                <TouchableOpacity
-                  style={styles.item}
-                  onPress={() => toggleSelect(item.id, selectedJobs, setSelectedJobs)}
-                >
-                  <Ionicons
-                    name={isSelected ? "checkbox" : "square-outline"}
-                    size={22}
-                    color={isSelected ? "#007AFF" : "#666"}
-                    style={{ marginRight: 10 }}
-                  />
-                  <Text>{item.label}</Text>
-                </TouchableOpacity>
-              )
-            }}
-          />
-
-          <TouchableOpacity
-            style={styles.saveBtn}
-            onPress={() => console.log("Đã chọn:", setSelectedJobs)}
-          >
-            <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
-          </TouchableOpacity>
-        </BottomSheetView>
-      </BottomSheet>
-    </View>
-  )
-}
-
-export default FilterScreen
 
 // Styles
 const styles = StyleSheet.create({
@@ -480,7 +625,7 @@ const styles = StyleSheet.create({
   chip: {
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 20,
+    borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 8,
     marginRight: 10,
@@ -519,21 +664,57 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   modalItemText: { fontSize: 16, color: "#333" },
-  salaryContainer: { marginBottom: 16, paddingHorizontal: 4 },
+  salaryBox: {
+    backgroundColor: "#f9fafb",
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    marginBottom: 20,
+  },
+  salaryRangeBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  salaryValueBox: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    minWidth: 90,
+    alignItems: "center",
+  },
+  salaryValueLabel: {
+    fontSize: 12,
+    color: "#888",
+    marginBottom: 2,
+  },
+  salaryValueText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#007AFF",
+  },
   salaryLabels: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginTop: 6,
   },
-  salaryLabel: { fontSize: 14, color: "#666" },
-  slider: { width: "100%", height: 40 },
-  salaryValue: {
-    textAlign: "center",
-    fontSize: 14,
-    color: "#007AFF",
-    fontWeight: "600",
-    marginTop: 8,
+  salaryLabel: {
+    fontSize: 13,
+    color: "#666",
   },
+
   saveButton: {
     backgroundColor: "#007AFF",
     paddingVertical: 14,
@@ -552,6 +733,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 6,
     alignItems: "center",
+    marginBottom: 10
   },
   sheetContent: { flex: 1, paddingHorizontal: 16 },
   sheetHeader: {
@@ -570,6 +752,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 10,
     marginBottom: 6,
+    fontSize: 18,
   },
   searchInput: {
     flex: 1,
@@ -577,4 +760,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
+
+  emptyBox: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    color: "#999",
+    fontSize: 16,
+    fontStyle: "italic",
+  },
+
 })

@@ -7,6 +7,7 @@ import { RootStackParamList } from "../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 
 interface IJobCardProps {
+    id: number;
     logo_path: any;
     job_title: string;
     company_name: string;
@@ -22,6 +23,7 @@ type JobDetailNavigationProp = NativeStackNavigationProp<
 >;
 
 const JobCard = ({
+    id,
     logo_path,
     job_title,
     company_name,
@@ -35,7 +37,7 @@ const JobCard = ({
     return (
         <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate("JobDetail")}
+            onPress={() => navigation.navigate("JobDetail", {id: id})}
         >
             <LinearGradient
                 colors={["#fff", applied ? "#fff" : "#fceabb"]}
@@ -43,7 +45,16 @@ const JobCard = ({
             >
                 <View style={styles.row}>
                     {/* Logo */}
-                    <Image source={logo_path} style={styles.logo} />
+                    <Image
+                        source={
+                            logo_path
+                                ? typeof logo_path === "string"
+                                    ? { uri: logo_path } 
+                                    : logo_path 
+                                : require("../../assets/App/logoJob.png")
+                        }
+                        style={styles.logo}
+                    />
 
                     {/* Nội dung */}
                     <View style={styles.info}>

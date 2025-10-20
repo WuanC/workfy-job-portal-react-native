@@ -24,7 +24,7 @@ import SearchScreen from "../screens/JobSeeker/SearchScreen";
 import MyJobScreen from "../screens/JobSeeker/MyJobScreen";
 import CVScreen from "../screens/JobSeeker/CVScreen";
 import MenuScreen from "../screens/JobSeeker/Menu&Settings/MenuScreen";
-import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
+
 import JobSubmitScreen from "../screens/JobSeeker/JobSubmitScreen";
 import JobSubmitSucessScreen from "../screens/JobSeeker/JobSubmitSucessScreen";
 import FilterScreen from "../screens/JobSeeker/FilterScreen";
@@ -48,6 +48,7 @@ import MyCompany from "../screens/Employer/MyCompany";
 import UpdateCompanyInfo from "../screens/Employer/UpdateCompanyInfo";
 import UpdateCompanyMedia from "../screens/Employer/UpdateCompanyMedia";
 import UpdateJobScreen from "../screens/Employer/UpdateJobScreen";
+import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();

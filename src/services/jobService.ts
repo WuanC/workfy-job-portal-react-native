@@ -30,7 +30,22 @@ export type JobRequest = {
   description?: string;
   expirationDate: string; // format dd/MM/yyyy
 };
-
+export type AdvancedJobQuery = {
+  keyword?: string;
+  industryIds?: (number | string)[];
+  provinceIds?: (number | string)[];
+  jobLevels?: string[];
+  jobTypes?: string[];
+  experienceLevels?: string[];
+  educationLevels?: string[];
+  postedWithinDays?: number;
+  minSalary?: number;
+  maxSalary?: number;
+  salaryUnit?: string;
+  sort?: string; // ✅ dùng union type chuẩn
+  pageNumber?: number;
+  pageSize?: number;
+};
 // ✅ Hàm gọi API tạo job
 export const createJob = async (job: JobRequest) => {
   try {
@@ -125,6 +140,131 @@ export const getPopularIndustries = async (limit: number = 10) => {
     return res.data.data;
   } catch (error: any) {
     console.error("Lỗi khi lấy danh sách ngành nghề phổ biến:", error.response?.data || error.message);
+    throw error;
+  }
+};
+// 🔍 Tìm kiếm nâng cao (public)
+export const getAdvancedJobs = async ({
+  keyword,
+  industryIds,
+  provinceIds,
+  jobLevels,
+  jobTypes,
+  experienceLevels,
+  educationLevels,
+  postedWithinDays,
+  minSalary,
+  maxSalary,
+  salaryUnit,
+  sort,
+  pageNumber = 1,
+  pageSize = 10,
+}: AdvancedJobQuery) => {
+  try {
+    const params: any = {
+      pageNumber,
+      pageSize,
+    };
+
+    if (keyword) params.keyword = keyword;
+    if (industryIds?.length) params.industryIds = industryIds.join(",");
+    if (provinceIds?.length) params.provinceIds = provinceIds.join(",");
+    if (jobLevels?.length) params.jobLevels = jobLevels.join(",");
+    if (jobTypes?.length) params.jobTypes = jobTypes.join(",");
+    if (experienceLevels?.length)
+      params.experienceLevels = experienceLevels.join(",");
+    if (educationLevels?.length)
+      params.educationLevels = educationLevels.join(",");
+    if (postedWithinDays && postedWithinDays >= 1)
+      params.postedWithinDays = postedWithinDays;
+    if (minSalary !== undefined) params.minSalary = minSalary;
+    if (maxSalary !== undefined) params.maxSalary = maxSalary;
+    if (salaryUnit) params.salaryUnit = salaryUnit;
+    if (sort) params.sort = sort;
+    const res = await apiInstance.get("/jobs/advanced", { params });
+    return res.data.data; // Trả về phần "data" để dễ xử lý hơn
+  } catch (error: any) {
+    console.error("❌ Lỗi khi tìm kiếm nâng cao:", error.response?.data || error.message);
+    throw error;
+  }
+};
+export const updateJobStatus = async (id: number, status: string) => {
+  try {
+    const res = await apiInstance.patch(`/jobs/status/${id}`, null, {
+      params: { status },
+    });
+    return res.data; // ✅ { status, message }
+  } catch (error: any) {
+    if (error.response) {
+      const { status: httpStatus, data } = error.response;
+
+      switch (httpStatus) {
+        case 400:
+          console.error("❌ Lỗi 400: Trạng thái không hợp lệ (enum sai).", data);
+          break;
+        case 401:
+          console.error("❌ Lỗi 401: Chưa đăng nhập hoặc token hết hạn.");
+          break;
+        case 403:
+          console.error("❌ Lỗi 403: Bạn không có quyền ADMIN để cập nhật trạng thái công việc.");
+          break;
+        case 404:
+          console.error("❌ Lỗi 404: Không tìm thấy công việc hoặc ID không tồn tại.");
+          break;
+        default:
+          console.error("❌ Lỗi không xác định:", data);
+      }
+    } else {
+      console.error("❌ Lỗi mạng hoặc server:", error.message);
+    }
+    throw error;
+  }
+};
+export const getAllJobsAdmin = async ({
+  pageNumber = 1,
+  pageSize = 10,
+  industryId,
+  provinceId,
+  keyword,
+  sorts,
+}: {
+  pageNumber?: number;
+  pageSize?: number;
+  industryId?: number;
+  provinceId?: number;
+  keyword?: string;
+  sorts?: string; // ví dụ: "createdAt:desc" hoặc "jobTitle:asc"
+}) => {
+  try {
+    const params: any = { pageNumber, pageSize };
+
+    if (industryId) params.industryId = industryId;
+    if (provinceId) params.provinceId = provinceId;
+    if (keyword) params.keyword = keyword;
+    if (sorts) params.sorts = sorts;
+
+    const res = await apiInstance.get("/jobs/all", { params });
+    return res.data; // ✅ trả về PageResponse<List<JobResponse>>
+  } catch (error: any) {
+    if (error.response) {
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 400:
+          console.error("❌ Lỗi 400: Dữ liệu không hợp lệ:", data);
+          break;
+        case 401:
+          console.error("❌ Lỗi 401: Chưa đăng nhập hoặc token hết hạn.");
+          break;
+        case 403:
+          console.error("❌ Lỗi 403: Bạn không có quyền truy cập danh sách công việc (chỉ ADMIN).");
+          break;
+        default:
+          console.error("❌ Lỗi không xác định:", data);
+      }
+    } else {
+      console.error("❌ Lỗi mạng hoặc server:", error.message);
+    }
     throw error;
   }
 };

@@ -153,6 +153,7 @@ const CompanyDetailScreen = () => {
             <Text style={styles.sectionTitle}>Việc làm đang tuyển</Text>
             {jobs.map((item) => (
               <JobCard
+                id = {1}
                 key={item.id}
                 logo_path={item.logo_path}
                 job_title={item.job_title}

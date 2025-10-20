@@ -12,7 +12,7 @@ export type RootStackParamList = {
     onApply?: (filter: any) => void;
   };
   Chat: undefined
-
+  CompanyDetail: {id: number}
   //Settings
   Setting: undefined
   ChangePassword: undefined

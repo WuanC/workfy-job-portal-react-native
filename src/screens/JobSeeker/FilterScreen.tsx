@@ -89,7 +89,7 @@ const FilterScreen = ({ route }: any) => {
       // console.log("selectedEducationLevels:", selectedEducationLevels);
       // console.log("salaryRange:", salaryRange);
       const filter: AdvancedJobQuery = {
-        keyword: currentFilter.keyword, // bạn có thể thêm ô nhập keyword nếu cần
+       keyword: currentFilter?.keyword ?? "",
         industryIds: selectedIndustry,
         provinceIds: selectedLocations,
         jobLevels: selectedJobLevels,

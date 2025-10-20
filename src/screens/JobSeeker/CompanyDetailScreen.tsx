@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,55 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import JobCard from "../../components/JobCard";
+import { getEmployerById } from "../../services/employerService";
+import { getCompanySizeLabel } from "../../utilities/constant";
 
-const CompanyDetailScreen = () => {
+const CompanyDetailScreen = ({ route }: any) => {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState<"about" | "jobs">("about");
+  const { id } = route.params as { id: number };
+  const [loading, setLoading] = useState(true);
+  const [company, setCompany] = useState<any>()
+  useEffect(() => {
+    let cancelled = false; // flag để tránh setState sau unmount
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        const companyData = await getEmployerById(id);
+        setCompany(companyData)
+        if (cancelled) return;
+
+      } catch (err: any) {
+        if (cancelled) return;
+        console.error("Lỗi load", err);
+      } finally {
+        if (!cancelled) { }
+        setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0066ff" />
+        <Text style={{ marginTop: 10, color: "#333" }}>Đang tải dữ liệu...</Text>
+      </View>
+    );
+  }
+
 
   const jobs = [
     {
@@ -44,7 +84,14 @@ const CompanyDetailScreen = () => {
         {/* Banner */}
         <View style={styles.bannerContainer}>
           <Image
-            source={require("../../../assets/App/banner.jpg")}
+            source={
+              company.backgroundUrl
+                ? typeof company.backgroundUrl === "string"
+                  ? { uri: company.backgroundUrl }
+                  : company.backgroundUrl
+                : require("../../../assets/App/companyBannerDefault.jpg")
+
+            }
             style={styles.banner}
           />
 
@@ -62,13 +109,20 @@ const CompanyDetailScreen = () => {
         {/* Company info */}
         <View style={styles.headerContainer}>
           <Image
-            source={require("../../../assets/App/logoJob.png")}
+            source={
+              company.avatarUrl
+                ? typeof company.avatarUrl === "string"
+                  ? { uri: company.avatarUrl }
+                  : company.avatarUrl
+                : require("../../../assets/App/companyLogoDefault.png")
+
+            }
             style={styles.logo}
           />
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={styles.companyName}>CÔNG TY CỔ PHẦN DEAIR</Text>
-            <Text style={styles.companyLocation}>Hà Nội, Việt Nam</Text>
-            <Text style={styles.companySize}>Quy mô: 51 - 150 nhân viên</Text>
+            <Text style={styles.companyName}>{company.companyName}</Text>
+            <Text style={styles.companyLocation}>{company.district.name}, {company.province.name}, Việt Nam</Text>
+            <Text style={styles.companySize}>{getCompanySizeLabel(company.companySize)}</Text>
           </View>
         </View>
 
@@ -108,10 +162,7 @@ const CompanyDetailScreen = () => {
           <View style={styles.contentContainer}>
             <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
             <Text style={styles.description}>
-              DEAIR là công ty công nghệ phát triển các giải pháp phần mềm hiện đại
-              cho doanh nghiệp Việt Nam và quốc tế. Với đội ngũ nhân sự trẻ trung,
-              sáng tạo, chúng tôi tập trung vào việc tạo ra các sản phẩm chất lượng
-              cao, mang lại giá trị thiết thực cho khách hàng.
+              {company.aboutCompany}
             </Text>
 
             <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
@@ -132,7 +183,7 @@ const CompanyDetailScreen = () => {
               <Text style={styles.infoText}>youtube.com/@deair</Text>
             </View>
 
-            <Text style={styles.sectionTitle}>Hình ảnh</Text>
+            {/* <Text style={styles.sectionTitle}>Hình ảnh</Text>
             <View style={styles.photoRow}>
               <Image
                 source={require("../../../assets/App/logo.png")}
@@ -146,14 +197,14 @@ const CompanyDetailScreen = () => {
                 source={require("../../../assets/App/logo.png")}
                 style={styles.photo}
               />
-            </View>
+            </View> */}
           </View>
         ) : (
           <View style={styles.contentContainer}>
             <Text style={styles.sectionTitle}>Việc làm đang tuyển</Text>
             {jobs.map((item) => (
               <JobCard
-                id = {1}
+                id={1}
                 key={item.id}
                 logo_path={item.logo_path}
                 job_title={item.job_title}
@@ -286,6 +337,12 @@ const styles = StyleSheet.create({
     width: 100,
     height: 70,
     borderRadius: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
   },
 });
 

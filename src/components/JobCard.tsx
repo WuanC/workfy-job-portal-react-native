@@ -51,7 +51,7 @@ const JobCard = ({
                                 ? typeof logo_path === "string"
                                     ? { uri: logo_path } 
                                     : logo_path 
-                                : require("../../assets/App/logoJob.png")
+                                : require("../../assets/App/companyLogoDefault.png")
                         }
                         style={styles.logo}
                     />

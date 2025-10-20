@@ -48,6 +48,8 @@ const SearchScreen = ({ route }: any) => {
         }
     }, [advanceFilter]);
     const fetchFilteredJobs = async (filter: any) => {
+        if (!filter.keyword) filter.keyword = "";
+        console.log(filter.keyword)
         try {
             setLoading(true);
             const data = await getAdvancedJobs(filter);
@@ -154,7 +156,7 @@ const SearchScreen = ({ route }: any) => {
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
                             <JobCard
-                                id = {item.id}
+                                id={item.id}
                                 logo_path={item.avatarUrl}
                                 job_title={item.jobTitle}
                                 company_name={item.companyName}

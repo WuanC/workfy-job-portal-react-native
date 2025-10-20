@@ -67,7 +67,8 @@ const ExploreStackScreen = () => (
     <ExploreStack.Screen name="JobSubmitSuccess" component={JobSubmitSucessScreen} />
     <RootStack.Screen name="Blog" component={BlogScreen} />
     <SearchStack.Screen name="SearchMain" component={SearchScreen} />
-        <SearchStack.Screen name="SearchFilter" component={FilterScreen} />
+    <SearchStack.Screen name="SearchFilter" component={FilterScreen} />
+    <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
   </ExploreStack.Navigator>
 );
 
@@ -78,6 +79,7 @@ const SearchStackScreen = () => (
     <SearchStack.Screen name="JobSubmit" component={JobSubmitScreen} />
     <SearchStack.Screen name="JobSubmitSuccess" component={JobSubmitSucessScreen} />
     <SearchStack.Screen name="SearchFilter" component={FilterScreen} />
+    <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
   </SearchStack.Navigator>
 );
 
@@ -263,7 +265,7 @@ const AppNavigator = () => {
 
               <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
 
-              <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
+
 
               <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
               <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />

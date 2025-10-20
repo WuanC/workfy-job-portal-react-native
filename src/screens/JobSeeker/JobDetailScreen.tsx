@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Animated
+  Animated,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
-const logoImg = require("../../../assets/App/logoJob.png")
+import { getJobById } from "../../services/jobService";
+import { getCompanySizeLabel, getEducationLevelLabel, getExperienceLevelLabel, getJobGenderLabel, getJobLevelLabel, getJobTypeLabel } from "../../utilities/constant";
+
 const bannerImg = require("../../../assets/App/banner.jpg")
 const keywords = [
   "Tiếng Anh",
@@ -24,7 +27,7 @@ const keywords = [
 ];
 type JobSubmitNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "JobSubmit"
+  "JobSubmit" | "CompanyDetail"
 >;
 
 const JobDetailScreen = ({ route }: any) => {
@@ -37,13 +40,70 @@ const JobDetailScreen = ({ route }: any) => {
     extrapolate: "clamp",
   });
   const navigation = useNavigation<JobSubmitNavigationProp>();
+  const [job, setJob] = useState<any>();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false; // flag để tránh setState sau unmount
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        const jobData = await getJobById(id);
+        setJob(jobData)
+        if (cancelled) return;
+
+      } catch (err: any) {
+        if (cancelled) return;
+        console.error("Lỗi load", err);
+      } finally {
+        if (!cancelled) { }
+        setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0066ff" />
+        <Text style={{ marginTop: 10, color: "#333" }}>Đang tải dữ liệu...</Text>
+      </View>
+    );
+  }
+
+  // ❌ Nếu không có dữ liệu
+  if (!job) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ color: "red" }}>Không tìm thấy thông tin công việc</Text>
+        <TouchableOpacity onPress={() => {
+          console.log("Back 1")
+          navigation.goBack()
+        }
+
+        } style={{ marginTop: 10 }}>
+          <Text style={{ color: "#0066ff" }}>← Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.headerHide, { opacity: headerOpacity }]}>
-        <TouchableOpacity style={[styles.backBtnHide]} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={[styles.backBtnHide]} onPress={() => {
+          console.log("Back 2")
+          navigation.goBack()
+
+        }}
+        >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Market Research Executive</Text>
+        <Text style={styles.headerTitle}>{job.jobTitle}</Text>
       </Animated.View>
       <Animated.ScrollView
         contentContainerStyle={{ paddingBottom: 80 }}
@@ -55,14 +115,28 @@ const JobDetailScreen = ({ route }: any) => {
       >
         {/* Banner */}
         <View style={{ position: "relative" }}>
-          <Image
+          {/* <Image
             source={bannerImg}
             style={styles.banner}
-          />
+          /> */}
+          <Image
+            source={
+              job.author.backgroundUrl
+                ? typeof job.author.backgroundUrl === "string"
+                  ? { uri: job.author.backgroundUrl }
+                  : job.author.backgroundUrl
+                : require("../../../assets/App/companyBannerDefault.jpg")
 
+            }
+            style={styles.banner}
+          />
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              console.log("Back 3")
+              navigation.goBack()
+
+            }}
           >
             <Ionicons name="arrow-back" size={28} color="#fff" />
           </TouchableOpacity>
@@ -71,13 +145,24 @@ const JobDetailScreen = ({ route }: any) => {
         {/* Header: Logo + Công ty + Chức danh */}
         <View style={styles.infoContainerHeader}>
           <View style={styles.header}>
-            <Image
+            {/* <Image
               source={logoImg}
+              style={styles.logo}
+            /> */}
+            <Image
+              source={
+                job.author.avatarUrl
+                  ? typeof job.author.avatarUrl === "string"
+                    ? { uri: job.author.avatarUrl }
+                    : job.author.avatarUrl
+                  : require("../../../assets/App/companyLogoDefault.png")
+
+              }
               style={styles.logo}
             />
             <View style={{ flex: 1 }}>
-              <Text style={styles.company}>Công Ty TNHH Becamex Tokyu</Text>
-              <Text style={styles.title}>Market Research Executive</Text>
+              <Text style={styles.company}>{job.companyName}</Text>
+              <Text style={styles.title}>{job.jobTitle}</Text>
             </View>
 
           </View>
@@ -85,11 +170,30 @@ const JobDetailScreen = ({ route }: any) => {
           {/* Box thông tin */}
 
           <View style={styles.infoBox}>
-            <Text style={styles.info}>📍 Thành phố Thủ Dầu Một, Bình Dương</Text>
-            <Text style={[styles.info, { color: "orange" }]}>💰 Thương lượng</Text>
-            <Text style={styles.info}>🧰 2 - 5 năm kinh nghiệm</Text>
+            <Text style={styles.info}>📍 {job.jobLocations[0].district.name}, {job.jobLocations[0].province.name}</Text>
+            <Text
+              style={[
+                styles.info,
+                job.salaryType === "NEGOTIABLE"
+                  ? { color: "orange" }
+                  : job.salaryType === "COMPETITIVE"
+                    ? { color: "green" }
+                    : { color: "#000" }, // mặc định
+              ]}
+            >
+              {job.salaryType === "RANGE"
+                ? `💰 ${job.minSalary?.toLocaleString() || "?"} ${job.salaryUnit || ""} - ${job.maxSalary?.toLocaleString() || "?"} ${job.salaryUnit || ""}`
+                : job.salaryType === "GREATER_THAN"
+                  ? `💰 Trên ${job.minSalary?.toLocaleString() || "?"} ${job.salaryUnit || ""}`
+                  : job.salaryType === "NEGOTIABLE"
+                    ? "💰 Thỏa thuận"
+                    : job.salaryType === "COMPETITIVE"
+                      ? "💰 Cạnh tranh"
+                      : "💰 Không rõ"}
+            </Text>
+            <Text style={styles.info}>🧰 {getExperienceLevelLabel(job.experienceLevel)}</Text>
             <Text style={styles.info}>
-              📅 14 tháng 9, 2025 | hết hạn sau 15 ngày tới
+              📅 {job.expirationDate}
             </Text>
           </View>
         </View>
@@ -98,25 +202,15 @@ const JobDetailScreen = ({ route }: any) => {
         <View style={styles.infoContainer}>
           <Text style={styles.sectionTitle}>Mô tả công việc</Text>
           <View style={styles.section}>
-            <Text>- Conduct market and competitor research & analysis.</Text>
-            <Text>- Plan Marketing strategies and campaigns.</Text>
-            <Text>- Perform other tasks as assigned by Manager.</Text>
-            <Text>- Working hours: 8:00 - 17:00 (Mon-Fri).</Text>
+            <Text>{job.jobDescription}</Text>
           </View>
         </View>
 
         {/* Phúc lợi */}
         <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Phúc lợi</Text>
+          <Text style={styles.sectionTitle}>Yêu cầu công việc</Text>
           <View style={styles.section}>
-            <Text>✔ Travel and annual general health check-up</Text>
-            <Text>✔ 13th-month salary, Union bonus</Text>
-            <Text>✔ Free bus card, shuttle bus from HCMC</Text>
-            <Text>✔ Support lunch & phone expenses</Text>
-            <Text>✔ Full insurance, annual leave, overtime</Text>
-            <Text>✔ Company laptop</Text>
-            <Text>✔ Premium health care package</Text>
-            <Text>✔ Support tuition for courses</Text>
+            <Text>{job.requirement}</Text>
           </View>
         </View>
 
@@ -125,65 +219,65 @@ const JobDetailScreen = ({ route }: any) => {
           <View style={styles.detailGrid}>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Loại công việc</Text>
-              <Text style={styles.detailValue}>Nhân viên toàn thời gian</Text>
+              <Text style={styles.detailValue}> {getJobTypeLabel(job.jobType)}</Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Giới tính</Text>
-              <Text style={styles.detailValue}>Nam / Nữ</Text>
+              <Text style={styles.detailValue}>{getJobGenderLabel(job.gender)}</Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Cấp bậc</Text>
-              <Text style={styles.detailValue}>Nhân viên, Kỹ thuật viên / Kỹ sư</Text>
+              <Text style={styles.detailValue}>{getJobLevelLabel(job.jobLevel)}</Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Trình độ học vấn</Text>
-              <Text style={styles.detailValue}>Cử nhân</Text>
+              <Text style={styles.detailValue}> {getEducationLevelLabel(job.educationLevel)}</Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>Ngành nghề</Text>
-              <Text style={styles.detailValue}>Quảng cáo, Khuyến mãi, Đối ngoại, BĐS, Tiếp thị</Text>
+              <Text style={styles.detailValue}>
+                {job.industries && job.industries.length > 0
+                  ? job.industries.map((ind: any) => ind.name).join(", ")
+                  : "Không rõ"}
+              </Text>
             </View>
           </View>
+
           <View style={styles.infoContainer}>
             <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
             <View style={styles.section}>
-              <Text>✔ Travel and annual general health check-up</Text>
-              <Text>✔ 13th-month salary, Union bonus</Text>
-              <Text>✔ Free bus card, shuttle bus from HCMC</Text>
-              <Text>✔ Support lunch & phone expenses</Text>
-              <Text>✔ Full insurance, annual leave, overtime</Text>
-              <Text>✔ Company laptop</Text>
-              <Text>✔ Premium health care package</Text>
-              <Text>✔ Support tuition for courses</Text>
+              <Text>{job.description}</Text>
             </View>
           </View>
 
 
         </View>
         <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>về công ty</Text>
+          <Text style={styles.sectionTitle}>Về công ty</Text>
           <View style={styles.section}>
-            <Text>✔ Travel and annual general health check-up</Text>
-            <Text>✔ 13th-month salary, Union bonus</Text>
-            <Text>✔ Free bus card, shuttle bus from HCMC</Text>
-            <Text>✔ Support lunch & phone expenses</Text>
-            <Text>✔ Full insurance, annual leave, overtime</Text>
-            <Text>✔ Company laptop</Text>
-            <Text>✔ Premium health care package</Text>
-            <Text>✔ Support tuition for courses</Text>
+            <Text>{job.aboutCompany}</Text>
           </View>
         </View>
 
         <View style={styles.infoContainer}>
           {/* Về công ty */}
           <Text style={styles.sectionTitle}>Về công ty</Text>
-          <View style={styles.companyBox}>
+          <TouchableOpacity style={styles.companyBox} onPress={() => {
+            console.log(job.author.id)
+            navigation.navigate("CompanyDetail", {id: job.author.id})}}>
             <Image
-              source={require("../../../assets/App/logoJob.png")}
-              style={styles.companyLogo}
+              source={
+                job.author.avatarUrl
+                  ? typeof job.author.avatarUrl === "string"
+                    ? { uri: job.author.avatarUrl }
+                    : job.author.avatarUrl
+                  : require("../../../assets/App/companyLogoDefault.png")
+
+              }
+              style={styles.logo}
             />
             <View style={{ flex: 1 }}>
-              <Text style={styles.companyName}>Công Ty TNHH Becamex Tokyu</Text>
+              <Text style={styles.companyName}>{job.companyName}</Text>
               <View style={styles.row}>
                 <Ionicons name="briefcase-outline" size={16} color="#555" />
                 <Text style={styles.companyInfo}> 15 việc đang tuyển</Text>
@@ -193,10 +287,10 @@ const JobDetailScreen = ({ route }: any) => {
                   color="#555"
                   style={{ marginLeft: 10 }}
                 />
-                <Text style={styles.companyInfo}> 100 - 499</Text>
+                <Text style={styles.companyInfo}> {getCompanySizeLabel(job.companySize)}</Text>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* Nơi làm việc */}
           <Text style={styles.sectionTitle}>Nơi làm việc:</Text>
@@ -282,14 +376,18 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 24,
     borderWidth: 2,
-    marginTop: 22
+    marginTop: 22,
+      zIndex: 100,         // 👈 thêm dòng này
+    elevation: 10,
   },
   backBtnHide: {
     position: "absolute",   // đẩy xuống 1 chút cho thoát khỏi status bar
     left: 16, // nền mờ để dễ nhìn
     padding: 8,
     borderRadius: 24,
-    marginTop: 10
+    marginTop: 10,
+    zIndex: 100,         // 👈 thêm dòng này
+
   },
   header: {
     flexDirection: "row",
@@ -353,7 +451,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
-  companyBox: { flexDirection: "row", alignItems: "center", marginBottom: 15 },
+  companyBox: { flexDirection: "row", alignItems: "center", marginBottom: 15, paddingLeft: 15 },
   companyLogo: { width: 50, height: 50, marginRight: 10 },
   companyName: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
   row: { flexDirection: "row", alignItems: "center" },
@@ -440,5 +538,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#000",
+    paddingLeft: 60,
+    paddingRight: 40
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
   },
 });

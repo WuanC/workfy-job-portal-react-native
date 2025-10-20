@@ -11,8 +11,10 @@ import {
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import RenderHtml from "react-native-render-html";
 import { getPostById, Post } from "../services/postService";
+import { useNavigation } from "@react-navigation/native";
 
-export default function ArticleDetailScreen({ route, navigation }: any) {
+export default function ArticleDetailScreen({ route }: any) {
+    const navigation = useNavigation();
     const { id } = route.params as { id: number };
     const [post, setPost] = useState<Post | null>(null);
     const [loading, setLoading] = useState(true);
@@ -97,12 +99,7 @@ export default function ArticleDetailScreen({ route, navigation }: any) {
                 ) : null}
 
                 <View style={styles.authorRow}>
-                    <View style={styles.authorInfo}>
-                        <View style={styles.authorAvatar}>
-                            <Text style={styles.avatarText}>
-                                {post?.authorName ? post.authorName[0] : "Ẩ"}
-                            </Text>
-                        </View>
+                    <View style={styles.authorInfo}> 
                         <Text style={styles.authorName}>{post?.authorName ?? "Ẩn danh"}</Text>
                     </View>
 
@@ -147,7 +144,7 @@ const styles = StyleSheet.create({
         borderColor: "#e5e7eb",
         position: "relative",
     },
-    iconButton: { padding: 8, borderRadius: 8 },
+    iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
     headerTitle: {
         position: "absolute",
         left: 0,

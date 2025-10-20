@@ -133,7 +133,6 @@ const JobDetailScreen = ({ route }: any) => {
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() => {
-              console.log("Back 3")
               navigation.goBack()
 
             }}

@@ -83,6 +83,11 @@ export const updateEmployerProfile = async (data: {
 export const updateEmployerWebsiteUrls = async (data: {
     websiteUrls: string[];
     linkedinUrl: string;
+    facebookUrl: string;
+    twitterUrl: string;
+    googleUrl: string;
+    youtubeUrl: string
+
 }) => {
     try {
         const res = await apiInstance.patch("/employers/me/website-urls", data);

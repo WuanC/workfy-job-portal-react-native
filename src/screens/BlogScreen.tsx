@@ -113,22 +113,11 @@ export default function BlogScreen() {
                         onPress={() => navigation?.goBack?.()}
                         style={styles.backButton}
                     >
-                        <Ionicons name="arrow-back" size={22} color="#fff" />
+                        <Ionicons name="arrow-back" size={22} color="#000000ff" />
                     </TouchableOpacity>
 
-                    <View style={styles.searchBox}>
-                        <Ionicons
-                            name="search-outline"
-                            size={20}
-                            color="#777"
-                            style={{ marginRight: 6 }}
-                        />
-                        <TextInput
-                            placeholder="Tìm kiếm bài viết, tác giả, hashtag..."
-                            placeholderTextColor="#999"
-                            style={{ flex: 1, color: "#333" }}
-                        />
-                    </View>
+                    {/* Thêm tiêu đề ở giữa */}
+                    <Text style={styles.headerTitle}>Danh sách bài viết</Text>
                 </View>
             </View>
 
@@ -205,7 +194,6 @@ export default function BlogScreen() {
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <TouchableOpacity style={styles.card}
-                        //onPress={() => navigation.navigate("ArticleDetail", { postId: item.id as number })}
                         onPress={() => {
                             if (item?.id) {
                                 console.log("Đi đến bài viết ID:", item.id);
@@ -220,11 +208,11 @@ export default function BlogScreen() {
                         <View style={{ flex: 1 }}>
                             <Text style={styles.title}>{item.title}</Text>
                             <Text style={styles.meta}>
-                                📅 {new Date(item.updatedAt).toLocaleDateString("vi-VN")} ·{" "}
+                                 {new Date(item.updatedAt).toLocaleDateString("vi-VN")} ·{" "}
                                 {item.category.title}
                             </Text>
                             <Text style={styles.author}>
-                                ✍️ {item.authorName} · ⏱ {item.readingTime} phút đọc
+                                {item.authorName} ·  {item.readingTime} phút đọc
                             </Text>
                         </View>
                     </TouchableOpacity>
@@ -248,14 +236,24 @@ export default function BlogScreen() {
 
 const styles = StyleSheet.create({
     headerContainer: {
-        backgroundColor: "#9fbbdeff",
+        backgroundColor: "#ffffffff",
         paddingHorizontal: 12,
-        paddingTop: 30,
+        paddingTop: 10,
         paddingBottom: 14,
+        borderWidth: 0.5,
+        borderColor: "#a7a5a5ff"
     },
     headerRow: {
         flexDirection: "row",
         alignItems: "center",
+    },
+    headerTitle: {
+        flex: 1,
+        textAlign: "center",
+        fontSize: 17,
+        fontWeight: "600",
+        color: "#000000ff",
+        marginRight: 50, // để cân giữa vì có nút back bên trái
     },
     backButton: {
         padding: 6,

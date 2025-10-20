@@ -126,7 +126,7 @@ const MyCompany = () => {
             source={
               company?.backgroundUrl
                 ? { uri: company.backgroundUrl }
-                : require("../../../assets/App/banner.jpg")
+                : require("../../../assets/App/companyBannerDefault.jpg")
             }
             style={styles.banner}
           />
@@ -142,7 +142,7 @@ const MyCompany = () => {
               source={
                 company?.avatarUrl
                   ? { uri: company.avatarUrl }
-                  : require("../../../assets/App/logoJob.png")
+                  : require("../../../assets/App/companyLogoDefault.png")
               }
               style={styles.logo}
             />
@@ -198,9 +198,7 @@ const MyCompany = () => {
           <View style={styles.contentContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
-              <TouchableOpacity style={styles.editSmallButton}>
-                <Ionicons name="create-outline" size={18} color="#007bff" />
-              </TouchableOpacity>
+
             </View>
 
             <Text style={styles.description}>
@@ -214,7 +212,7 @@ const MyCompany = () => {
               </TouchableOpacity>
             </View>
             {/* ✅ Hiển thị danh sách website động */}
-            {Array.isArray(company?.websiteUrls) && company.websiteUrls.length > 0 ? (
+            {company?.websiteUrls && company.websiteUrls.length > 0 ? (
               company.websiteUrls.map((url: string, index: number) => (
                 <View style={styles.infoRow} key={index}>
                   <Ionicons name="globe-outline" size={18} color="#007bff" />
@@ -222,17 +220,50 @@ const MyCompany = () => {
                 </View>
               ))
             ) : (
-                <View style={styles.infoRow} >
-                  <Ionicons name="globe-outline" size={18} color="#007bff" />
-                  <Text style={styles.infoText}></Text>
-                </View>
+              <Text style={{ color: "#555", marginVertical: 4 }}>Không có website</Text>
             )}
-            <View style={styles.infoRow}>
-              <Ionicons name="logo-linkedin" size={18} color="#007bff" />
-              <Text style={styles.infoText}>{company?.linkedinUrl}</Text>
-            </View>
 
-            <View style={styles.sectionHeader}>
+            {/* 🌍 Facebook */}
+            {company?.facebookUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-facebook" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.facebookUrl}</Text>
+              </View>
+            )}
+
+            {/* 💼 LinkedIn */}
+            {company?.linkedinUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-linkedin" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.linkedinUrl}</Text>
+              </View>
+            )}
+
+            {/* 📺 YouTube */}
+            {company?.youtubeUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-youtube" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.youtubeUrl}</Text>
+              </View>
+            )}
+
+            {/* 🟢 Google */}
+            {company?.googleUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-google" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.googleUrl}</Text>
+              </View>
+            )}
+
+            {/* 🐦 Twitter */}
+            {company?.twitterUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-twitter" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.twitterUrl}</Text>
+              </View>
+            )}
+
+            {/* <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Hình ảnh</Text>
               <TouchableOpacity style={styles.editSmallButton}>
                 <Ionicons name="create-outline" size={18} color="#007bff" />
@@ -252,7 +283,7 @@ const MyCompany = () => {
                 source={require("../../../assets/App/logo.png")}
                 style={styles.photo}
               />
-            </View>
+            </View> */}
           </View>
         ) : (
           <View style={styles.contentContainer}>
@@ -266,6 +297,7 @@ const MyCompany = () => {
             {jobs.map((item) => (
               <JobCard
                 key={item.id}
+                id={1}
                 logo_path={item.logo_path}
                 job_title={item.job_title}
                 company_name={item.company_name}

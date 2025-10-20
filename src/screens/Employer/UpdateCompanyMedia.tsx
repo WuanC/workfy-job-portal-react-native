@@ -12,15 +12,17 @@ import {
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation } from "@react-navigation/native";
-import apiInstance from "../../api/apiInstance"; // ✅ đảm bảo đúng đường dẫn
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import { getEmployerProfile, updateEmployerWebsiteUrls } from "../../services/employerService";
 
 const UpdateCompanyMedia = () => {
   const navigation = useNavigation();
 
-  const [websiteLinks, setWebsiteLinks] = useState([""]);
+  const [websiteLinks, setWebsiteLinks] = useState<string[]>([""]);
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [googleUrl, setGoogleUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [companyImage, setCompanyImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,59 +33,53 @@ const UpdateCompanyMedia = () => {
         const data = await getEmployerProfile();
         if (data) {
           setWebsiteLinks(data.websiteUrls && data.websiteUrls.length > 0 ? data.websiteUrls : [""]);
+          setFacebookUrl(data.facebookUrl || "");
+          setTwitterUrl(data.twitterUrl || "");
           setLinkedinUrl(data.linkedinUrl || "");
+          setGoogleUrl(data.googleUrl || "");
+          setYoutubeUrl(data.youtubeUrl || "");
           setCompanyImage(data.backgroundUrl || null);
         }
       } catch (error) {
         console.log("❌ Lỗi khi lấy employer:", error);
       }
     };
-
     fetchEmployerData();
   }, []);
 
-  /** ➕ Thêm website */
   const handleAddWebsite = () => setWebsiteLinks((prev) => [...prev, ""]);
 
-  /** ✏️ Thay đổi website */
   const handleWebsiteChange = (index: number, text: string) => {
     const updated = [...websiteLinks];
     updated[index] = text;
     setWebsiteLinks(updated);
   };
 
-  /** 🗑️ Xóa website */
   const handleRemoveWebsite = (index: number) => {
     setWebsiteLinks((prev) => prev.filter((_, i) => i !== index));
   };
 
-  /** 📷 Chọn ảnh công ty */
-  const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-    if (!result.canceled) setCompanyImage(result.assets[0].uri);
-  };
 
-  /** 🔙 Quay lại */
   const handleCancel = () => navigation.goBack();
 
-  /** 💾 Cập nhật */
   const handleUpdate = async () => {
     try {
       setLoading(true);
       const payload = {
         websiteUrls: websiteLinks.filter((url) => url.trim() !== ""),
+        facebookUrl,
+        twitterUrl,
         linkedinUrl,
+        googleUrl,
+        youtubeUrl,
       };
 
       await updateEmployerWebsiteUrls(payload);
-      Alert.alert("✅ Thành công", "Cập nhật liên kết và hình ảnh công ty thành công!");
+      Alert.alert("Thành công", "Cập nhật liên kết và hình ảnh công ty thành công!");
       navigation.goBack();
     } catch (error) {
-      console.log("❌ Lỗi khi cập nhật:", error);
-      Alert.alert("❌ Lỗi", "Không thể cập nhật thông tin.");
+      console.log("Lỗi khi cập nhật:", error);
+      Alert.alert("Lỗi", "Không thể cập nhật thông tin.");
     } finally {
       setLoading(false);
     }
@@ -125,6 +121,30 @@ const UpdateCompanyMedia = () => {
           <Text style={styles.addLinkText}>+ Thêm website</Text>
         </TouchableOpacity>
 
+        {/* Facebook */}
+        <Text style={[styles.label, { marginTop: 20 }]}>Facebook</Text>
+        <View style={styles.inputRow}>
+          <FontAwesome name="facebook" size={20} color="#1877F2" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.input}
+            placeholder="https://facebook.com/your-page"
+            value={facebookUrl}
+            onChangeText={setFacebookUrl}
+          />
+        </View>
+
+        {/* Twitter */}
+        <Text style={[styles.label, { marginTop: 20 }]}>Twitter</Text>
+        <View style={styles.inputRow}>
+          <FontAwesome name="twitter" size={20} color="#1DA1F2" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.input}
+            placeholder="https://twitter.com/your-handle"
+            value={twitterUrl}
+            onChangeText={setTwitterUrl}
+          />
+        </View>
+
         {/* LinkedIn */}
         <Text style={[styles.label, { marginTop: 20 }]}>LinkedIn</Text>
         <View style={styles.inputRow}>
@@ -137,8 +157,32 @@ const UpdateCompanyMedia = () => {
           />
         </View>
 
+        {/* Google */}
+        <Text style={[styles.label, { marginTop: 20 }]}>Google</Text>
+        <View style={styles.inputRow}>
+          <FontAwesome name="google" size={20} color="#DB4437" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.input}
+            placeholder="https://google.com/your-profile"
+            value={googleUrl}
+            onChangeText={setGoogleUrl}
+          />
+        </View>
+
+        {/* YouTube */}
+        <Text style={[styles.label, { marginTop: 20 }]}>YouTube</Text>
+        <View style={styles.inputRow}>
+          <FontAwesome name="youtube-play" size={20} color="#FF0000" style={{ marginRight: 8 }} />
+          <TextInput
+            style={styles.input}
+            placeholder="https://youtube.com/@your-channel"
+            value={youtubeUrl}
+            onChangeText={setYoutubeUrl}
+          />
+        </View>
+
         {/* Hình ảnh công ty */}
-        <Text style={[styles.label, { marginTop: 20 }]}>Hình ảnh công ty</Text>
+        {/* <Text style={[styles.label, { marginTop: 20 }]}>Hình ảnh công ty</Text>
         <TouchableOpacity style={styles.imageBox} onPress={handlePickImage}>
           {companyImage ? (
             <Image source={{ uri: companyImage }} style={styles.image} />
@@ -148,7 +192,7 @@ const UpdateCompanyMedia = () => {
               <Text style={{ color: "#666", marginTop: 5 }}>Thêm hình ảnh mới</Text>
             </View>
           )}
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Nút */}
         <View style={styles.buttonRow}>
@@ -164,7 +208,7 @@ const UpdateCompanyMedia = () => {
   );
 };
 
-/** 🎨 Giao diện gốc giữ nguyên */
+/** 🎨 Giao diện */
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
@@ -191,11 +235,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: "#fff",
   },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: "#333",
-  },
+  input: { flex: 1, fontSize: 15, color: "#333" },
   addLinkBtn: { marginTop: 4 },
   addLinkText: { color: "#007bff", fontSize: 15 },
   imageBox: {

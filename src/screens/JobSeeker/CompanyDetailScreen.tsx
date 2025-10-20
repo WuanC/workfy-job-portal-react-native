@@ -166,38 +166,57 @@ const CompanyDetailScreen = ({ route }: any) => {
             </Text>
 
             <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
-            <View style={styles.infoRow}>
-              <Ionicons name="globe-outline" size={18} color="#007bff" />
-              <Text style={styles.infoText}>www.deair.vn</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Ionicons name="logo-facebook" size={18} color="#007bff" />
-              <Text style={styles.infoText}>facebook.com/deair.vn</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Ionicons name="logo-linkedin" size={18} color="#007bff" />
-              <Text style={styles.infoText}>linkedin.com/company/deair</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Ionicons name="logo-youtube" size={18} color="#007bff" />
-              <Text style={styles.infoText}>youtube.com/@deair</Text>
-            </View>
+            {company?.websiteUrls && company.websiteUrls.length > 0 ? (
+              company.websiteUrls.map((url: string, index: number) => (
+                <View style={styles.infoRow} key={index}>
+                  <Ionicons name="globe-outline" size={18} color="#007bff" />
+                  <Text style={styles.infoText}>{url}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={{ color: "#555", marginVertical: 4 }}>Không có website</Text>
+            )}
 
-            {/* <Text style={styles.sectionTitle}>Hình ảnh</Text>
-            <View style={styles.photoRow}>
-              <Image
-                source={require("../../../assets/App/logo.png")}
-                style={styles.photo}
-              />
-              <Image
-                source={require("../../../assets/App/logo.png")}
-                style={styles.photo}
-              />
-              <Image
-                source={require("../../../assets/App/logo.png")}
-                style={styles.photo}
-              />
-            </View> */}
+            {/* 🌍 Facebook */}
+            {company?.facebookUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-facebook" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.facebookUrl}</Text>
+              </View>
+            )}
+
+            {/* 💼 LinkedIn */}
+            {company?.linkedinUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-linkedin" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.linkedinUrl}</Text>
+              </View>
+            )}
+
+            {/* 📺 YouTube */}
+            {company?.youtubeUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-youtube" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.youtubeUrl}</Text>
+              </View>
+            )}
+
+            {/* 🟢 Google */}
+            {company?.googleUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-google" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.googleUrl}</Text>
+              </View>
+            )}
+
+            {/* 🐦 Twitter */}
+            {company?.twitterUrl && (
+              <View style={styles.infoRow}>
+                <Ionicons name="logo-twitter" size={18} color="#007bff" />
+                <Text style={styles.infoText}>{company.twitterUrl}</Text>
+              </View>
+            )}
+
           </View>
         ) : (
           <View style={styles.contentContainer}>

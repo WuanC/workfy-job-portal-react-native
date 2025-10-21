@@ -1,6 +1,8 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiInstance from "../api/apiInstance";
+import { signOut } from "../services/authService";
+import { navigationRef } from "../navigations/NavigationRef";
 
 type User = {
     id: string;
@@ -65,8 +67,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // ✅ Logout
     const logout = async () => {
-        await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
-        setUser(null);
+        try {
+            const accessToken = await AsyncStorage.getItem("accessToken");
+            const refreshToken = await AsyncStorage.getItem("refreshToken");
+
+            // attempt server-side sign-out, but proceed regardless of result per docs
+            try {
+                await signOut(accessToken, refreshToken);
+            } catch (err) {
+                console.warn("signOut failed:", err);
+            }
+        } finally {
+            // always clear local state
+            await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
+            setUser(null);
+
+            // reset navigation to Login
+            try {
+                if (navigationRef.isReady()) {
+                    navigationRef.reset({ index: 0, routes: [{ name: "Login" }] });
+                }
+            } catch (err) {
+                // ignore
+            }
+        }
     };
 
     return (

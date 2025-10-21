@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar } from "react-native"
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, SafeAreaView, StatusBar, Alert } from "react-native"
+import { useAuth } from "../../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../../types/navigation";
@@ -13,6 +14,7 @@ type MenuNavigationProp = NativeStackNavigationProp<
 const MenuScreen = () => {
   const navigation = useNavigation<MenuNavigationProp>();
   const [showMoreOptions, setShowMoreOptions] = useState(false)
+  const { logout } = useAuth();
 
   const toggleMoreOptions = () => {
     setShowMoreOptions(!showMoreOptions)
@@ -120,7 +122,25 @@ const MenuScreen = () => {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => {
+            Alert.alert("Xác nhận", "Bạn có chắc muốn đăng xuất?", [
+              { text: "Hủy", style: "cancel" },
+              {
+                text: "Đăng xuất",
+                style: "destructive",
+                onPress: async () => {
+                  try {
+                    await logout();
+                  } catch (err) {
+                    // ignore: AuthContext.logout already treats signOut failures as non-blocking
+                  }
+                },
+              },
+            ]);
+          }}
+        >
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
 

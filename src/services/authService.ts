@@ -165,3 +165,27 @@ export const registerEmployer = async (payload: EmployerRegisterRequest) => {
         throw new Error(err.message || "Đăng ký nhà tuyển dụng thất bại, vui lòng thử lại.");
     }
 };
+
+/**
+ * Sign out (used for both users and employers)
+ * Sends X-Token (accessToken) and Y-Token (refreshToken) in headers
+ */
+export const signOut = async (accessToken: string | null, refreshToken: string | null) => {
+    try {
+        await apiInstance.post(
+            "/auth/sign-out",
+            {},
+            {
+                headers: {
+                    ...(accessToken ? { "X-Token": accessToken } : {}),
+                    ...(refreshToken ? { "Y-Token": refreshToken } : {}),
+                },
+            }
+        );
+        return true;
+    } catch (err: any) {
+        // per docs, frontend should still treat logout as success even if server returns error
+        console.warn("signOut failed:", err?.response?.data || err.message || err);
+        return false;
+    }
+};

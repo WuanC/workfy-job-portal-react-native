@@ -108,17 +108,15 @@ export default function BlogScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f8ff" }}>
             {/* Header */}
             <View style={styles.headerContainer}>
-                <View style={styles.headerRow}>
-                    <TouchableOpacity
-                        onPress={() => navigation?.goBack?.()}
-                        style={styles.backButton}
-                    >
-                        <Ionicons name="arrow-back" size={22} color="#000000ff" />
-                    </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => navigation?.goBack?.()}
+                    style={styles.backButton}
+                >
+                    <Ionicons name="arrow-back" size={22} color="#000000ff" />
+                </TouchableOpacity>
 
-                    {/* Thêm tiêu đề ở giữa */}
-                    <Text style={styles.headerTitle}>Danh sách bài viết</Text>
-                </View>
+                {/* Thêm tiêu đề ở giữa */}
+                <Text style={styles.headerTitle}>Danh sách bài viết</Text>
             </View>
 
             {/* Bộ lọc */}
@@ -208,7 +206,7 @@ export default function BlogScreen() {
                         <View style={{ flex: 1 }}>
                             <Text style={styles.title}>{item.title}</Text>
                             <Text style={styles.meta}>
-                                 {new Date(item.updatedAt).toLocaleDateString("vi-VN")} ·{" "}
+                                {new Date(item.updatedAt).toLocaleDateString("vi-VN")} ·{" "}
                                 {item.category.title}
                             </Text>
                             <Text style={styles.author}>
@@ -238,12 +236,9 @@ const styles = StyleSheet.create({
     headerContainer: {
         backgroundColor: "#ffffffff",
         paddingHorizontal: 12,
-        paddingTop: 10,
-        paddingBottom: 14,
+        paddingVertical: 12,
         borderWidth: 0.5,
-        borderColor: "#a7a5a5ff"
-    },
-    headerRow: {
+        borderColor: "#e5e7eb",
         flexDirection: "row",
         alignItems: "center",
     },
@@ -256,9 +251,10 @@ const styles = StyleSheet.create({
         marginRight: 50, // để cân giữa vì có nút back bên trái
     },
     backButton: {
-        padding: 6,
+        padding: 8,
         borderRadius: 8,
         marginRight: 10,
+
     },
     searchBox: {
         flex: 1,

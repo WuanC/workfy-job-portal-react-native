@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { RootStackParamList } from "../../types/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { closeJob, deleteJob, getMyJobs } from "../../services/jobService";
 import { EmployerJobCard } from "../../components/Employer/EmployerJobCard";
 
@@ -53,6 +53,7 @@ export default function EmployerJobScreen() {
       setLoading(true);
       const res = await getMyJobs();
       if (res.status === 200) {
+
         setJobs(res.data.items);
       }
     } catch (err) {
@@ -62,11 +63,15 @@ export default function EmployerJobScreen() {
     }
   };
   // Fetch job list
-  useEffect(() => {
+  // useEffect(() => {
 
-    fetchJobs();
-  }, []);
-
+  //   fetchJobs();
+  // }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchJobs();
+    }, [])
+  );
   // Chọn / Bỏ chọn filter
   const toggleSelect = (id: number, name: string, selected: string[], setter: any) => {
     if (selected.includes(name)) setter(selected.filter((s) => s !== name));

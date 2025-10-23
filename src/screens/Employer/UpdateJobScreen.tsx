@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,19 +12,44 @@ import {
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { RichEditor, RichToolbar, actions } from "react-native-pell-rich-editor";
-import { useNavigation } from "@react-navigation/native";
-import { AgeType, EducationLevel, ExperienceLevel, getEnumOptions, JobGender, JobLevel, JobType, LevelCompanySize, SalaryType, SalaryUnit } from "../../utilities/constant";
-import { Dropdown } from "react-native-element-dropdown";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { AgeType, BenefitType, EducationLevel, ExperienceLevel, getEnumOptions, JobGender, JobLevel, JobType, LevelCompanySize, SalaryType, SalaryUnit } from "../../utilities/constant";
+import { Dropdown, MultiSelect } from "react-native-element-dropdown";
 import { getAllIndustries, Industry } from "../../services/industryService";
 import { getAllProvince, Province } from "../../services/provinceService";
 import { District, getDistrictById, getDistrictsByProvince } from "../../services/districtService";
-import { createJob, getJobById, JobRequest, updateJob } from "../../services/jobService";
+import { Benefit, createJob, getJobById, JobRequest, updateJob } from "../../services/jobService";
 import { JobLocation } from "../../types/type";
 
 const UpdateJobScreen = ({ route }: any) => {
 
   const { id } = route.params as { id: number };
+  // const richText = useRef<RichEditor>(null);
+
+
+  // const [isEditorReady, setIsEditorReady] = useState(false);
+  // const isInitialLoad = useRef(true);
   const navigation = useNavigation();
+  const richRefs = {
+    aboutCompany: useRef<RichEditor>(null),
+    description: useRef<RichEditor>(null),
+    requirement: useRef<RichEditor>(null),
+    jobDescription: useRef<RichEditor>(null),
+  };
+
+  const [editorsReady, setEditorsReady] = useState({
+    aboutCompany: false,
+    description: false,
+    requirement: false,
+    jobDescription: false,
+  });
+
+  const initialLoads = {
+    aboutCompany: useRef(true),
+    description: useRef(true),
+    requirement: useRef(true),
+    jobDescription: useRef(true),
+  };
   //-- Province
   const [listProvinces, setListProvinces] = useState<Province[]>([])
 
@@ -48,6 +73,7 @@ const UpdateJobScreen = ({ route }: any) => {
   const [salaryUnit, setSalaryUnit] = useState("");
   const [jobDescription, setJobDescription] = useState("")
   const [requirement, setRequirement] = useState("")
+  const [benefits, setBenefits] = useState<Benefit[]>([])
   const [listJobDistricts, setListJobDistricts] = useState<District[]>([])
 
   // --- Chi tiết công việc ---
@@ -86,30 +112,30 @@ const UpdateJobScreen = ({ route }: any) => {
 
   // --- Editor ---
 
-  const richAboutCompany = useRef<RichEditor>(null);
-  const richContact = useRef<RichEditor>(null);
-  const richRequirement = useRef<RichEditor>(null);
-  const richJobDescription = useRef<RichEditor>(null);
-  useEffect(() => {
-    if (richAboutCompany.current && aboutCompany) {
-      richAboutCompany.current.setContentHTML(aboutCompany);
-    }
-  }, [aboutCompany]);
-  useEffect(() => {
-    if (richContact.current && description) {
-      richContact.current.setContentHTML(description);
-    }
-  }, [description]);
-  useEffect(() => {
-    if (richRequirement.current && requirement) {
-      richRequirement.current.setContentHTML(requirement);
-    }
-  }, [requirement]);
-  useEffect(() => {
-    if (richJobDescription.current && jobDescription) {
-      richJobDescription.current.setContentHTML(jobDescription);
-    }
-  }, [jobDescription]);
+  // const richAboutCompany = useRef<RichEditor>(null);
+  // const richContact = useRef<RichEditor>(null);
+  // const richRequirement = useRef<RichEditor>(null);
+  // const richJobDescription = useRef<RichEditor>(null);
+  // useEffect(() => {
+  //   if (richAboutCompany.current && aboutCompany) {
+  //     richAboutCompany.current.setContentHTML(aboutCompany);
+  //   }
+  // }, [aboutCompany]);
+  // useEffect(() => {
+  //   if (richContact.current && description) {
+  //     richContact.current.setContentHTML(description);
+  //   }
+  // }, [description]);
+  // useEffect(() => {
+  //   if (richRequirement.current && requirement) {
+  //     richRequirement.current.setContentHTML(requirement);
+  //   }
+  // }, [requirement]);
+  // useEffect(() => {
+  //   if (richJobDescription.current && jobDescription) {
+  //     richJobDescription.current.setContentHTML(jobDescription);
+  //   }
+  // }, [jobDescription]);
 
   // --- Hàm submit ---
   const handleSubmit = async () => {
@@ -143,6 +169,10 @@ const UpdateJobScreen = ({ route }: any) => {
         Alert.alert("Sai định dạng", "Vui lòng nhập mức lương hợp lệ (Min < Max)");
         return;
       }
+      if (benefits.length <= 0) {
+        Alert.alert("Sai định dạng", "Phúc lợi không được để trống");
+        return;
+      }
       if (salaryType === "GREATER_THAN" && !minSalary) {
         Alert.alert("Thiếu thông tin", "Vui lòng nhập mức lương tối thiểu");
         return;
@@ -166,7 +196,7 @@ const UpdateJobScreen = ({ route }: any) => {
         companyWebsite: companyWebSite || undefined,
         aboutCompany,
         jobTitle,
-
+        jobBenefits: benefits,
         jobLocations: [
           {
             provinceId: jobProvincedId ?? -1,
@@ -201,10 +231,10 @@ const UpdateJobScreen = ({ route }: any) => {
         expirationDate: formatDate(expiryDate)
       };
       // ======== 3️⃣ GỌI API ========
-      console.log("📦 jobData gửi lên:", JSON.stringify(jobData, null, 2));
+      //console.log("📦 jobData gửi lên:", JSON.stringify(jobData, null, 2));
       const res = await updateJob(id, jobData);
       if (res.status === 200) {
-        Alert.alert("🎉 Thành công", "Công việc đã được đăng!");
+        Alert.alert("Thành công", "Cập nhật thành công!");
         navigation.goBack()
       } else {
         Alert.alert("Lỗi", res.message || "Không thể đăng công việc.");
@@ -265,6 +295,7 @@ const UpdateJobScreen = ({ route }: any) => {
 
         setJobDescription(job.jobDescription || "");
         setRequirement(job.requirement || "");
+        setBenefits(job.jobBenefits || [])
 
         setEducation(job.educationLevel || "");
         setExperience(job.experienceLevel || "");
@@ -356,6 +387,46 @@ const UpdateJobScreen = ({ route }: any) => {
       //setContactDistrictId(null);
     }
   }, [contactProvinceId]);
+
+  //////////////////////////////////
+
+
+
+  // useEffect(() => {
+  //   if (isEditorReady && requirement && isInitialLoad.current) {
+  //     richText.current?.setContentHTML(requirement);
+  //     isInitialLoad.current = false;
+  //   }
+  // }, [isEditorReady, requirement]);
+
+
+  // const handleEditorReady = () => {
+  //   setIsEditorReady(true);
+  // };
+  const handleEditorReady = (key: keyof typeof editorsReady) => {
+    setEditorsReady((prev) => ({ ...prev, [key]: true }));
+  };
+  const data = {
+    aboutCompany,
+    description,
+    requirement,
+    jobDescription,
+  };
+  // ⚙️ Dùng chung 1 useEffect duy nhất để cập nhật tất cả editor
+  useEffect(() => {
+    Object.keys(richRefs).forEach((key) => {
+      const k = key as keyof typeof editorsReady;
+      const editorReady = editorsReady[k];
+      const htmlValue = data[k];
+      const ref = richRefs[k];
+      const isFirst = initialLoads[k];
+
+      if (editorReady && htmlValue && isFirst.current) {
+        ref.current?.setContentHTML(htmlValue);
+        isFirst.current = false;
+      }
+    });
+  }, [editorsReady, data]);
   return (
     <View style={styles.container}>
       {/* ---------- HEADER ---------- */}
@@ -367,216 +438,285 @@ const UpdateJobScreen = ({ route }: any) => {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* ---------- THÔNG TIN CÔNG TY ---------- */}
-        <Text style={styles.title}>Thông tin công ty</Text>
+        <View style={styles.card}>
+          <Text style={styles.title}>Thông tin công ty</Text>
 
-        <Text style={styles.label}>
-          Tên công ty<Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: NPT Software"
-          value={companyName}
-          onChangeText={setCompanyName}
-        />
-
-        <Text style={styles.label}>
-          Số nhân viên<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={getEnumOptions(LevelCompanySize)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn số nhân viên"
-          value={companySize}
-          onChange={(item) => setCompanySize(item.value)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        <Text style={styles.label}>Website công ty</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: https://nptsoftware.vn"
-          value={companyWebSite}
-          onChangeText={setCompanyWebSite}
-        />
-
-        <Text style={styles.label}>
-          Sơ lược công ty<Text style={styles.required}>*</Text>
-        </Text>
-        <View style={styles.richContainer}>
-          <RichToolbar
-            editor={richAboutCompany}
-            actions={[actions.setBold, actions.setItalic, actions.setUnderline, actions.insertBulletsList]}
-            style={styles.toolbar}
+          <Text style={styles.label}>
+            Tên công ty<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="VD: NPT Software"
+            value={companyName}
+            onChangeText={setCompanyName}
           />
-          <RichEditor
-            ref={richAboutCompany}
-            placeholder="Giới thiệu ngắn gọn về công ty..."
-            style={styles.richEditor}
-            initialHeight={150}
-            onChange={setAboutCompany}
-            initialContentHTML={aboutCompany}
+
+          <Text style={styles.label}>
+            Số nhân viên<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={getEnumOptions(LevelCompanySize)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn số nhân viên"
+            value={companySize}
+            onChange={(item) => setCompanySize(item.value)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
           />
+
+          <Text style={styles.label}>Website công ty</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="VD: https://nptsoftware.vn"
+            value={companyWebSite}
+            onChangeText={setCompanyWebSite}
+          />
+
+          <Text style={styles.label}>
+            Sơ lược công ty<Text style={styles.required}>*</Text>
+          </Text>
+          <View style={styles.editorWrapper}>
+            <RichToolbar
+              editor={richRefs.aboutCompany}
+              actions={[
+                actions.setBold,
+                actions.setItalic,
+                actions.setUnderline,
+                actions.alignLeft,
+                actions.alignCenter,
+                actions.alignRight,
+                actions.alignFull,
+                actions.insertBulletsList,
+                actions.insertOrderedList,
+                actions.undo,
+                actions.redo,
+              ]}
+              iconTint="#555"
+              selectedIconTint="#007AFF"
+              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+              style={styles.toolbar}
+              iconSize={18}
+            />
+
+            <RichEditor
+              ref={richRefs.aboutCompany}
+              style={styles.editor}
+              placeholder="Nhập yêu cầu công việc..."
+              initialHeight={180}
+              editorInitializedCallback={() => handleEditorReady("aboutCompany")}
+              onChange={(html) => setAboutCompany(html)}
+            />
+          </View>
         </View>
-
         {/* ---------- THÔNG TIN CÔNG VIỆC ---------- */}
-        <Text style={styles.title}>Thông tin công việc</Text>
+        <View style={styles.card}>
+          <Text style={styles.title}>Thông tin công việc</Text>
 
-        <Text style={styles.label}>
-          Tên công việc<Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: Lập trình viên React Native"
-          value={jobTitle}
-          onChangeText={setJobTitle}
-        />
+          <Text style={styles.label}>
+            Tên công việc<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="VD: Lập trình viên React Native"
+            value={jobTitle}
+            onChangeText={setJobTitle}
+          />
 
-        <Text style={styles.label}>
-          Địa điểm<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={listProvinces}
-          labelField="name"
-          valueField="id"
-          placeholder="Chọn Tỉnh / Thành phố"
-          value={jobProvincedId}
-          onChange={(item) => {
-            setJobProvinceId(item.id)
-          }}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
+          <Text style={styles.label}>
+            Địa điểm<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={listProvinces}
+            labelField="name"
+            valueField="id"
+            placeholder="Chọn Tỉnh / Thành phố"
+            value={jobProvincedId}
+            onChange={(item) => {
+              setJobProvinceId(item.id)
+            }}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
 
-        {/* --- Quận / Huyện --- */}
-        <Dropdown
-          data={listJobDistricts}
-          labelField="name"
-          valueField="id"
-          placeholder="Chọn Quận / Huyện"
-          value={jobDistrictdId}
-          onChange={(item) => {
-            console.log(item.id)
-            setJobDistrictId(item.id)
-          }}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
+          {/* --- Quận / Huyện --- */}
+          <Dropdown
+            data={listJobDistricts}
+            labelField="name"
+            valueField="id"
+            placeholder="Chọn Quận / Huyện"
+            value={jobDistrictdId}
+            onChange={(item) => {
+              console.log(item.id)
+              setJobDistrictId(item.id)
+            }}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
 
-        {/* --- Số nhà / Địa chỉ chi tiết --- */}
-        <TextInput
-          style={styles.input}
-          placeholder="VD: 123 Nguyễn Trãi, Phường 5"
-          value={jobDetailAddress}
-          onChangeText={setJobDetailAddress}
-        />
+          {/* --- Số nhà / Địa chỉ chi tiết --- */}
+          <TextInput
+            style={styles.input}
+            placeholder="VD: 123 Nguyễn Trãi, Phường 5"
+            value={jobDetailAddress}
+            onChangeText={setJobDetailAddress}
+          />
 
-        <Text style={styles.label}>
-          Lương<Text style={styles.required}>*</Text>
-        </Text>
+          <Text style={styles.label}>
+            Lương<Text style={styles.required}>*</Text>
+          </Text>
 
-        {/* --- Dropdown chọn loại lương --- */}
-        <Dropdown
-          data={getEnumOptions(SalaryType)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn mức lương"
-          value={salaryType}
-          onChange={(item) => {
-            console.log(typeof salaryType, salaryType);
-            console.log(typeof SalaryType.GREATER_THAN, SalaryType.GREATER_THAN);
-            setSalaryType(item.value)
-          }
-          }
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
+          {/* --- Dropdown chọn loại lương --- */}
+          <Dropdown
+            data={getEnumOptions(SalaryType)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn mức lương"
+            value={salaryType}
+            onChange={(item) => {
+              console.log(typeof salaryType, salaryType);
+              console.log(typeof SalaryType.GREATER_THAN, SalaryType.GREATER_THAN);
+              setSalaryType(item.value)
+            }
+            }
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
 
-        {/* --- Nếu chọn “Trên” --- */}
-        {salaryType === "GREATER_THAN" && (
-          <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Nhập mức lương tối thiểu"
-              keyboardType="numeric"
-              value={minSalary?.toString() ?? ""}   // number -> string
-              onChangeText={(text) => {
-                setMinSalary(text ? parseFloat(text) : null);
-              }}
+          {/* --- Nếu chọn “Trên” --- */}
+          {salaryType === "GREATER_THAN" && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Nhập mức lương tối thiểu"
+                keyboardType="numeric"
+                value={minSalary?.toString() ?? ""}   // number -> string
+                onChangeText={(text) => {
+                  setMinSalary(text ? parseFloat(text) : null);
+                }}
+              />
+              <Dropdown
+                data={getEnumOptions(SalaryUnit)}
+                labelField="label"
+                valueField="value"
+                placeholder="Đơn vị"
+                value={salaryUnit}
+                onChange={(item) => setSalaryUnit(item.value)}
+                style={[styles.dropdown, { flex: 1 }]}
+                placeholderStyle={styles.placeholder}
+                selectedTextStyle={styles.selectedText}
+              />
+            </View>
+          )}
+
+          {/* --- Nếu chọn “Trong khoảng” --- */}
+          {salaryType === "RANGE" && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Min"
+                keyboardType="numeric"
+                value={minSalary?.toString() ?? ""}   // number -> string
+                onChangeText={(text) => {
+                  setMinSalary(text ? parseFloat(text) : null);
+                }}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Max"
+                keyboardType="numeric"
+                value={maxSalary?.toString() ?? ""}   // number -> string
+                onChangeText={(text) => {
+                  setMaxSalary(text ? parseFloat(text) : null);
+                }}
+              />
+              <Dropdown
+                data={getEnumOptions(SalaryUnit)}
+                labelField="label"
+                valueField="value"
+                placeholder="Đơn vị"
+                value={salaryUnit}
+                onChange={(item) => setSalaryUnit(item.value)}
+                style={[styles.dropdown, { flex: 1 }]}
+                placeholderStyle={styles.placeholder}
+                selectedTextStyle={styles.selectedText}
+              />
+            </View>
+          )}
+
+          <Text style={styles.label}>Mô tả công việc</Text>
+          <View style={styles.editorWrapper}>
+            <RichToolbar
+              editor={richRefs.jobDescription}
+              actions={[
+                actions.setBold,
+                actions.setItalic,
+                actions.setUnderline,
+                actions.alignLeft,
+                actions.alignCenter,
+                actions.alignRight,
+                actions.alignFull,
+                actions.insertBulletsList,
+                actions.insertOrderedList,
+                actions.undo,
+                actions.redo,
+              ]}
+              iconTint="#555"
+              selectedIconTint="#007AFF"
+              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+              style={styles.toolbar}
+              iconSize={18}
             />
-            <Dropdown
-              data={getEnumOptions(SalaryUnit)}
-              labelField="label"
-              valueField="value"
-              placeholder="Đơn vị"
-              value={salaryUnit}
-              onChange={(item) => setSalaryUnit(item.value)}
-              style={[styles.dropdown, { flex: 1 }]}
-              placeholderStyle={styles.placeholder}
-              selectedTextStyle={styles.selectedText}
+
+            <RichEditor
+              ref={richRefs.jobDescription}
+              style={styles.editor}
+              placeholder="Nhập yêu cầu công việc..."
+              initialHeight={180}
+              editorInitializedCallback={() => handleEditorReady("jobDescription")}
+              onChange={(html) => setJobDescription(html)}
             />
           </View>
-        )}
 
-        {/* --- Nếu chọn “Trong khoảng” --- */}
-        {salaryType === "RANGE" && (
-          <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Min"
-              keyboardType="numeric"
-              value={minSalary?.toString() ?? ""}   // number -> string
-              onChangeText={(text) => {
-                setMinSalary(text ? parseFloat(text) : null);
-              }}
+          <Text style={styles.label}>Yêu cầu công việc</Text>
+
+          <View style={styles.editorWrapper}>
+            <RichToolbar
+              editor={richRefs.requirement}
+              actions={[
+                actions.setBold,
+                actions.setItalic,
+                actions.setUnderline,
+                actions.alignLeft,
+                actions.alignCenter,
+                actions.alignRight,
+                actions.alignFull,
+                actions.insertBulletsList,
+                actions.insertOrderedList,
+                actions.undo,
+                actions.redo,
+              ]}
+              iconTint="#555"
+              selectedIconTint="#007AFF"
+              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+              style={styles.toolbar}
+              iconSize={18}
             />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Max"
-              keyboardType="numeric"
-              value={maxSalary?.toString() ?? ""}   // number -> string
-              onChangeText={(text) => {
-                setMaxSalary(text ? parseFloat(text) : null);
-              }}
-            />
-            <Dropdown
-              data={getEnumOptions(SalaryUnit)}
-              labelField="label"
-              valueField="value"
-              placeholder="Đơn vị"
-              value={salaryUnit}
-              onChange={(item) => setSalaryUnit(item.value)}
-              style={[styles.dropdown, { flex: 1 }]}
-              placeholderStyle={styles.placeholder}
-              selectedTextStyle={styles.selectedText}
+
+            <RichEditor
+              ref={richRefs.requirement}
+              style={styles.editor}
+              placeholder="Nhập yêu cầu công việc..."
+              initialHeight={180}
+              editorInitializedCallback={() => handleEditorReady("requirement")}
+              onChange={(html) => setRequirement(html)}
             />
           </View>
-        )}
-
-        <Text style={styles.label}>Mô tả công việc</Text>
-        <View style={styles.richContainer}>
-          <RichToolbar
-            editor={richJobDescription}
-            actions={[actions.setBold, actions.setItalic, actions.setUnderline]}
-            style={styles.toolbar}
-          />
-          <RichEditor
-            ref={richJobDescription}
-            placeholder="Thông tin mô tả chi tiết..."
-            style={styles.richEditor}
-            initialHeight={120}
-            onChange={setJobDescription}
-            initialContentHTML={jobDescription}
-          />
-        </View>
-
-        <Text style={styles.label}>Yêu cầu công việc</Text>
-        <View style={styles.richContainer}>
+          {/* <View style={styles.richContainer}>
           <RichToolbar
             editor={richRequirement}
             actions={[actions.setBold, actions.setItalic, actions.setUnderline]}
@@ -590,302 +730,370 @@ const UpdateJobScreen = ({ route }: any) => {
             onChange={setRequirement}
             initialContentHTML={requirement}
           />
-        </View>
+        </View> */}
+          {/* <View style={styles.textAreaContainer}>
+          <TextInput
+            value={requirement}
+            onChangeText={setRequirement}
+            placeholder="Thông tin mô tả chi tiết..."
+            multiline
+            textAlignVertical="top"
+            style={styles.textArea}
+          />
+        </View> */}
+          <Text style={styles.label}>
+            Phúc lợi<Text style={styles.required}>*</Text>
+          </Text>
 
-        {/* ---------- CHI TIẾT CÔNG VIỆC ---------- */}
-        <Text style={styles.title}>Chi tiết công việc</Text>
-
-        <Text style={styles.label}>
-          Trình độ học vấn<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={getEnumOptions(EducationLevel)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn trình độ học vấn"
-          value={education}
-          onChange={(item) => setEducation(item.value)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        <Text style={styles.label}>
-          Mức kinh nghiệm<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={getEnumOptions(ExperienceLevel)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn kinh nghiệm làm việc"
-          value={experience}
-          onChange={(item) => setExperience(item.value)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        <Text style={styles.label}>
-          Cấp bậc<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={getEnumOptions(JobLevel)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn cấp bậc"
-          value={jobLevel}
-          onChange={(item) => setJobLevel(item.value)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        <Text style={styles.label}>
-          Loại công việc<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={getEnumOptions(JobType)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn loại công việc"
-          value={jobType}
-          onChange={(item) => setJobType(item.value)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        <Text style={styles.label}>
-          Giới tính<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={getEnumOptions(JobGender)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn giới tính"
-          value={jobGender}
-          onChange={(item) => setJobGender(item.value)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-
-        <Text style={styles.label}>Mã việc làm</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: RN-2025-01"
-          value={jobCode}
-          onChangeText={(text) => setJobCode(text)}
-        />
-
-        <Text style={styles.label}>
-          Ngành nghề<Text style={styles.required}>*</Text>
-        </Text>
-
-        {/** Duyệt qua danh sách ngành nghề đã chọn **/}
-        {selectIndustryList.map((selected, index) => (
-          <View
-            key={index}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginHorizontal: 16,
-              marginTop: 6,
-              gap: 8,
+          <MultiSelect
+            data={getEnumOptions(BenefitType)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn phúc lợi"
+            value={benefits.map((b) => b.type)} // mảng các value đã chọn
+            onChange={(selectedValues) => {
+              const selectedBenefits = selectedValues.map((val) => ({
+                type: val,
+                description: BenefitType[val as keyof typeof BenefitType],
+              }));
+              setBenefits(selectedBenefits);
             }}
-          >
-            <View style={{ flex: 1 }}>
-              <Dropdown
-                data={industries}
-                labelField="name"
-                valueField="id"
-                placeholder="Vui lòng chọn"
-                value={selected}
-                onChange={(item) => {
-                  const updated = [...selectIndustryList];
-                  updated[index] = item.id;
-                  setSelectIndustryList(updated);
-                }}
-                style={styles.dropdown}
-                placeholderStyle={styles.placeholder}
-                selectedTextStyle={styles.selectedText}
-              />
-            </View>
-
-            {index > 0 && (
-              <TouchableOpacity
-                onPress={() => {
-                  const updated = selectIndustryList.filter((_, i) => i !== index);
-                  setSelectIndustryList(updated);
-                }}
-              >
-                <Ionicons name="trash-outline" size={22} color="red" />
-              </TouchableOpacity>
+            style={[styles.dropdown]}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+            activeColor="#f0f0f0"
+            search
+            searchPlaceholder="Tìm phúc lợi..."
+            renderSelectedItem={(item, unSelect) => (
+              <View style={styles.selectedItem}>
+                <Text style={styles.selectedItemText}>{item.label}</Text>
+                <Ionicons
+                  name="close-circle"
+                  size={16}
+                  color="#747474ff"
+                  style={styles.removeIcon}
+                  onPress={() => unSelect?.(item)}
+                />
+              </View>
             )}
-          </View>
-        ))}
+          />
+        </View>
+        {/* ---------- CHI TIẾT CÔNG VIỆC ---------- */}
+        <View style={styles.card}>
+          <Text style={styles.title}>Chi tiết công việc</Text>
 
-        <TouchableOpacity
-          onPress={() => setSelectIndustryList([...selectIndustryList, null])}
-          style={{ marginHorizontal: 16, marginTop: 8 }}
-        >
-          <Text style={{ color: "#1a73e8", fontWeight: "500" }}>+ Thêm danh mục</Text>
-        </TouchableOpacity>
+          <Text style={styles.label}>
+            Trình độ học vấn<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={getEnumOptions(EducationLevel)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn trình độ học vấn"
+            value={education}
+            onChange={(item) => setEducation(item.value)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
+
+          <Text style={styles.label}>
+            Mức kinh nghiệm<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={getEnumOptions(ExperienceLevel)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn kinh nghiệm làm việc"
+            value={experience}
+            onChange={(item) => setExperience(item.value)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
+
+          <Text style={styles.label}>
+            Cấp bậc<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={getEnumOptions(JobLevel)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn cấp bậc"
+            value={jobLevel}
+            onChange={(item) => setJobLevel(item.value)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
+
+          <Text style={styles.label}>
+            Loại công việc<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={getEnumOptions(JobType)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn loại công việc"
+            value={jobType}
+            onChange={(item) => setJobType(item.value)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
+
+          <Text style={styles.label}>
+            Giới tính<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={getEnumOptions(JobGender)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn giới tính"
+            value={jobGender}
+            onChange={(item) => setJobGender(item.value)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
 
 
-        <Text style={styles.label}>Từ khóa</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: React Native, Frontend, Mobile App..."
-        />
-
-        <Text style={styles.label}>
-          Tuổi<Text style={styles.required}>*</Text>
-        </Text>
-        {/* --- Dropdown chọn loại tuổi --- */}
-        <Dropdown
-          data={getEnumOptions(AgeType)}
-          labelField="label"
-          valueField="value"
-          placeholder="Chọn điều kiện độ tuổi"
-          value={ageType}
-          onChange={(item) => setAgeType(item.value)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        {/* --- Nếu chọn “Trên” thì hiện 1 ô nhập --- */}
-        {ageType === "ABOVE" && (
+          <Text style={styles.label}>Mã việc làm</Text>
           <TextInput
             style={styles.input}
-            placeholder="Nhập độ tuổi tối thiểu"
-            keyboardType="numeric"
-            value={minAge?.toString() ?? ""}   // number -> string
-            onChangeText={(text) => {
-              setMinAge(text ? parseFloat(text) : null);
-            }}
+            placeholder="VD: RN-2025-01"
+            value={jobCode}
+            onChangeText={(text) => setJobCode(text)}
           />
-        )}
 
-        {/* --- Nếu chọn “Dưới” thì hiện 1 ô nhập --- */}
-        {ageType === "BELOW" && (
+          <Text style={styles.label}>
+            Ngành nghề<Text style={styles.required}>*</Text>
+          </Text>
+
+          {/** Duyệt qua danh sách ngành nghề đã chọn **/}
+          {selectIndustryList.map((selected, index) => (
+            <View
+              key={index}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginHorizontal: 16,
+                marginTop: 6,
+                gap: 8,
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Dropdown
+                  data={industries}
+                  labelField="name"
+                  valueField="id"
+                  placeholder="Vui lòng chọn"
+                  value={selected}
+                  onChange={(item) => {
+                    const updated = [...selectIndustryList];
+                    updated[index] = item.id;
+                    setSelectIndustryList(updated);
+                  }}
+                  style={styles.dropdown}
+                  placeholderStyle={styles.placeholder}
+                  selectedTextStyle={styles.selectedText}
+                />
+              </View>
+
+              {index > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const updated = selectIndustryList.filter((_, i) => i !== index);
+                    setSelectIndustryList(updated);
+                  }}
+                >
+                  <Ionicons name="trash-outline" size={22} color="red" />
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+
+          <TouchableOpacity
+            onPress={() => setSelectIndustryList([...selectIndustryList, null])}
+            style={{ marginHorizontal: 16, marginTop: 8 }}
+          >
+            <Text style={{ color: "#1a73e8", fontWeight: "500" }}>+ Thêm danh mục</Text>
+          </TouchableOpacity>
+
+
+          <Text style={styles.label}>Từ khóa</Text>
           <TextInput
             style={styles.input}
-            placeholder="Nhập độ tuổi tối đa"
-            keyboardType="numeric"
-            value={maxAge?.toString() ?? ""}   // number -> string
-            onChangeText={(text) => {
-              setMaxAge(text ? parseFloat(text) : null);
-            }}
+            placeholder="VD: React Native, Frontend, Mobile App..."
           />
-        )}
 
-        {/* --- Nếu chọn “Trong khoảng” thì hiện 2 ô nhập --- */}
-        {ageType === "INPUT" && (
-          <View style={{ flexDirection: "row", gap: 8, marginHorizontal: 16 }}>
+          <Text style={styles.label}>
+            Tuổi<Text style={styles.required}>*</Text>
+          </Text>
+          {/* --- Dropdown chọn loại tuổi --- */}
+          <Dropdown
+            data={getEnumOptions(AgeType)}
+            labelField="label"
+            valueField="value"
+            placeholder="Chọn điều kiện độ tuổi"
+            value={ageType}
+            onChange={(item) => setAgeType(item.value)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
+
+          {/* --- Nếu chọn “Trên” thì hiện 1 ô nhập --- */}
+          {ageType === "ABOVE" && (
             <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Từ tuổi"
+              style={styles.input}
+              placeholder="Nhập độ tuổi tối thiểu"
               keyboardType="numeric"
               value={minAge?.toString() ?? ""}   // number -> string
               onChangeText={(text) => {
                 setMinAge(text ? parseFloat(text) : null);
               }}
             />
+          )}
+
+          {/* --- Nếu chọn “Dưới” thì hiện 1 ô nhập --- */}
+          {ageType === "BELOW" && (
             <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Đến tuổi"
+              style={styles.input}
+              placeholder="Nhập độ tuổi tối đa"
               keyboardType="numeric"
               value={maxAge?.toString() ?? ""}   // number -> string
               onChangeText={(text) => {
                 setMaxAge(text ? parseFloat(text) : null);
               }}
             />
-          </View>
-        )}
-        {/* ---------- THÔNG TIN LIÊN HỆ ---------- */}
-        <Text style={styles.title}>Thông tin liên hệ</Text>
+          )}
 
-        <Text style={styles.label}>
-          Người liên hệ<Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: Lê Hữu Nam"
-          value={contactName}
-          onChangeText={setContactName}
-        />
-
-        <Text style={styles.label}>
-          Điện thoại liên lạc<Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: 0905 123 456"
-          keyboardType="phone-pad"
-          value={contactPhone}
-          onChangeText={setContactPhone}
-        />
-
-        <Text style={styles.label}>
-          Địa điểm<Text style={styles.required}>*</Text>
-        </Text>
-        <Dropdown
-          data={listProvinces}
-          labelField="name"
-          valueField="id"
-          placeholder="Chọn Tỉnh / Thành phố"
-          value={contactProvinceId}
-          onChange={(item) => {
-            setContactProvinceId(item.id)
-          }}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        {/* --- Quận / Huyện --- */}
-        <Dropdown
-          data={listContactDistricts
-          }
-          labelField="name"
-          valueField="id"
-          placeholder="Chọn Quận / Huyện"
-          value={contactDistrictdId}
-          onChange={(item) => setContactDistrictId(item.id)}
-          style={styles.dropdown}
-          placeholderStyle={styles.placeholder}
-          selectedTextStyle={styles.selectedText}
-        />
-
-        {/* --- Số nhà / Địa chỉ chi tiết --- */}
-        <TextInput
-          style={styles.input}
-          placeholder="VD: 123 Nguyễn Trãi, Phường 5"
-          value={contactDetailAddress}
-          onChangeText={setContactDetailAddress}
-        />
-
-        <Text style={styles.label}>Mô tả</Text>
-        <View style={styles.richContainer}>
-          <RichToolbar
-            editor={richContact}
-            actions={[actions.setBold, actions.setItalic, actions.setUnderline]}
-            style={styles.toolbar}
-          />
-          <RichEditor
-            ref={richContact}
-            placeholder="Thông tin mô tả chi tiết..."
-            style={styles.richEditor}
-            initialHeight={120}
-            onChange={setDescription}
-            initialContentHTML={description}
-          />
+          {/* --- Nếu chọn “Trong khoảng” thì hiện 2 ô nhập --- */}
+          {ageType === "INPUT" && (
+            <View style={{ flexDirection: "row", gap: 8, marginHorizontal: 16 }}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Từ tuổi"
+                keyboardType="numeric"
+                value={minAge?.toString() ?? ""}   // number -> string
+                onChangeText={(text) => {
+                  setMinAge(text ? parseFloat(text) : null);
+                }}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Đến tuổi"
+                keyboardType="numeric"
+                value={maxAge?.toString() ?? ""}   // number -> string
+                onChangeText={(text) => {
+                  setMaxAge(text ? parseFloat(text) : null);
+                }}
+              />
+            </View>
+          )}
         </View>
+        {/* ---------- THÔNG TIN LIÊN HỆ ---------- */}
+        <View style={styles.card}>
+          <Text style={styles.title}>Thông tin liên hệ</Text>
 
-        {/* ---------- PHÂN CÔNG THÀNH VIÊN ----------
+          <Text style={styles.label}>
+            Người liên hệ<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="VD: Lê Hữu Nam"
+            value={contactName}
+            onChangeText={setContactName}
+          />
+
+          <Text style={styles.label}>
+            Điện thoại liên lạc<Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="VD: 0905 123 456"
+            keyboardType="phone-pad"
+            value={contactPhone}
+            onChangeText={setContactPhone}
+          />
+
+          <Text style={styles.label}>
+            Địa điểm<Text style={styles.required}>*</Text>
+          </Text>
+          <Dropdown
+            data={listProvinces}
+            labelField="name"
+            valueField="id"
+            placeholder="Chọn Tỉnh / Thành phố"
+            value={contactProvinceId}
+            onChange={(item) => {
+              setContactProvinceId(item.id)
+            }}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
+
+          {/* --- Quận / Huyện --- */}
+          <Dropdown
+            data={listContactDistricts
+            }
+            labelField="name"
+            valueField="id"
+            placeholder="Chọn Quận / Huyện"
+            value={contactDistrictdId}
+            onChange={(item) => setContactDistrictId(item.id)}
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholder}
+            selectedTextStyle={styles.selectedText}
+          />
+
+          {/* --- Số nhà / Địa chỉ chi tiết --- */}
+          <TextInput
+            style={styles.input}
+            placeholder="VD: 123 Nguyễn Trãi, Phường 5"
+            value={contactDetailAddress}
+            onChangeText={setContactDetailAddress}
+          />
+
+          <Text style={styles.label}>Mô tả</Text>
+          <View style={styles.editorWrapper}>
+            <RichToolbar
+              editor={richRefs.description}
+              actions={[
+                actions.setBold,
+                actions.setItalic,
+                actions.setUnderline,
+                actions.alignLeft,
+                actions.alignCenter,
+                actions.alignRight,
+                actions.alignFull,
+                actions.insertBulletsList,
+                actions.insertOrderedList,
+                actions.undo,
+                actions.redo,
+              ]}
+              iconTint="#555"
+              selectedIconTint="#007AFF"
+              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+              style={styles.toolbar}
+              iconSize={18}
+            />
+
+            <RichEditor
+              ref={richRefs.description}
+              style={styles.editor}
+              placeholder="Nhập yêu cầu công việc..."
+              initialHeight={180}
+              editorInitializedCallback={() => handleEditorReady("description")}
+              onChange={(html) => {
+                setDescription(html)}
+              }
+            />
+          </View>
+
+          {/* ---------- PHÂN CÔNG THÀNH VIÊN ----------
         <Text style={styles.title}>Phân công thành viên</Text>
 
         <Text style={styles.label}>Thành viên được phân công</Text>
@@ -907,7 +1115,7 @@ const UpdateJobScreen = ({ route }: any) => {
         />
 
         {/* ---------- NGÀY ĐĂNG ---------- */}
-        {/* <Text style={styles.title}>Ngày đăng</Text>
+          {/* <Text style={styles.title}>Ngày đăng</Text>
         <Text style={styles.label}>
           Ngày đăng<Text style={styles.required}>*</Text>
         </Text>
@@ -917,24 +1125,24 @@ const UpdateJobScreen = ({ route }: any) => {
           editable={false}
         /> */}
 
-        <Text style={styles.label}>
-          Ngày hết hạn<Text style={styles.required}>*</Text>
-        </Text>
-        <TouchableOpacity onPress={() => setDatePickerVisibility(true)} style={styles.input}>
-          <Text>{formatDate(expiryDate)}</Text>
-        </TouchableOpacity>
+          <Text style={styles.label}>
+            Ngày hết hạn<Text style={styles.required}>*</Text>
+          </Text>
+          <TouchableOpacity onPress={() => setDatePickerVisibility(true)} style={styles.input}>
+            <Text>{formatDate(expiryDate)}</Text>
+          </TouchableOpacity>
 
-        {/* --- Modal chọn ngày --- */}
-        <DateTimePickerModal
-          isVisible={isDatePickerVisible}
-          mode="date"
-          onConfirm={handleConfirm}
-          onCancel={hideDatePicker}
-          date={expiryDate}
-        />
+          {/* --- Modal chọn ngày --- */}
+          <DateTimePickerModal
+            isVisible={isDatePickerVisible}
+            mode="date"
+            onConfirm={handleConfirm}
+            onCancel={hideDatePicker}
+            date={expiryDate}
+          />
 
-        {/* ---------- NGÔN NGỮ HỒ SƠ ỨNG VIÊN ---------- */}
-        {/* <Text style={styles.title}>Ngôn ngữ nhận hồ sơ ứng viên</Text>
+          {/* ---------- NGÔN NGỮ HỒ SƠ ỨNG VIÊN ---------- */}
+          {/* <Text style={styles.title}>Ngôn ngữ nhận hồ sơ ứng viên</Text>
         <View style={styles.pickerContainer}>
           <Picker selectedValue={language} onValueChange={setLanguage}>
             <Picker.Item label="Vui lòng chọn" value="" />
@@ -943,18 +1151,19 @@ const UpdateJobScreen = ({ route }: any) => {
             <Picker.Item label="Song ngữ Việt - Anh" value="both" />
           </Picker>
         </View> */}
-
-        {/* ---------- NÚT SUBMIT ---------- */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.saveBtn} onPress={() => Alert.alert("Đã lưu nháp!")}>
-            <Text style={styles.saveText}>Lưu việc làm</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-            <Text style={styles.submitText}>Đăng công việc</Text>
-          </TouchableOpacity>
         </View>
+        {/* ---------- NÚT SUBMIT ---------- */}
+
       </ScrollView>
+      <View style={styles.buttonRow}>
+        <TouchableOpacity style={styles.saveBtn} onPress={() => Alert.alert("Đã lưu nháp!")}>
+          <Text style={styles.saveText}>Lưu việc làm</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+          <Text style={styles.submitText}>Cập nhật công việc</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -962,38 +1171,53 @@ const UpdateJobScreen = ({ route }: any) => {
 export default UpdateJobScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: "#f8fafc" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#ffffffff",
-    paddingVertical: 12,
     paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderColor: "#e5e7eb",
+    position: "relative",
   },
-  headerTitle: { color: "#000000ff", fontSize: 18, fontWeight: "bold" },
-  title: { fontSize: 20, fontWeight: "700", color: "#1a73e8", marginVertical: 16, paddingHorizontal: 16 },
-  label: { fontSize: 15, fontWeight: "600", marginTop: 14, color: "#333", paddingHorizontal: 16 },
+  iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
+  headerTitle: {
+    position: "absolute",
+    left: 40, // 👈 đẩy sang phải để tránh icon Back
+    right: 40,
+    textAlign: "center",
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#075985",
+    paddingLeft: 10, // 👈 thêm khoảng cách nhẹ bên trái // ❌ không dùng trong StyleSheet (đưa vào component)
+  },
+  card: {
+    backgroundColor: "#fff",
+    paddingVertical: 20,
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  title: { fontSize: 20, fontWeight: "700", color: "#075985", marginVertical: 5, paddingHorizontal: 10 },
+  label: { fontSize: 15, fontWeight: "600", marginTop: 14, color: "#000000ff", paddingHorizontal: 10 },
   required: { color: "red" },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginHorizontal: 16,
-    marginTop: 6,
+    borderColor: "#E0E0E0",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginHorizontal: 10,
+    marginVertical: 6,
+    backgroundColor: "#FFFFFF",
+    fontSize: 15,
+    color: "#333",
+    elevation: 1,
+    height: 50,
   },
-  richContainer: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    overflow: "hidden",
-    marginHorizontal: 16,
-  },
-  toolbar: { borderBottomWidth: 1, borderColor: "#ddd", backgroundColor: "#f5f5f5" },
-  richEditor: { padding: 10, minHeight: 150, backgroundColor: "#fff" },
   submitBtn: {
     backgroundColor: "#1a73e8",
     borderRadius: 10,
@@ -1005,13 +1229,15 @@ const styles = StyleSheet.create({
   submitText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
     gap: 10,
-    marginTop: 20,
-    marginBottom: 20,
-    marginHorizontal: 16,
-    backgroundColor: "#faf5f5ff",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    position: "relative",
   },
   saveBtn: {
     borderWidth: 1.5,
@@ -1032,10 +1258,12 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
-    marginHorizontal: 16,
+    marginHorizontal: 10,
     marginTop: 6,
     paddingHorizontal: 12,
+    marginVertical: 6,
     backgroundColor: "#fff",
+    elevation: 1,
   },
   placeholder: {
     color: "#999",
@@ -1047,4 +1275,69 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+
+  // selectedText: {
+  //   color: "#333",
+  // },
+  selectedItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f6fa",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "#dcdde1",
+    marginRight: 8,
+    marginTop: 8,
+    marginLeft: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 1.5,
+    elevation: 1,
+  },
+  selectedItemText: {
+    color: "#2f3640",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  removeIcon: {
+    marginLeft: 6,
+  },
+  //rich editor
+  editorWrapper: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    marginHorizontal: 10,
+    marginVertical: 6,
+  },
+  toolbar: {
+    backgroundColor: "#F7F9FC",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E4E6EB",
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    minHeight: 44,
+  },
+  editor: {
+    minHeight: 180,
+    padding: 12,
+    fontSize: 15,
+    color: "#333",
+    backgroundColor: "#FFFFFF",
+  },
+
 });
+
+

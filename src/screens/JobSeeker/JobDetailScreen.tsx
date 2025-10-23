@@ -14,7 +14,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
-import { getJobById } from "../../services/jobService";
+import { Benefit, getJobById } from "../../services/jobService";
 import { getCompanySizeLabel, getEducationLevelLabel, getExperienceLevelLabel, getJobGenderLabel, getJobLevelLabel, getJobTypeLabel } from "../../utilities/constant";
 
 const bannerImg = require("../../../assets/App/banner.jpg")
@@ -241,15 +241,28 @@ const JobDetailScreen = ({ route }: any) => {
               </Text>
             </View>
           </View>
-
-          <View style={styles.infoContainer}>
-            <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
-            <View style={styles.section}>
-              <Text>{job.description}</Text>
-            </View>
+        </View>
+        <View style={styles.infoContainer}>
+          <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
+          <View style={styles.section}>
+            <Text>{job.description}</Text>
           </View>
+        </View>
 
 
+        <View style={styles.infoContainer}>
+          <Text style={styles.sectionTitle}>Phúc lợi</Text>
+          <View style={styles.section}>
+            {job.jobBenefits && job.jobBenefits.length > 0 ? (
+              job.jobBenefits.map((benefit : Benefit) => (
+                <Text key={benefit.type} style={styles.benefitText}>
+                  • {benefit.description}
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>Chưa cập nhật</Text>
+            )}
+          </View>
         </View>
         <View style={styles.infoContainer}>
           <Text style={styles.sectionTitle}>Về công ty</Text>
@@ -263,7 +276,8 @@ const JobDetailScreen = ({ route }: any) => {
           <Text style={styles.sectionTitle}>Về công ty</Text>
           <TouchableOpacity style={styles.companyBox} onPress={() => {
             console.log(job.author.id)
-            navigation.navigate("CompanyDetail", {id: job.author.id})}}>
+            navigation.navigate("CompanyDetail", { id: job.author.id })
+          }}>
             <Image
               source={
                 job.author.avatarUrl
@@ -376,7 +390,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     borderWidth: 2,
     marginTop: 22,
-      zIndex: 100,         // 👈 thêm dòng này
+    zIndex: 100,         // 👈 thêm dòng này
     elevation: 10,
   },
   backBtnHide: {
@@ -545,5 +559,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f9f9f9",
+  },
+  benefitText: {
+    fontSize: 14,
+    color: "#333",
+    marginBottom: 4,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#888",
+    fontStyle: "italic",
   },
 });

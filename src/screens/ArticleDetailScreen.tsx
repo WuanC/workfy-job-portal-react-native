@@ -86,7 +86,13 @@ export default function ArticleDetailScreen({ route }: any) {
                     <Ionicons name="arrow-back" size={22} color="#333" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>{post?.title ?? "Bài viết"}</Text>
+                <Text
+                    style={styles.headerTitle}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                >
+                    {post?.title ?? "Bài viết"}
+                </Text>
                 <View style={{ width: 38 }} />
             </View>
 
@@ -99,7 +105,7 @@ export default function ArticleDetailScreen({ route }: any) {
                 ) : null}
 
                 <View style={styles.authorRow}>
-                    <View style={styles.authorInfo}> 
+                    <View style={styles.authorInfo}>
                         <Text style={styles.authorName}>{post?.authorName ?? "Ẩn danh"}</Text>
                     </View>
 
@@ -144,15 +150,24 @@ const styles = StyleSheet.create({
         borderColor: "#e5e7eb",
         position: "relative",
     },
-    iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
-    headerTitle: {
-        position: "absolute",
-        left: 0,
-        right: 0,
+    iconButton: { padding: 8, borderRadius: 8, zIndex: 100,},
+    // headerTitle: {
+    //     position: "absolute",
+    //     left: 40, // 👈 đẩy sang phải để tránh icon Back
+    //     right: 40,
+    //     textAlign: "center",
+    //     fontSize: 17,
+    //     fontWeight: "700",
+    //     color: "#075985",
+    //     paddingLeft: 10, // 👈 thêm khoảng cách nhẹ bên trái // ❌ không dùng trong StyleSheet (đưa vào component)
+    // },
+        headerTitle: {
+        flex: 1,
         textAlign: "center",
         fontSize: 17,
-        fontWeight: "700",
-        color: "#075985",
+        fontWeight: "600",
+        color: "#000000ff",
+        marginRight: 0, // để cân giữa vì có nút back bên trái
     },
     card: {
         margin: 16,

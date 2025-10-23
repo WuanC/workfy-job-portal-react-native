@@ -14,8 +14,9 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation";
 import SearchBar from "../../components/SearchBar";
 import JobCard from "../../components/JobCard";
-import { getAllIndustries, Industry } from "../../services/industryService"; // 👈 import đúng API của bạn
+import { CategoryJob, getAllIndustries, getIndustriesJobCount, Industry } from "../../services/industryService"; // 👈 import đúng API của bạn
 import { AdvancedJobQuery, getAdvancedJobs } from "../../services/jobService";
+import { getEnumOptions, getSortTypeLabel, Sort } from "../../utilities/constant";
 
 type FilterNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -35,11 +36,11 @@ const SearchScreen = ({ route }: any) => {
     const [jobs, setJobs] = useState<any[]>([]);
 
     // --- Industries ---
-    const [industries, setIndustries] = useState<Industry[]>([]);
+    const [categoryJobs, setCategoryJobs] = useState<CategoryJob[]>([]);
     const [loading, setLoading] = useState(false);
     useEffect(() => {
         if (activeTab === "industries") {
-            fetchIndustries();
+            fetchCategoryJobs();
         }
     }, [activeTab]);
     useEffect(() => {
@@ -47,6 +48,12 @@ const SearchScreen = ({ route }: any) => {
             fetchFilteredJobs(advanceFilter);
         }
     }, [advanceFilter]);
+    useEffect(() => {
+        // Nếu chưa có bộ lọc nào, tạo mặc định
+        if (!advanceFilter) {
+            setAdvanceFilter({ sort: "createdAt" });
+        }
+    }, []);
     const fetchFilteredJobs = async (filter: any) => {
         if (!filter.keyword) filter.keyword = "";
         console.log(filter.keyword)
@@ -60,11 +67,11 @@ const SearchScreen = ({ route }: any) => {
             setLoading(false);
         }
     };
-    const fetchIndustries = async () => {
+    const fetchCategoryJobs = async () => {
         try {
             setLoading(true);
-            const data = await getAllIndustries(); // ⬅️ gọi API bạn viết sẵn
-            setIndustries(data);
+            const data = await getIndustriesJobCount(); // ⬅️ gọi API bạn viết sẵn
+            setCategoryJobs(data);
         } catch (error) {
             console.error("❌ Lỗi khi load ngành nghề:", error);
         } finally {
@@ -187,31 +194,43 @@ const SearchScreen = ({ route }: any) => {
                     {loading ? (
                         <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />
                     ) : (
-                        industries.map((item) => (
-                            <TouchableOpacity
-                                key={item.id}
-                                style={styles.industryCard}
-                                onPress={() => {
-                                    const newFilter = {
-                                        ...advanceFilter,
-                                        industryIds: [item.id], // ✅ chỉ giữ 1 industry được chọn
-                                    };
+                        categoryJobs.map((category) => (
+                            <View key={category.id} style={styles.categoryBlock}>
+                                <Text style={styles.categoryTitle}>
+                                    {category.name} ({category.industries.length})
+                                </Text>
 
-                                    setAdvanceFilter(newFilter);
-                                    setActiveTab("jobs");     // ✅ chuyển về tab "Công việc"
-                                    fetchFilteredJobs(newFilter); // ✅ gọi lại API lấy danh sách việc làm
-                                }}
-                            >
-                                <View style={styles.iconBox}>
-                                    <Ionicons name="briefcase-outline" size={22} color="#007bff" />
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.industryName}>{item.name}</Text>
-                                    {item.engName && (
-                                        <Text style={styles.industryEng}>{item.engName}</Text>
-                                    )}
-                                </View>
-                            </TouchableOpacity>
+                                {category.industries.map((industry) => (
+                                    <TouchableOpacity
+                                        key={`${category.id}-${industry.id}`}
+                                        style={styles.industryCard}
+                                        onPress={() => {
+                                            const newFilter = {
+                                                ...advanceFilter,
+                                                industryIds: [industry.id],
+                                            };
+                                            setAdvanceFilter(newFilter);
+                                            setActiveTab("jobs");
+                                            fetchFilteredJobs(newFilter);
+                                        }}
+                                    >
+                                        <View style={styles.iconBox}>
+                                            <Ionicons name="briefcase-outline" size={22} color="#007bff" />
+                                        </View>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={styles.industryName}>
+                                                {industry.name}{" "}
+                                                <Text style={{ color: "#007bff" }}>
+                                                    ({industry.jobCount})
+                                                </Text>
+                                            </Text>
+                                            {industry.engName && (
+                                                <Text style={styles.industryEng}>{industry.engName}</Text>
+                                            )}
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
                         ))
                     )}
                 </ScrollView>
@@ -287,6 +306,16 @@ const styles = StyleSheet.create({
     industryContainer: {
         flex: 1,
         marginTop: 10,
+    },
+    categoryBlock: {
+        marginBottom: 16,
+    },
+    categoryTitle: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#222",
+        marginBottom: 6,
+        marginLeft: 4,
     },
     industryCard: {
         flexDirection: "row",

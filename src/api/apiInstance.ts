@@ -12,7 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * ===============================
  */
 const apiInstance: AxiosInstance = axios.create({
-  baseURL: "http://192.168.0.104:8080/workify/api/v1",
+  baseURL: "http://192.168.1.2:8080/workify/api/v1",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

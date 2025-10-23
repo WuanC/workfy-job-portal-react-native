@@ -90,7 +90,23 @@ export const Sort = {
   expirationDate: "Sắp hết hạn"
 
 }
-
+export const BenefitType = {
+  TRAVEL_OPPORTUNITY: "Cơ hội du lịch",
+  BONUS_GIFT: "Thưởng/Quà",
+  SHUTTLE_BUS: "Xe đưa đón",
+  INSURANCE: "Bảo hiểm",
+  LAPTOP_MONITOR: "Laptop/Monitor",
+  HEALTH_CARE: "Chăm sóc sức khỏe",
+  PAID_LEAVE: "Nghỉ phép có lương",
+  FLEXIBLE_REMOTE_WORK: "Làm việc từ xa linh hoạt",
+  SALARY_REVIEW: "Xét lương",
+  TEAM_BUILDING: "Team Building",
+  TRAINING: "Đào tạo",
+  SNACKS_PANTRY: "Đồ ăn nhẹ/Pantry",
+  WORK_ENVIRONMENT: "Môi trường làm việc",
+  CHILD_CARE: "Chăm sóc trẻ",
+  OTHER: "Khác",
+};
 // ===== UTILS =====
 
 /**
@@ -113,3 +129,5 @@ export const getJobTypeLabel = (type?: string) => JobType[type as keyof typeof J
 export const getJobGenderLabel = (gender?: string) => JobGender[gender as keyof typeof JobGender] || "Chưa cập nhật";
 export const getAgeTypeLabel = (ageType?: string) => AgeType[ageType as keyof typeof AgeType] || "Chưa cập nhật";
 export const getJobStatusLabel = (status?: string) => JobStatus[status as keyof typeof JobStatus] || "Chưa cập nhật";
+export const getBenefitTypeLabel = (status?: string) => BenefitType[status as keyof typeof BenefitType] || "Chưa cập nhật";
+export const getSortTypeLabel = (status?: string) => Sort[status as keyof typeof Sort] || "createdAt";

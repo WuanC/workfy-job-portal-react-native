@@ -89,11 +89,21 @@ const UpdateCompanyMedia = () => {
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={22} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Liên kết & hình ảnh</Text>
-        <View style={{ width: 40 }} />
+
+        <Text
+          style={styles.headerTitle}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          Liên kết và hình ảnh
+        </Text>
+        <View style={{ width: 38 }} />
       </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -122,7 +132,7 @@ const UpdateCompanyMedia = () => {
         </TouchableOpacity>
 
         {/* Facebook */}
-        <Text style={[styles.label, { marginTop: 20 }]}>Facebook</Text>
+        <Text style={[styles.label]}>Facebook</Text>
         <View style={styles.inputRow}>
           <FontAwesome name="facebook" size={20} color="#1877F2" style={{ marginRight: 8 }} />
           <TextInput
@@ -134,7 +144,7 @@ const UpdateCompanyMedia = () => {
         </View>
 
         {/* Twitter */}
-        <Text style={[styles.label, { marginTop: 20 }]}>Twitter</Text>
+        <Text style={[styles.label]}>Twitter</Text>
         <View style={styles.inputRow}>
           <FontAwesome name="twitter" size={20} color="#1DA1F2" style={{ marginRight: 8 }} />
           <TextInput
@@ -146,7 +156,7 @@ const UpdateCompanyMedia = () => {
         </View>
 
         {/* LinkedIn */}
-        <Text style={[styles.label, { marginTop: 20 }]}>LinkedIn</Text>
+        <Text style={[styles.label]}>LinkedIn</Text>
         <View style={styles.inputRow}>
           <FontAwesome name="linkedin" size={20} color="#1877F2" style={{ marginRight: 8 }} />
           <TextInput
@@ -158,7 +168,7 @@ const UpdateCompanyMedia = () => {
         </View>
 
         {/* Google */}
-        <Text style={[styles.label, { marginTop: 20 }]}>Google</Text>
+        <Text style={[styles.label]}>Google</Text>
         <View style={styles.inputRow}>
           <FontAwesome name="google" size={20} color="#DB4437" style={{ marginRight: 8 }} />
           <TextInput
@@ -170,7 +180,7 @@ const UpdateCompanyMedia = () => {
         </View>
 
         {/* YouTube */}
-        <Text style={[styles.label, { marginTop: 20 }]}>YouTube</Text>
+        <Text style={[styles.label]}>YouTube</Text>
         <View style={styles.inputRow}>
           <FontAwesome name="youtube-play" size={20} color="#FF0000" style={{ marginRight: 8 }} />
           <TextInput
@@ -213,14 +223,25 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#c2d4e8ff",
-    paddingTop: 20,
-    paddingBottom: 15,
-    paddingHorizontal: 10,
     justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderColor: "#e5e7eb",
+    position: "relative",
   },
-  backButton: { padding: 8 },
-  headerTitle: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
+  headerTitle: {
+    position: "absolute",
+    left: 40, // 👈 đẩy sang phải để tránh icon Back
+    right: 40,
+    textAlign: "center",
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#075985",
+    paddingLeft: 10, // 👈 thêm khoảng cách nhẹ bên trái // ❌ không dùng trong StyleSheet (đưa vào component)
+  },
   container: { flex: 1, backgroundColor: "#fff", padding: 20 },
   title: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#222" },
   label: { fontSize: 14, color: "#333", marginTop: 12, marginBottom: 5 },

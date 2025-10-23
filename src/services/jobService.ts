@@ -1,6 +1,10 @@
 import apiInstance from "../api/apiInstance";
 import { JobLocation } from "../types/type";
 
+export type Benefit = {
+  type: string;
+  description: string;
+};
 export type JobRequest = {
   companyName: string;
   companySize: string;
@@ -8,6 +12,7 @@ export type JobRequest = {
   aboutCompany: string;
   jobTitle: string;
   jobLocations: JobLocation[];
+  jobBenefits: Benefit[];
   salaryType: string;
   minSalary?: number;
   maxSalary?: number;

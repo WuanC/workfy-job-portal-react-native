@@ -207,54 +207,11 @@ const MainAppEmployer = () => (
 
 // ========== Root Stack ==========
 const AppNavigator = () => {
-  const { isAuthenticated, loading } = useAuth();
-  useEffect(() => {
-    const handleDeepLink = async (event: { url: string }) => {
-      console.log("Handling deep link:", event.url);
-      const parsed = Linking.parse(event.url);
-      const token = parsed.queryParams?.token;
-
-      if (token) {
-        try {
-          await confirmEmailEmployer(token as string);
-          console.log("Deep Link URL");
-          navigationRef.current?.navigate("ConfirmEmail");
-        } catch (err: any) {
-          Alert.alert("Xác nhận thất bại", err.message || "Token không hợp lệ hoặc đã hết hạn.");
-        }
-      }
-    };
-
-    const subscription = Linking.addEventListener("url", handleDeepLink);
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
-    });
-
-    return () => subscription.remove();
-  }, []);
-
-  // if (loading) {
-  //   return (
-  //     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-  //       <ActivityIndicator size="large" />
-  //     </View>
-  //   );
-  // }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1, backgroundColor: "#000000ff" }} edges={["top", "left", "right", "bottom"]}>
-          <NavigationContainer
-            ref={navigationRef}
-            linking={{
-              prefixes: ["workify://"],
-              config: {
-                screens: {
-                  ConfirmEmail: "verify-email",
-                },
-              },
-            }}
-          >
+          <NavigationContainer>
             <RootStack.Navigator
               //key={isAuthenticated ? "user" : "guest"}
               screenOptions={{ headerShown: false }}

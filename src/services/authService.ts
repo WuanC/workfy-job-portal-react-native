@@ -36,11 +36,11 @@ export const loginUser = async (payload: LoginRequest) => {
 export const loginEmployer = async (payload: LoginRequest) => {
     try {
         const res = await apiInstance.post("/auth/employers/sign-in", payload);
-         const { accessToken } = res.data?.data || {};
-         console.log("Access Token:", accessToken);
-         if (accessToken) {
-              await AsyncStorage.setItem("accessToken", accessToken);
-         }
+        const { accessToken } = res.data?.data || {};
+        console.log("Access Token:", accessToken);
+        if (accessToken) {
+            await AsyncStorage.setItem("accessToken", accessToken);
+        }
         return res.data.data as TokenResponse;
     } catch (err: any) {
         if (err.response) {
@@ -134,34 +134,71 @@ export interface EmployerRegisterRequest {
     districtId: number;
     detailAddress?: string;
 }
-
+export interface EmployerVerifyEmailRequest {
+    email: string;
+    code: string;
+}
 export const registerEmployer = async (payload: EmployerRegisterRequest) => {
     try {
         const res = await apiInstance.post("/employers/sign-up", payload);
-        return res.data; // trả về data để UI hiển thị message
+
+        return res.data;
     } catch (err: any) {
-        // Nếu có phản hồi từ server (status 400 / 409 / 500)
+        if (err.response && err.response.data) {
+            const { status, message, errors } = err.response.data;
+
+            switch (status) {
+                case 400:
+                    if (Array.isArray(errors) && errors.length > 0) {
+                        const errorMessages = errors
+                            .map((e: any) => `${e.fieldName}: ${e.message}`)
+                            .join("\n");
+                        throw new Error(errorMessages);
+                    }
+                    throw new Error(message || "Dữ liệu không hợp lệ, vui lòng kiểm tra lại.");
+
+                case 409:
+                    throw new Error(message || "Email đã tồn tại trong hệ thống.");
+
+                case 500:
+                    throw new Error(message || "Lỗi máy chủ, vui lòng thử lại sau.");
+
+                default:
+                    throw new Error(message || `Lỗi không xác định (mã ${status}).`);
+            }
+        }
+
+        if (err.request) {
+            throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng hoặc server.");
+        }
+        throw new Error(err.message || "Đăng ký nhà tuyển dụng thất bại, vui lòng thử lại.");
+    }
+};
+export const verifyEmployerEmail = async (payload: EmployerVerifyEmailRequest) => {
+    try {
+        const res = await apiInstance.patch("/auth/employers/mobile/verify-email", payload);
+        return res.data; // trả về kết quả để UI xử lý
+    } catch (err: any) {
         if (err.response && err.response.data) {
             const data = err.response.data;
 
-            // Nếu có danh sách lỗi cụ thể (400 Bad Request)
+            // Trường hợp lỗi validate (400)
             if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
                 const firstError = data.errors[0];
                 throw new Error(`${firstError.fieldName}: ${firstError.message}`);
             }
 
-            // Nếu có message chung (409 hoặc 500)
+            // Các lỗi khác (409, 500, v.v.)
             if (data.message) {
                 throw new Error(data.message);
             }
         }
 
-        // Nếu request được gửi nhưng không nhận phản hồi
         if (err.request) {
-            throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại server.");
+            throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng hoặc server.");
         }
 
-        // Lỗi khác (do code hoặc axios)
-        throw new Error(err.message || "Đăng ký nhà tuyển dụng thất bại, vui lòng thử lại.");
+        throw new Error(err.message || "Xác nhận email thất bại, vui lòng thử lại.");
     }
 };
+

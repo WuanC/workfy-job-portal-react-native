@@ -20,7 +20,7 @@ import { loginEmployer } from "../../services/authService";
 type MainNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
     "Login" |
-    "Register" | "MainAppEmployer"
+    "Register" | "MainAppEmployer" | "ConfirmEmail"
 >;
 
 const EmployerLoginScreen = () => {

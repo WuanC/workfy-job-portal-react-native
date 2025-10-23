@@ -273,3 +273,41 @@ export const getAllJobsAdmin = async ({
     throw error;
   }
 };
+
+export const getEmployerJobOpenings = async (
+  employerId: number,
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  sorts: string = "createdAt,desc"
+) => {
+  try {
+    if (!employerId || employerId < 1) {
+      throw new Error("ID nhà tuyển dụng không hợp lệ (phải >= 1).");
+    }
+
+    const params = { pageNumber, pageSize, sorts };
+    const res = await apiInstance.get(`/jobs/openings/${employerId}`, { params });
+    console.log(res.data.data)
+    return res.data.data;
+  } catch (error: any) {
+    if (error.response) {
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 400:
+          console.error("❌ Lỗi 400: employerId hoặc query không hợp lệ:", data);
+          throw new Error("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại tham số.");
+        case 404:
+          console.error("❌ Lỗi 404: Không tìm thấy công việc phù hợp:", data);
+          throw new Error("Không tìm thấy công việc phù hợp cho nhà tuyển dụng này.");
+        default:
+          console.error("❌ Lỗi không xác định:", data);
+          throw new Error(data?.message || "Lỗi không xác định từ server.");
+      }
+    } else if (error.request) {
+      throw new Error("Không thể kết nối đến máy chủ. Kiểm tra lại mạng hoặc server.");
+    } else {
+      throw new Error(error.message || "Lỗi khi lấy danh sách công việc.");
+    }
+  }
+};

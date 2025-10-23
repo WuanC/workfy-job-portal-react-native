@@ -21,6 +21,7 @@ import { District, getDistrictById, getDistrictsByProvince } from "../../service
 import { Benefit, createJob, JobRequest } from "../../services/jobService";
 import { JobLocation } from "../../types/type";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import { getEmployerProfile } from "../../services/employerService";
 
 const PostJobScreen = () => {
   const navigation = useNavigation();
@@ -249,9 +250,12 @@ const PostJobScreen = () => {
     const load = async () => {
       try {
         const data = await getAllIndustries();
-        const listProvinces = await getAllProvince(); // gọi service bạn đã viết
+        const listProvinces = await getAllProvince();
+        const info = await getEmployerProfile(); // gọi service bạn đã viết
         if (cancelled) return;
-
+        setCompanyName(info.companyName || "");
+        setCompanySize(info.companySize || "");
+        setAboutCompany(info.aboutCompany || "");
         setIndustries(data);
         setListProvinces(listProvinces)
       } catch (err: any) {
@@ -1219,11 +1223,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F9FC",
     borderBottomWidth: 1,
     borderBottomColor: "#E4E6EB",
-    paddingVertical: 6,      
-    flexDirection: "row",    
-    alignItems: "center",    
-    justifyContent: "flex-start", 
-    minHeight: 44,           
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    minHeight: 44,
   },
   editor: {
     minHeight: 180,

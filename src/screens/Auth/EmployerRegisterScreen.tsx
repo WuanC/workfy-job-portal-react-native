@@ -7,93 +7,86 @@ import {
     Alert,
     ScrollView,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableWithoutFeedback,
+    Keyboard,
 } from "react-native";
 import Checkbox from "expo-checkbox";
 import RNPickerSelect from "react-native-picker-select";
 import { useEffect, useState } from "react";
 import { registerEmployer } from "../../services/authService"; // ✅ đổi import
 import apiInstance from "../../api/apiInstance";
+import { Ionicons } from "@expo/vector-icons";
+import { getAllProvince, Province } from "../../services/provinceService";
+import { District, getDistrictsByProvince } from "../../services/districtService";
+import { Dropdown } from "react-native-element-dropdown";
+import { getEnumOptions, LevelCompanySize } from "../../utilities/constant";
 
-interface Province {
-    id: number;
-    code: string;
-    name: string;
-    engName: string;
-}
-
-interface District {
-    id: number;
-    code: string;
-    name: string;
-}
 
 const EmployerRegisterScreen = ({ navigation }: any) => {
+
+    const [listProvinces, setListProvinces] = useState<Province[]>([])
+    const [listDistricts, setListDistricts] = useState<District[]>([])
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [companyName, setCompanyName] = useState("");
-    const [employeeCount, setEmployeeCount] = useState("");
+    const [companySize, setCompanySize] = useState("");
     const [contactPerson, setContactPerson] = useState("");
     const [phone, setPhone] = useState("");
     const [country] = useState("Việt Nam");
-    const [province, setProvince] = useState<string | null>(null);
-    const [district, setDistrict] = useState<string | null>(null);
+    const [provinceId, setProvinceId] = useState<number | null>(null);
+    const [districtId, setDistrictId] = useState<number | null>(null);
     const [address, setAddress] = useState("");
     const [receiveJobNews, setReceiveJobNews] = useState(true);
     const [loading, setLoading] = useState(false);
 
-    const [provinces, setProvinces] = useState<{ label: string; value: string; id: number }[]>([]);
-    const [districts, setDistricts] = useState<{ label: string; value: string }[]>([]);
-    const [loadingProvince, setLoadingProvince] = useState(true);
-    const [loadingDistrict, setLoadingDistrict] = useState(false);
-
-    // 🧭 Lấy danh sách tỉnh thành
     useEffect(() => {
-        const fetchProvinces = async () => {
+        let cancelled = false; // flag để tránh setState sau unmount
+
+        const load = async () => {
             try {
-                const res = await apiInstance.get("/provinces");
-                if (res.data?.data) {
-                    const provinceList = res.data.data.map((item: Province) => ({
-                        label: item.name,
-                        value: item.id.toString(),
-                        id: item.id,
-                    }));
-                    setProvinces(provinceList);
-                }
+                const listProvinces = await getAllProvince(); // gọi service bạn đã viết
+                if (cancelled) return;
+
+                setListProvinces(listProvinces)
             } catch (err: any) {
-                console.error("Lỗi lấy tỉnh thành:", err.message);
-                Alert.alert("Lỗi", "Không thể tải danh sách tỉnh thành.");
+                if (cancelled) return;
+                console.error("Lỗi load", err);
             } finally {
-                setLoadingProvince(false);
+                if (!cancelled) { }
             }
         };
-        fetchProvinces();
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
     }, []);
+    useEffect(() => {
+        if (provinceId) {
+            (async () => {
+                try {
+                    const data = await getDistrictsByProvince(provinceId);
+                    setListDistricts(data)
+                } catch (error) {
+                    console.error("Lỗi khi lấy quận/huyện:", error);
+                    setListDistricts([])
+                } finally {
 
-    const handleSelectProvince = async (provinceId: string | null) => {
-        setProvince(provinceId);
-        setDistrict(null);
-        setDistricts([]);
-
-        if (!provinceId) return;
-
-        try {
-            setLoadingDistrict(true);
-            const res = await apiInstance.get(`/districts/province/${provinceId}`);
-            if (res.data?.data) {
-                const districtList = res.data.data.map((d: District) => ({
-                    label: d.name,
-                    value: d.code,
-                }));
-                setDistricts(districtList);
-            }
-        } catch (err: any) {
-            console.error("Lỗi lấy quận/huyện:", err.message);
-            Alert.alert("Lỗi", "Không thể tải danh sách quận/huyện.");
-        } finally {
-            setLoadingDistrict(false);
+                }
+            })();
+        } else {
+            setListDistricts([])
         }
-    };
+    }, [provinceId]);
+
+
+
+
 
     const handleRegister = async () => {
         if (!email || !password || !confirmPassword || !companyName) {
@@ -108,21 +101,20 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
         try {
             setLoading(true);
 
-            // ✅ Gọi API đúng theo backend yêu cầu
             await registerEmployer({
                 email,
                 password,
                 companyName,
-                companySize: employeeCount,
+                companySize: companySize,
                 contactPerson,
                 phoneNumber: phone,
-                provinceId: province ? Number(province) : 0,
-                districtId: district ? Number(district) : 0,
+                provinceId: provinceId ? Number(provinceId) : 0,
+                districtId: districtId ? Number(districtId) : 0,
                 detailAddress: address || undefined,
             });
-
+            console.log(email);
             Alert.alert("Thành công", "Đăng ký nhà tuyển dụng thành công!");
-            navigation.replace("ConfirmEmail");
+            navigation.replace("ConfirmEmail", { email: email });
         } catch (err: any) {
             Alert.alert("Đăng ký thất bại", err.message || "Vui lòng thử lại.");
         } finally {
@@ -131,162 +123,197 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Nhà tuyển dụng đăng ký</Text>
-            <Text style={styles.subtitle}>
-                Tạo tài khoản để tiếp cận kho ứng viên chất lượng và bắt đầu đăng việc ngay
-            </Text>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+        >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <ScrollView contentContainerStyle={styles.container}>
+                    <View style={styles.header}>
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={() => navigation.goBack()}
+                        >
+                            <Ionicons name="arrow-back" size={22} color="#333" />
+                        </TouchableOpacity>
 
-            {/* Email */}
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-            />
+                        <Text
+                            style={styles.headerTitle}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                        >
+                            Nhà tuyển dụng đăng ký
+                        </Text>
+                        <View style={{ width: 38 }} />
+                    </View>
 
-            {/* Password */}
-            <TextInput
-                style={styles.input}
-                placeholder="Mật khẩu"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Thông tài khoản</Text>
+                        {/* Email */}
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            keyboardType="email-address"
+                            value={email}
+                            onChangeText={setEmail}
+                        />
 
-            {/* Confirm Password */}
-            <TextInput
-                style={styles.input}
-                placeholder="Nhập lại mật khẩu"
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-            />
+                        {/* Password */}
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Mật khẩu"
+                            secureTextEntry
+                            value={password}
+                            onChangeText={setPassword}
+                        />
 
-            <Text style={styles.sectionTitle}>Thông tin công ty</Text>
+                        {/* Confirm Password */}
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nhập lại mật khẩu"
+                            secureTextEntry
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                        />
 
-            <TextInput
-                style={styles.input}
-                placeholder="Tên công ty"
-                value={companyName}
-                onChangeText={setCompanyName}
-            />
+                        <Text style={styles.sectionTitle}>Thông tin công ty</Text>
 
-            <View style={styles.dropdown}>
-                <RNPickerSelect
-                    onValueChange={setEmployeeCount}
-                    items={[
-                        { label: "Dưới 10 nhân viên", value: "LESS_THAN_10" },
-                        { label: "10 - 24 nhân viên", value: "FROM_10_TO_24" },
-                        { label: "25 - 99 nhân viên", value: "FROM_25_TO_99" },
-                        { label: "100 - 499 nhân viên", value: "FROM_100_TO_499" },
-                        { label: "500 - 999 nhân viên", value: "FROM_500_TO_999" },
-                        { label: "1000 - 4999 nhân viên", value: "FROM_1000_TO_4999" },
-                        { label: "5000 - 9999 nhân viên", value: "FROM_5000_TO_9999" },
-                        { label: "10000 - 19999 nhân viên", value: "FROM_10000_TO_19999" },
-                        { label: "20000 - 49999 nhân viên", value: "FROM_20000_TO_49999" },
-                        { label: "Trên 50000 nhân viên", value: "MORE_THAN_50000" },
-                    ]}
-                    placeholder={{ label: "Chọn quy mô công ty", value: null }}
-                    value={employeeCount}
-                    style={pickerSelectStyles}
-                />
-            </View>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Tên công ty"
+                            value={companyName}
+                            onChangeText={setCompanyName}
+                        />
 
-            <View style={styles.row}>
-                <TextInput
-                    style={[styles.input, { flex: 1, marginRight: 5 }]}
-                    placeholder="Người liên hệ"
-                    value={contactPerson}
-                    onChangeText={setContactPerson}
-                />
-                <TextInput
-                    style={[styles.input, { flex: 1, marginLeft: 5 }]}
-                    placeholder="Điện thoại"
-                    keyboardType="phone-pad"
-                    value={phone}
-                    onChangeText={setPhone}
-                />
-            </View>
+                        <Dropdown
+                            data={getEnumOptions(LevelCompanySize)}
+                            labelField="label"
+                            valueField="value"
+                            placeholder="Chọn số nhân viên"
+                            value={companySize}
+                            onChange={(item) => setCompanySize(item.value)}
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholder}
+                            selectedTextStyle={styles.selectedText}
+                        />
+                        <TextInput
+                            style={[styles.input]}
+                            placeholder="Người liên hệ"
+                            value={contactPerson}
+                            onChangeText={setContactPerson}
+                        />
+                        <TextInput
+                            style={[styles.input]}
+                            placeholder="Điện thoại"
+                            keyboardType="phone-pad"
+                            value={phone}
+                            onChangeText={setPhone}
+                        />
+                        <Text style={styles.sectionTitle}>Địa chỉ</Text>
 
-            <Text style={styles.sectionTitle}>Địa chỉ</Text>
+                        <TextInput style={styles.input} value={country} editable={false} />
 
-            <TextInput style={styles.input} value={country} editable={false} />
+                        <Dropdown
+                            data={listProvinces}
+                            labelField="name"
+                            valueField="id"
+                            placeholder="Chọn Tỉnh / Thành phố"
+                            value={provinceId}
+                            onChange={(item) => {
+                                setProvinceId(item.id)
+                            }}
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholder}
+                            selectedTextStyle={styles.selectedText}
+                        />
+                        <Dropdown
+                            data={listDistricts}
+                            labelField="name"
+                            valueField="id"
+                            placeholder="Chọn Quận / Huyện"
+                            value={districtId}
+                            onChange={(item) => {
+                                setDistrictId(item.id)
+                            }}
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholder}
+                            selectedTextStyle={styles.selectedText}
+                        />
 
-            <View style={styles.dropdown}>
-                {loadingProvince ? (
-                    <ActivityIndicator size="small" color="#1976d2" />
-                ) : (
-                    <RNPickerSelect
-                        onValueChange={handleSelectProvince}
-                        items={provinces}
-                        placeholder={{ label: "Chọn tỉnh / thành", value: null }}
-                        value={province}
-                        style={pickerSelectStyles}
+
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Số nhà, phường, xã"
+                            value={address}
+                            onChangeText={setAddress}
+                        />
+
+                        {/* <View style={styles.checkboxRow}>
+                    <Checkbox
+                        value={receiveJobNews}
+                        onValueChange={setReceiveJobNews}
+                        color={receiveJobNews ? "#1976d2" : undefined}
+                        style={styles.checkbox}
                     />
-                )}
-            </View>
+                    <Text style={styles.checkboxText}>Nhận bản tin việc làm</Text>
+                </View> */}
+                    </View>
+                    <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+                        <Text style={styles.buttonText}>
+                            {loading ? "Đang đăng ký..." : "Đăng ký ngay"}
+                        </Text>
+                    </TouchableOpacity>
 
-            <View style={styles.dropdown}>
-                {loadingDistrict ? (
-                    <ActivityIndicator size="small" color="#1976d2" />
-                ) : (
-                    <RNPickerSelect
-                        onValueChange={setDistrict}
-                        items={districts}
-                        placeholder={{ label: "Chọn quận / huyện", value: null }}
-                        value={district}
-                        style={pickerSelectStyles}
-                        disabled={!province}
-                    />
-                )}
-            </View>
+                    <View style={styles.bottomLinks}>
+                        <TouchableOpacity onPress={() => navigation.navigate("EmployerLogin")}>
+                            <Text style={styles.linkText}>
+                                Đã có tài khoản?{" "}
+                                <Text style={styles.linkHighlight}>Đăng nhập</Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Số nhà, phường, xã"
-                value={address}
-                onChangeText={setAddress}
-            />
 
-            <View style={styles.checkboxRow}>
-                <Checkbox
-                    value={receiveJobNews}
-                    onValueChange={setReceiveJobNews}
-                    color={receiveJobNews ? "#1976d2" : undefined}
-                    style={styles.checkbox}
-                />
-                <Text style={styles.checkboxText}>Nhận bản tin việc làm</Text>
-            </View>
-
-            <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-                <Text style={styles.buttonText}>
-                    {loading ? "Đang đăng ký..." : "Đăng ký ngay"}
-                </Text>
-            </TouchableOpacity>
-
-            <View style={styles.bottomLinks}>
-                <TouchableOpacity onPress={() => navigation.navigate("EmployerLogin")}>
-                    <Text style={styles.linkText}>
-                        Đã có tài khoản?{" "}
-                        <Text style={styles.linkHighlight}>Đăng nhập</Text>
-                    </Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+                </ScrollView>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
-        padding: 20,
-        backgroundColor: "#fff",
-        alignItems: "center",
+        paddingBottom: 40,
+        backgroundColor: "#f8fafc",
     },
-    title: { fontSize: 22, fontWeight: "bold", color: "#333", marginBottom: 5 },
-    subtitle: { color: "#555", fontSize: 14, textAlign: "center", marginBottom: 15 },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: "#fff",
+        borderBottomWidth: 1,
+        borderColor: "#e5e7eb",
+        position: "relative",
+    },
+    iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
+    headerTitle: {
+        position: "absolute",
+        left: 40, // 👈 đẩy sang phải để tránh icon Back
+        right: 40,
+        textAlign: "center",
+        fontSize: 17,
+        fontWeight: "700",
+        color: "#075985",
+        paddingLeft: 10, // 👈 thêm khoảng cách nhẹ bên trái // ❌ không dùng trong StyleSheet (đưa vào component)
+    },
+    card: {
+        backgroundColor: "#fff",
+        margin: 20,
+        padding: 20,
+        borderRadius: 10,
+        elevation: 2,
+    },
     sectionTitle: {
         fontSize: 16,
         fontWeight: "600",
@@ -327,8 +354,8 @@ const styles = StyleSheet.create({
     button: {
         backgroundColor: "#1976d2",
         paddingVertical: 16,
+        marginHorizontal: 20,
         borderRadius: 8,
-        width: "100%",
         alignItems: "center",
         marginTop: 10,
     },
@@ -336,17 +363,16 @@ const styles = StyleSheet.create({
     bottomLinks: { marginTop: 20, alignItems: "center" },
     linkText: { color: "#555", fontSize: 14 },
     linkHighlight: { color: "#1976d2", fontWeight: "bold" },
+    placeholder: {
+        color: "#999",
+        fontSize: 15,
+    },
+    selectedText: {
+        color: "#333",
+        fontSize: 15,
+        fontWeight: "500",
+    },
 });
 
-const pickerSelectStyles = StyleSheet.create({
-    inputIOS: {
-        fontSize: 15,
-        color: "#333",
-    },
-    inputAndroid: {
-        fontSize: 15,
-        color: "#333",
-    },
-});
 
 export default EmployerRegisterScreen;

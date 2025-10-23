@@ -8,7 +8,8 @@ import {
   StyleSheet,
   SafeAreaView,
   Animated,
-  ActivityIndicator
+  ActivityIndicator,
+  useWindowDimensions
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,8 +17,8 @@ import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { Benefit, getJobById } from "../../services/jobService";
 import { getCompanySizeLabel, getEducationLevelLabel, getExperienceLevelLabel, getJobGenderLabel, getJobLevelLabel, getJobTypeLabel } from "../../utilities/constant";
+import RenderHTML from "react-native-render-html";
 
-const bannerImg = require("../../../assets/App/banner.jpg")
 const keywords = [
   "Tiếng Anh",
   "Marketing",
@@ -42,6 +43,7 @@ const JobDetailScreen = ({ route }: any) => {
   const navigation = useNavigation<JobSubmitNavigationProp>();
   const [job, setJob] = useState<any>();
   const [loading, setLoading] = useState(true);
+  const { width } = useWindowDimensions();
   useEffect(() => {
     let cancelled = false; // flag để tránh setState sau unmount
 
@@ -201,7 +203,20 @@ const JobDetailScreen = ({ route }: any) => {
         <View style={styles.infoContainer}>
           <Text style={styles.sectionTitle}>Mô tả công việc</Text>
           <View style={styles.section}>
-            <Text>{job.jobDescription}</Text>
+            {job?.jobDescription ? (
+              <RenderHTML
+                contentWidth={width}
+                source={{ html: job.jobDescription }}
+                tagsStyles={{
+                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
+                  b: { fontWeight: "bold" },
+                  strong: { fontWeight: "bold" },
+                  i: { fontStyle: "italic" },
+                }}
+              />
+            ) : (
+              <Text>Chưa có mô tả về công ty.</Text>
+            )}
           </View>
         </View>
 
@@ -209,7 +224,20 @@ const JobDetailScreen = ({ route }: any) => {
         <View style={styles.infoContainer}>
           <Text style={styles.sectionTitle}>Yêu cầu công việc</Text>
           <View style={styles.section}>
-            <Text>{job.requirement}</Text>
+            {job?.requirement ? (
+              <RenderHTML
+                contentWidth={width}
+                source={{ html: job.requirement }}
+                tagsStyles={{
+                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
+                  b: { fontWeight: "bold" },
+                  strong: { fontWeight: "bold" },
+                  i: { fontStyle: "italic" },
+                }}
+              />
+            ) : (
+              <Text>Chưa có mô tả về công ty.</Text>
+            )}
           </View>
         </View>
 
@@ -245,7 +273,21 @@ const JobDetailScreen = ({ route }: any) => {
         <View style={styles.infoContainer}>
           <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
           <View style={styles.section}>
-            <Text>{job.description}</Text>
+            {job?.description ? (
+              <RenderHTML
+                contentWidth={width}
+                source={{ html: job.description }}
+                tagsStyles={{
+                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
+                  b: { fontWeight: "bold" },
+                  strong: { fontWeight: "bold" },
+                  i: { fontStyle: "italic" },
+                }}
+              />
+            ) : (
+              <Text>Chưa có mô tả về công ty.</Text>
+            )}
+
           </View>
         </View>
 
@@ -254,7 +296,7 @@ const JobDetailScreen = ({ route }: any) => {
           <Text style={styles.sectionTitle}>Phúc lợi</Text>
           <View style={styles.section}>
             {job.jobBenefits && job.jobBenefits.length > 0 ? (
-              job.jobBenefits.map((benefit : Benefit) => (
+              job.jobBenefits.map((benefit: Benefit) => (
                 <Text key={benefit.type} style={styles.benefitText}>
                   • {benefit.description}
                 </Text>
@@ -267,7 +309,20 @@ const JobDetailScreen = ({ route }: any) => {
         <View style={styles.infoContainer}>
           <Text style={styles.sectionTitle}>Về công ty</Text>
           <View style={styles.section}>
-            <Text>{job.aboutCompany}</Text>
+            {job?.aboutCompany ? (
+              <RenderHTML
+                contentWidth={width}
+                source={{ html: job.aboutCompany }}
+                tagsStyles={{
+                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
+                  b: { fontWeight: "bold" },
+                  strong: { fontWeight: "bold" },
+                  i: { fontStyle: "italic" },
+                }}
+              />
+            ) : (
+              <Text>Chưa có mô tả về công ty.</Text>
+            )}
           </View>
         </View>
 

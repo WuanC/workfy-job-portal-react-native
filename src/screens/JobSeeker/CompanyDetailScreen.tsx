@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,18 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
+  useWindowDimensions,
+  Alert,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import JobCard from "../../components/JobCard";
 import { getEmployerById } from "../../services/employerService";
 import { getCompanySizeLabel } from "../../utilities/constant";
+import RenderHTML from "react-native-render-html";
+import { getEmployerJobOpenings } from "../../services/jobService";
 
 const CompanyDetailScreen = ({ route }: any) => {
   const navigation = useNavigation();
@@ -22,6 +27,9 @@ const CompanyDetailScreen = ({ route }: any) => {
   const { id } = route.params as { id: number };
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState<any>()
+  const [openJobs, setOpenJobs] = useState<any[]>([]);
+
+  const { width } = useWindowDimensions();
   useEffect(() => {
     let cancelled = false; // flag để tránh setState sau unmount
 
@@ -47,6 +55,24 @@ const CompanyDetailScreen = ({ route }: any) => {
       cancelled = true;
     };
   }, []);
+
+
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) return;
+      const fetchOpenJobs = async () => {
+        try {
+          const data = await getEmployerJobOpenings(id);
+          setOpenJobs(data.items);
+        } catch (err) {
+          Alert.alert("Lỗi", "Không thể tải danh sách công việc.");
+        }
+      };
+      fetchOpenJobs();
+    }, [id])
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -55,28 +81,6 @@ const CompanyDetailScreen = ({ route }: any) => {
       </View>
     );
   }
-
-
-  const jobs = [
-    {
-      id: "1",
-      logo_path: require("../../../assets/App/logoJob.png"),
-      job_title: "UI/UX Designer",
-      company_name: "Công ty Cổ phần Deair",
-      job_location: "Hà Nội",
-      salary_range: "15-25 triệu",
-      time_passed: "2 giờ trước",
-    },
-    {
-      id: "2",
-      logo_path: require("../../../assets/App/logoJob.png"),
-      job_title: "Frontend Developer",
-      company_name: "Công ty Cổ phần Deair",
-      job_location: "TP. Hồ Chí Minh",
-      salary_range: "20-30 triệu",
-      time_passed: "5 giờ trước",
-    },
-  ];
 
   return (
     <View style={styles.container}>
@@ -162,7 +166,20 @@ const CompanyDetailScreen = ({ route }: any) => {
           <View style={styles.contentContainer}>
             <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
             <Text style={styles.description}>
-              {company.aboutCompany}
+              {company?.aboutCompany ? (
+                <RenderHTML
+                  contentWidth={width}
+                  source={{ html: company.aboutCompany }}
+                  tagsStyles={{
+                    p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
+                    b: { fontWeight: "bold" },
+                    strong: { fontWeight: "bold" },
+                    i: { fontStyle: "italic" },
+                  }}
+                />
+              ) : (
+                <Text style={{ color: "#555" }}>Chưa có mô tả về công ty.</Text>
+              )}
             </Text>
 
             <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
@@ -221,18 +238,41 @@ const CompanyDetailScreen = ({ route }: any) => {
         ) : (
           <View style={styles.contentContainer}>
             <Text style={styles.sectionTitle}>Việc làm đang tuyển</Text>
-            {jobs.map((item) => (
-              <JobCard
-                id={1}
-                key={item.id}
-                logo_path={item.logo_path}
-                job_title={item.job_title}
-                company_name={item.company_name}
-                job_location={item.job_location}
-                salary_range={item.salary_range}
-                time_passed={item.time_passed}
+            {openJobs.length > 0 ? (
+              <FlatList
+                data={openJobs}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false} // ❗ Không cho FlatList tự cuộn
+                nestedScrollEnabled={false}
+                renderItem={({ item }) => (
+                  <JobCard
+                    id={item.id}
+                    logo_path={item.avatarUrl}
+                    job_title={item.jobTitle}
+                    company_name={item.companyName}
+                    job_location={item.jobLocations[0].province.name}
+                    salary_range={
+                      item.salaryType === "RANGE"
+                        ? `${item.minSalary?.toLocaleString()} ${item.salaryUnit}  - ${item.maxSalary?.toLocaleString()} ${item.salaryUnit} `
+                        : item.salaryType === "GREATER_THAN"
+                          ? `Trên ${item.minSalary?.toLocaleString()}`
+                          : item.salaryType === "NEGOTIABLE"
+                            ? "Thỏa thuận"
+                            : item.salaryType === "COMPETITIVE"
+                              ? "Cạnh tranh"
+                              : "Không rõ"
+                    }
+                    time_passed={item.expirationDate}
+                  />
+                )}
+                contentContainerStyle={{ paddingBottom: 80 }}
+                showsVerticalScrollIndicator={false}
               />
-            ))}
+            ) : (
+              <Text style={{ color: "#777", marginTop: 10 }}>
+                Chưa có công việc nào.
+              </Text>
+            )}
           </View>
         )}
       </ScrollView>

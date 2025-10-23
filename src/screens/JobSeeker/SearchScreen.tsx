@@ -245,11 +245,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
-        paddingHorizontal: 8,
     },
     tabContainer: {
         justifyContent: "space-between",
         flexDirection: "row",
+        marginHorizontal: 10,
     },
     tabRow: {
         flexDirection: "row",
@@ -258,16 +258,15 @@ const styles = StyleSheet.create({
     },
     activeTab: {
         backgroundColor: "#e0f0ff",
-        paddingVertical: 6,
         paddingHorizontal: 12,
+        paddingVertical: 6,
         borderRadius: 6,
         marginRight: 8,
     },
     inactiveTab: {
-        backgroundColor: "#f5f5f5",
-        paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 6,
+        paddingVertical: 6,
         marginRight: 8,
     },
     activeTabText: {
@@ -278,15 +277,14 @@ const styles = StyleSheet.create({
         color: "#333",
     },
     icon: {
-        paddingVertical: 6,
         justifyContent: "center",
     },
     listContainer: {
         flex: 1,
-        backgroundColor: "#E6F0FA",
-        paddingHorizontal: 10,
+        backgroundColor: "#f8fafc",
         paddingTop: 15,
         marginTop: 10,
+        paddingHorizontal: 10,
     },
     headerRow: {
         flexDirection: "row",

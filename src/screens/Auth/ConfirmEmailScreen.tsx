@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { verifyEmployerEmail } from "../../services/authService";
+import { verifyEmployeeEmail, verifyEmployerEmail } from "../../services/authService";
 
 const ConfirmEmailScreen = ({ navigation, route }: any) => {
-  const { email } = route.params as { email: string };
+  const { email, role } = route.params as { email: string; role: string };
   const [otp, setOtp] = useState(Array(8).fill(""));
   const inputs = useRef<Array<TextInput | null>>([]);
 
@@ -30,9 +30,17 @@ const ConfirmEmailScreen = ({ navigation, route }: any) => {
 
     try {
 
-      const res = await verifyEmployerEmail({ email, code: otp.join("") });
-      Alert.alert("Thành công", res.message);
-      navigation.replace("EmployerLogin");
+      if (role === "employer") {
+        const res = await verifyEmployerEmail({ email, code: otp.join("") });
+        Alert.alert("Thành công", res.message);
+        navigation.replace("EmployerLogin");
+      }
+      else if (role === "employee") {
+        const res = await verifyEmployeeEmail({ email, code: otp.join("") });
+        Alert.alert("Thành công", res.message);
+        navigation.replace("Login");
+      }
+
     } catch (err: any) {
       Alert.alert("Lỗi", err.message);
     }

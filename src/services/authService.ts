@@ -50,7 +50,7 @@ export const loginEmployer = async (payload: LoginRequest) => {
         }
     }
 };
-export const registerUser = async (payload: {
+export const registerEmployee = async (payload: {
     fullName: string;
     email: string;
     password: string;
@@ -84,44 +84,7 @@ export const registerUser = async (payload: {
         //throw new Error("Đăng ký thất bại, vui lòng thử lại.");
     }
 };
-export const confirmEmail = async (token: string) => {
-    try {
-        const res = await apiInstance.patch(
-            "/auth/users/verify-email",
-            {}, // hoặc bỏ luôn nếu server không yêu cầu body
-            {
-                headers: { "C-Token": token },
-            }
-        );
-        return res.data;
-    } catch (err: any) {
-        console.log("ConfirmEmail error:", err.response?.data || err.message);
 
-        if (err.response?.data?.message)
-            throw new Error(err.response.data.message);
-
-        throw new Error("Xác nhận email thất bại.");
-    }
-};
-export const confirmEmailEmployer = async (token: string) => {
-    try {
-        const res = await apiInstance.patch(
-            "/auth/employers/verify-email",
-            {}, // hoặc bỏ luôn nếu server không yêu cầu body
-            {
-                headers: { "C-Token": token },
-            }
-        );
-        return res.data;
-    } catch (err: any) {
-        console.log("ConfirmEmail error:", err.response?.data || err.message);
-
-        if (err.response?.data?.message)
-            throw new Error(err.response.data.message);
-
-        throw new Error("Xác nhận email thất bại.");
-    }
-};
 
 export interface EmployerRegisterRequest {
     email: string;
@@ -134,7 +97,7 @@ export interface EmployerRegisterRequest {
     districtId: number;
     detailAddress?: string;
 }
-export interface EmployerVerifyEmailRequest {
+export interface VerifyEmailRequest {
     email: string;
     code: string;
 }
@@ -174,9 +137,36 @@ export const registerEmployer = async (payload: EmployerRegisterRequest) => {
         throw new Error(err.message || "Đăng ký nhà tuyển dụng thất bại, vui lòng thử lại.");
     }
 };
-export const verifyEmployerEmail = async (payload: EmployerVerifyEmailRequest) => {
+export const verifyEmployerEmail = async (payload: VerifyEmailRequest) => {
     try {
         const res = await apiInstance.patch("/auth/employers/mobile/verify-email", payload);
+        return res.data; // trả về kết quả để UI xử lý
+    } catch (err: any) {
+        if (err.response && err.response.data) {
+            const data = err.response.data;
+
+            // Trường hợp lỗi validate (400)
+            if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                const firstError = data.errors[0];
+                throw new Error(`${firstError.fieldName}: ${firstError.message}`);
+            }
+
+            // Các lỗi khác (409, 500, v.v.)
+            if (data.message) {
+                throw new Error(data.message);
+            }
+        }
+
+        if (err.request) {
+            throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng hoặc server.");
+        }
+
+        throw new Error(err.message || "Xác nhận email thất bại, vui lòng thử lại.");
+    }
+};
+export const verifyEmployeeEmail = async (payload: VerifyEmailRequest) => {
+    try {
+        const res = await apiInstance.patch("/auth/users/mobile/verify-email", payload);
         return res.data; // trả về kết quả để UI xử lý
     } catch (err: any) {
         if (err.response && err.response.data) {

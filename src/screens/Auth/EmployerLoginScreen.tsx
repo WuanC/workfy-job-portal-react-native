@@ -49,12 +49,6 @@ const EmployerLoginScreen = () => {
         } finally {
             //setLoading(false);
         }
-        // try {
-        //     setLoading(true);
-        //     //await login(email, password);
-        //     setTimeout(() => {
-
-        //     }, 100);
 
     };
 
@@ -123,7 +117,7 @@ const EmployerLoginScreen = () => {
             </View>
 
             {/* Social Login */}
-            <TouchableOpacity style={styles.socialButton}>
+            {/* <TouchableOpacity style={styles.socialButton}>
                 <Ionicons name="logo-google" size={24} color="#DB4437" />
                 <Text style={styles.socialText}>Sign in with Google</Text>
             </TouchableOpacity>
@@ -131,7 +125,7 @@ const EmployerLoginScreen = () => {
             <TouchableOpacity style={styles.socialButton}>
                 <Ionicons name="logo-linkedin" size={24} color="#0077B5" />
                 <Text style={styles.socialText}>Sign in with LinkedIn</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* 🆕 Signup and Employer login */}
             <View style={styles.bottomLinks}>

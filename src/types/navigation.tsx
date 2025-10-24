@@ -26,7 +26,7 @@ export type RootStackParamList = {
   UpdateCompanyMedia: undefined
 
   //Auth
-  ConfirmEmail: {email: string}
+  ConfirmEmail: {email: string, role: string}
   Login: undefined
   Register: undefined
   EmployerLogin: undefined

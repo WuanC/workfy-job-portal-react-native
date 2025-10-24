@@ -114,7 +114,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
             });
             console.log(email);
             Alert.alert("Thành công", "Đăng ký nhà tuyển dụng thành công!");
-            navigation.replace("ConfirmEmail", { email: email });
+            navigation.replace("ConfirmEmail", { email: email, role: "employer" });
         } catch (err: any) {
             Alert.alert("Đăng ký thất bại", err.message || "Vui lòng thử lại.");
         } finally {
@@ -265,7 +265,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     </TouchableOpacity>
 
                     <View style={styles.bottomLinks}>
-                        <TouchableOpacity onPress={() => navigation.navigate("EmployerLogin")}>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
                             <Text style={styles.linkText}>
                                 Đã có tài khoản?{" "}
                                 <Text style={styles.linkHighlight}>Đăng nhập</Text>

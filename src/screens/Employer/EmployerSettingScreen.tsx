@@ -11,8 +11,17 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { updateEmployerPassword } from "../../services/employerService"; // 👈 thêm import
-
+import { useAuth } from "../../context/AuthContext";
+import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../types/navigation";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+type EmployerSettingNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "EmployerLogin"
+>;
 const EmployerSettingScreen = () => {
+  const navigation = useNavigation<EmployerSettingNavigationProp>();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<"profile" | "notification">("profile");
   const [avatar, setAvatar] = useState<string | null>(null);
   const [fullName, setFullName] = useState("");
@@ -41,6 +50,11 @@ const EmployerSettingScreen = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    Alert.alert("Đăng xuất", "Bạn đã đăng xuất thành công.");
+    navigation.replace("EmployerLogin"); // hoặc navigation.navigate("Login")
+  };
   // 🔐 Đổi mật khẩu
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -160,6 +174,21 @@ const EmployerSettingScreen = () => {
               >
                 <Text style={styles.primaryText}>
                   {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Đăng xuất</Text>
+
+
+              <TouchableOpacity
+                style={[styles.primaryBtn, loading && { opacity: 0.6 }]}
+                onPress={handleLogout}
+                disabled={loading}
+              >
+                <Text style={styles.primaryText}>
+                  Đăng xuất
                 </Text>
               </TouchableOpacity>
             </View>

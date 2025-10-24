@@ -1,5 +1,4 @@
-// services/authService.ts
-//const BASE_URL = "http://localhost:8080/workify/api/v1/auth";
+
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import apiInstance from "../api/apiInstance";
@@ -50,6 +49,24 @@ export const loginEmployer = async (payload: LoginRequest) => {
         }
     }
 };
+
+
+
+export interface EmployerRegisterRequest {
+    email: string;
+    password: string;
+    companyName: string;
+    companySize: string;
+    contactPerson: string;
+    phoneNumber: string;
+    provinceId: number;
+    districtId: number;
+    detailAddress?: string;
+}
+export interface VerifyEmailRequest {
+    email: string;
+    code: string;
+}
 export const registerEmployee = async (payload: {
     fullName: string;
     email: string;
@@ -84,23 +101,6 @@ export const registerEmployee = async (payload: {
         //throw new Error("Đăng ký thất bại, vui lòng thử lại.");
     }
 };
-
-
-export interface EmployerRegisterRequest {
-    email: string;
-    password: string;
-    companyName: string;
-    companySize: string;
-    contactPerson: string;
-    phoneNumber: string;
-    provinceId: number;
-    districtId: number;
-    detailAddress?: string;
-}
-export interface VerifyEmailRequest {
-    email: string;
-    code: string;
-}
 export const registerEmployer = async (payload: EmployerRegisterRequest) => {
     try {
         const res = await apiInstance.post("/employers/sign-up", payload);
@@ -192,3 +192,53 @@ export const verifyEmployeeEmail = async (payload: VerifyEmailRequest) => {
     }
 };
 
+//Get INFO
+export const getProfile = async () => {
+    try {
+        const response = await apiInstance.get("/users/me");
+        return response.data.data;
+    } catch (error: any) {
+        // Kiểm tra lỗi 401 (token không hợp lệ)
+        if (error.response?.status === 401) {
+            throw new Error("Token không hợp lệ hoặc đã hết hạn.");
+        }
+        throw new Error(error.response?.data?.message || "Lỗi không xác định.");
+    }
+};
+export const getEmployerProfile = async () => {
+    try {
+        const response = await apiInstance.get("/employers/me");
+        return response.data.data;
+    } catch (error: any) {
+        if (error.response?.status === 401) {
+            throw new Error("Token không hợp lệ hoặc bạn không phải nhà tuyển dụng.");
+        }
+        throw new Error(error.response?.data?.message || "Lỗi không xác định.");
+    }
+};
+
+//LOG OUT
+export const logoutService = async () => {
+  try {
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    const refreshToken = await AsyncStorage.getItem("refreshToken");
+
+    if (!accessToken || !refreshToken) {
+      console.warn("Thiếu token khi logout.");
+      return;
+    }
+
+    await apiInstance.post(
+      "/auth/sign-out",
+      {},
+      {
+        headers: {
+          "X-Token": accessToken,
+          "Y-Token": refreshToken,
+        },
+      }
+    );
+  } catch (err) {
+    console.error("Logout request failed:", err);
+  }
+};

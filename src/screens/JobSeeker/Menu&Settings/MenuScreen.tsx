@@ -6,18 +6,23 @@ import { Ionicons } from "@expo/vector-icons"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "../../../context/AuthContext";
 type MenuNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Setting"
 >;
 const MenuScreen = () => {
+  const {logout} = useAuth();
   const navigation = useNavigation<MenuNavigationProp>();
   const [showMoreOptions, setShowMoreOptions] = useState(false)
 
   const toggleMoreOptions = () => {
     setShowMoreOptions(!showMoreOptions)
   }
-
+  const handleLogout = async () => {
+    await logout();
+    navigation.replace("Login");
+  }
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
@@ -120,7 +125,7 @@ const MenuScreen = () => {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={() => handleLogout()}>
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
 

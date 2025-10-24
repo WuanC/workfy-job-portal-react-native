@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { TouchableOpacity, TouchableOpacityProps, Alert, View, ActivityIndicator } from "react-native";
+import { TouchableOpacity, TouchableOpacityProps, Alert, View, ActivityIndicator, Text } from "react-native";
 import * as Linking from "expo-linking";
 
 // 🔗 Navigation Ref để điều hướng bên ngoài
@@ -37,9 +37,7 @@ import MyCandidate from "../screens/Employer/MyCandidate";
 import PostJobScreen from "../screens/Employer/PostJobScreen";
 import EmployerSettingScreen from "../screens/Employer/EmployerSettingScreen";
 import CandidateFilter from "../screens/Employer/CandidateFilter";
-import { confirmEmail, confirmEmailEmployer } from "../services/authService";
 import CompanyDetailScreen from "../screens/JobSeeker/CompanyDetailScreen";
-import { useAuth } from "../context/AuthContext";
 import BlogScreen from "../screens/BlogScreen";
 import ArticleDetailScreen from "../screens/ArticleDetailScreen";
 import EmployerLoginScreen from "../screens/Auth/EmployerLoginScreen";
@@ -49,6 +47,7 @@ import UpdateCompanyInfo from "../screens/Employer/UpdateCompanyInfo";
 import UpdateCompanyMedia from "../screens/Employer/UpdateCompanyMedia";
 import UpdateJobScreen from "../screens/Employer/UpdateJobScreen";
 import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
+import { useAuth } from "../context/AuthContext";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -69,6 +68,7 @@ const ExploreStackScreen = () => (
     <SearchStack.Screen name="SearchMain" component={SearchScreen} />
     <SearchStack.Screen name="SearchFilter" component={FilterScreen} />
     <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
+    <RootStack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
   </ExploreStack.Navigator>
 );
 
@@ -207,44 +207,71 @@ const MainAppEmployer = () => (
 
 // ========== Root Stack ==========
 const AppNavigator = () => {
+  const { user, isAuthenticated, loading } = useAuth();
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#000",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ActivityIndicator size="large" color="#00bcd4" />
+        <Text style={{ color: "#fff", marginTop: 12, fontSize: 16 }}>
+          Đang tải dữ liệu người dùng...
+        </Text>
+      </View>
+    );
+  }
   return (
+
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1, backgroundColor: "#000000ff" }} edges={["top", "left", "right", "bottom"]}>
           <NavigationContainer>
             <RootStack.Navigator
-              //key={isAuthenticated ? "user" : "guest"}
               screenOptions={{ headerShown: false }}
-            //initialRouteName={isAuthenticated ? "MainApp" : "Login"}
             >
               {/* Auth */}
-              <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
-
-              <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
-
-
-
-              <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
-              <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
-
-
-              <RootStack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
-
-
-              <RootStack.Screen name="UpdateCompanyInfo" component={UpdateCompanyInfo} />
-              <RootStack.Screen name="UpdateCompanyMedia" component={UpdateCompanyMedia} />
-
-
-
-
-
-              {/* <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} /> */}
-
-              <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
-
+              {/* Nếu chưa đăng nhập */}
+              {!isAuthenticated ? (
+                <>
+                  <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
+                  <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
+                  <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
+                  <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
+                  <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
+                  <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
+                  <RootStack.Screen name="MainApp" component={MainAppEmployee} />
+                </>
+              ) : user?.role === "employer" ? (
+                // Nếu là nhà tuyển dụng
+                <>
+                  <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
+                  <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
+                  <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
+                  <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
+                  <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
+                  <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
+                  <RootStack.Screen name="MainApp" component={MainAppEmployee} />
+                </>
+              ) : (
+                // Nếu là ứng viên
+                <>
+                  <RootStack.Screen name="MainApp" component={MainAppEmployee} />
+                  <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
+                  <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
+                  <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
+                  <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
+                  <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
+                  <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
+                </>
+              )}
               {/* Main */}
-              <RootStack.Screen name="MainApp" component={MainAppEmployee} />
-              <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
+
+
             </RootStack.Navigator>
           </NavigationContainer>
         </SafeAreaView>

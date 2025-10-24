@@ -24,8 +24,8 @@ type MainNavigationProp = NativeStackNavigationProp<
 >;
 
 const EmployerLoginScreen = () => {
+    const { loginEmployerAuth } = useAuth();
     const [isChecked, setChecked] = useState(false);
-    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ const EmployerLoginScreen = () => {
             return;
         }
         try {
-             await loginEmployer({email, password});
+             await loginEmployerAuth(email, password);
             
             navigation.replace("MainAppEmployer");
 

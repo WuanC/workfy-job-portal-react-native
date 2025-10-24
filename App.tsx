@@ -9,7 +9,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import CVScreen from './src/screens/JobSeeker/CVScreen';
 import * as Linking from 'expo-linking';
-import { confirmEmail } from './src/services/authService';
 
 
 

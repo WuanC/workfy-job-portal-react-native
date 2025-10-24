@@ -1,11 +1,11 @@
-import { 
-  View, 
-  Text, 
-  Image, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  Alert 
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LOGO_IMG } from "../../utilities/constant";
@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
+import { loginEmployer } from "../../services/authService";
 
 type MainNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -23,8 +24,8 @@ type MainNavigationProp = NativeStackNavigationProp<
 >;
 
 const JobSeekerLoginScreen = () => {
+  const { loginEmployeeAuth } = useAuth();
   const [isChecked, setChecked] = useState(false);
-  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,10 +39,10 @@ const JobSeekerLoginScreen = () => {
 
     try {
       setLoading(true);
-      await login(email, password);
-      setTimeout(() => {
-        navigation.replace("MainApp");
-      }, 100);
+      await loginEmployeeAuth(email, password);
+      // await loginEmployee(email, password);
+      console.log("Login successful");
+      navigation.replace("MainApp");
     } catch (error: any) {
       Alert.alert('Lỗi', error.message || 'Đăng nhập thất bại');
       console.error(error);

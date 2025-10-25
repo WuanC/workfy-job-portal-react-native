@@ -38,7 +38,7 @@ const EmployerLoginScreen = () => {
         }
         try {
              await loginEmployerAuth(email, password);
-            
+        
             navigation.replace("MainAppEmployer");
 
 

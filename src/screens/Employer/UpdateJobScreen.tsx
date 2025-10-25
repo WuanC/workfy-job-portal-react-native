@@ -750,12 +750,12 @@ const UpdateJobScreen = ({ route }: any) => {
             labelField="label"
             valueField="value"
             placeholder="Chọn phúc lợi"
-            value={benefits.map((b) => b.type)} // mảng các value đã chọn
+            value={benefits.map((b) => b.type)}
             onChange={(selectedValues) => {
-              const selectedBenefits = selectedValues.map((val) => ({
-                type: val,
-                description: BenefitType[val as keyof typeof BenefitType],
-              }));
+              const selectedBenefits = selectedValues.map((val) => {
+                const existing = benefits.find((b) => b.type === val);
+                return existing || { type: val, description: "" };
+              });
               setBenefits(selectedBenefits);
             }}
             style={[styles.dropdown]}
@@ -777,6 +777,24 @@ const UpdateJobScreen = ({ route }: any) => {
               </View>
             )}
           />
+
+          {benefits.map((benefit, index) => (
+            <View key={benefit.type} style={styles.benefitItem}>
+              <Text style={styles.benefitLabel}>
+              {BenefitType[benefit.type as keyof typeof BenefitType]}
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập mô tả phúc lợi..."
+                value={benefit.description}
+                onChangeText={(text) => {
+                  const updated = [...benefits];
+                  updated[index].description = text;
+                  setBenefits(updated);
+                }}
+              />
+            </View>
+          ))}
         </View>
         {/* ---------- CHI TIẾT CÔNG VIỆC ---------- */}
         <View style={styles.card}>
@@ -1336,6 +1354,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
     backgroundColor: "#FFFFFF",
+  },
+    benefitItem: {
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 10,
+  },
+  benefitLabel: {
+    fontWeight: "bold",
+    marginBottom: 5,
+    marginLeft: 10,
   },
 
 });

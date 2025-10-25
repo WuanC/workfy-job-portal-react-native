@@ -25,6 +25,7 @@ import {
   getEnumOptions,
   JobLevel,
   JobType,
+  SalaryUnit,
   Sort,
 } from "../../utilities/constant";
 import { getAllProvince, Province } from "../../services/provinceService";
@@ -34,6 +35,7 @@ import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { AdvancedJobQuery, getAdvancedJobs, getAllJobsAdmin, updateJobStatus } from "../../services/jobService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
+import { Dropdown } from "react-native-element-dropdown";
 type FilterNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "SearchMain"
@@ -50,11 +52,16 @@ const FilterScreen = ({ route }: any) => {
       setSelectedJobType(currentFilter.jobTypes || []);
       setSelectedExperienceLevels(currentFilter.experienceLevels || []);
       setSelectedEducationLevels(currentFilter.educationLevels || []);
-      if (currentFilter.minSalary && currentFilter.maxSalary) {
-        setSalaryRange([
-          currentFilter.minSalary / 100, 
-          currentFilter.maxSalary / 100,
-        ]);
+      if (currentFilter.minSalary !== null && currentFilter.minSalary !== undefined
+        && currentFilter.maxSalary !== null && currentFilter.maxSalary !== undefined) {
+        setSalaryOption("custom");
+        setMaxSalary(currentFilter.maxSalary);
+        setMinSalary(currentFilter.minSalary);
+        setSalaryUnit(currentFilter.salaryUnit);
+        
+      }
+      else{
+        setSalaryOption("none");
       }
     }
   }, [currentFilter]);
@@ -89,17 +96,16 @@ const FilterScreen = ({ route }: any) => {
       // console.log("selectedEducationLevels:", selectedEducationLevels);
       // console.log("salaryRange:", salaryRange);
       const filter: AdvancedJobQuery = {
-       keyword: currentFilter?.keyword ?? "",
+        keyword: currentFilter?.keyword ?? "",
         industryIds: selectedIndustry,
         provinceIds: selectedLocations,
         jobLevels: selectedJobLevels,
         jobTypes: selectedJobType,
         experienceLevels: selectedExperienceLevels,
         educationLevels: selectedEducationLevels,
-        //postedWithinDays: Number(selectedDate),
-        minSalary: salaryRange[0] * 100,  // convert từ triệu
-        maxSalary: salaryRange[1] * 100,
-        //salaryUnit: "VND",
+        salaryUnit: selectSalaryUnity,
+        minSalary: minSalary !== null && minSalary !== undefined ? minSalary : null,
+        maxSalary: maxSalary ? maxSalary : null,
         sort: selectedSort,
         pageNumber: 1,
         pageSize: 10,
@@ -107,6 +113,7 @@ const FilterScreen = ({ route }: any) => {
       //await updateJobStatus(1, "APPROVED");
       //const res = await getAdvancedJobs(filter);
 
+      console.log(filter.minSalary, filter.maxSalary, filter.salaryUnit);
       if (onApply) {
         onApply(filter); // ✅ Gọi callback để gửi dữ liệu ngược về
       }
@@ -127,10 +134,26 @@ const FilterScreen = ({ route }: any) => {
   const [selectedJobType, setSelectedJobType] = useState<string[]>([]);
   const [selectedExperienceLevels, setSelectedExperienceLevels] = useState<string[]>([]);
   const [selectedEducationLevels, setSelectedEducationLevels] = useState<string[]>([]);
-  const [salaryRange, setSalaryRange] = useState<[number, number]>([10, 70]);
+
+  const [salaryOption, setSalaryOption] = useState<"none" | "custom">("none");
+  const [selectSalaryUnity, setSalaryUnit] = useState<string | null>(null);
+  const [minSalary, setMinSalary] = useState<number | null>(null);
+  const [maxSalary, setMaxSalary] = useState<number | null>(null);
+
   const [query, setQuery] = useState<string>("");
 
-
+  const handleSelectSalaryOptions = (option: "none" | "custom") => {
+    if (option === "none") {
+      setMinSalary(null);
+      setMaxSalary(null);
+      setSalaryUnit(null);
+    }
+    else if (option === "custom") {
+      setMinSalary(1);
+      setMaxSalary(10000000)
+      setSalaryUnit("VND");
+    }
+  }
 
 
 
@@ -381,7 +404,7 @@ const FilterScreen = ({ route }: any) => {
               ))}
             </View>
             {/* Salary */}
-            <Text style={styles.sectionTitle}>Mức lương mong muốn</Text>
+            {/* <Text style={styles.sectionTitle}>Mức lương mong muốn</Text>
             <View style={styles.salaryBox}>
               <View style={styles.salaryRangeBox}>
                 <View style={styles.salaryValueBox}>
@@ -395,8 +418,8 @@ const FilterScreen = ({ route }: any) => {
               <MultiSlider
                 values={[salaryRange[0], salaryRange[1]]}
                 onValuesChange={(values) => setSalaryRange(values as [number, number])}
-                min={0}
-                max={100}
+                min={1}
+                max={10000}
                 step={1}
                 sliderLength={300}
                 selectedStyle={{ backgroundColor: "#007AFF" }}
@@ -416,6 +439,84 @@ const FilterScreen = ({ route }: any) => {
                 }}
                 containerStyle={{ alignSelf: "center", marginTop: 10 }}
               />
+            </View> */}
+            <View>
+              <Text style={styles.sectionTitle}>Mức lương mong muốn</Text>
+
+              {/* Chọn kiểu nhập */}
+              <View style={styles.optionContainer}>
+                <TouchableOpacity
+                  style={[styles.optionButton, salaryOption === "none" && styles.optionButtonActive]}
+                  onPress={() => {
+                    setSalaryOption("none")
+                    handleSelectSalaryOptions("none");  
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      salaryOption === "none" && styles.optionTextActive,
+                    ]}
+                  >
+                    Không nhập lương
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.optionButton, salaryOption === "custom" && styles.optionButtonActive]}
+                  onPress={() => {
+                    setSalaryOption("custom")
+                    handleSelectSalaryOptions("custom");
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      salaryOption === "custom" && styles.optionTextActive,
+                    ]}
+                  >
+                    Nhập lương
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Khi chọn nhập lương */}
+              {salaryOption === "custom" && (
+                <View style={styles.salaryBox}>
+                  <Text style={styles.inputLabel}>Mức lương tối thiểu</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nhập mức lương tối thiểu"
+                    keyboardType="numeric"
+                    value={minSalary?.toString() || ""}
+                    onChangeText={(text) => setMinSalary(text ? Number(text) : null)}
+                  />
+
+                  <Text style={[styles.inputLabel, { marginTop: 10 }]}>
+                    Mức lương tối đa
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nhập mức lương tối đa"
+                    keyboardType="numeric"
+                    value={maxSalary?.toString() || ""}
+                    onChangeText={(text) => setMaxSalary(text ? Number(text) : null)}
+                  />
+
+                  {/* Dropdown chọn đơn vị */}
+                  <Dropdown
+                    data={getEnumOptions(SalaryUnit)}
+                    labelField="value"
+                    valueField="value"
+                    placeholder="Chọn đơn vị"
+                    value={selectSalaryUnity}
+                    onChange={(item) => setSalaryUnit(item.value)}
+                    style={styles.dropdown}
+                    placeholderStyle={styles.placeholderStyle}
+                    selectedTextStyle={styles.selectedTextStyle}
+                  />
+                </View>
+              )}
             </View>
           </ScrollView>
 
@@ -665,22 +766,21 @@ const styles = StyleSheet.create({
   },
   modalItemText: { fontSize: 16, color: "#333" },
   salaryBox: {
-    backgroundColor: "#f9fafb",
+    marginTop: 20,
     paddingVertical: 18,
+    backgroundColor: "#f9f9f9",
     paddingHorizontal: 16,
     borderRadius: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
-    elevation: 2,
     marginBottom: 20,
   },
   salaryRangeBox: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
   },
   salaryValueBox: {
     backgroundColor: "#fff",
@@ -772,5 +872,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontStyle: "italic",
   },
+
+  ////
+  optionContainer: { flexDirection: "row", marginTop: 10, marginBottom: 20 },
+  optionButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    marginRight: 10,
+  },
+  optionButtonActive: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
+  optionText: { color: "#333" },
+  optionTextActive: { color: "#fff" },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  inputLabel: { fontWeight: "500", marginBottom: 5 },
+  dropdown: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  placeholderStyle: { color: "#999" },
+  selectedTextStyle: { color: "#000" },
 
 })

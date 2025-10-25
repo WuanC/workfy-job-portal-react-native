@@ -44,9 +44,9 @@ export type AdvancedJobQuery = {
   experienceLevels?: string[];
   educationLevels?: string[];
   postedWithinDays?: number;
-  minSalary?: number;
-  maxSalary?: number;
-  salaryUnit?: string;
+  minSalary?: number | null;
+  maxSalary?: number | null;
+  salaryUnit?: string | null;
   sort?: string; // ✅ dùng union type chuẩn
   pageNumber?: number;
   pageSize?: number;

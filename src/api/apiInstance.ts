@@ -12,7 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * ===============================
  */
 const apiInstance: AxiosInstance = axios.create({
-  baseURL: "http://192.168.1.6:8080/workify/api/v1",
+  baseURL: "http://192.168.0.103:8080/workify/api/v1",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -63,7 +63,9 @@ apiInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-
+    if (originalRequest.url?.endsWith("/sign-in")) {
+      return Promise.reject(error);
+    }
     // Nếu token hết hạn
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;

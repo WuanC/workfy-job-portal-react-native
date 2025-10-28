@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TextInput,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,7 +33,7 @@ const PostJobScreen = () => {
     requirement: useRef<RichEditor>(null),
     jobDescription: useRef<RichEditor>(null),
   };
-
+  const [loading, setLoading] = useState(true);
   const [editorsReady, setEditorsReady] = useState({
     aboutCompany: false,
     description: false,
@@ -262,6 +263,7 @@ const PostJobScreen = () => {
         if (cancelled) return;
         console.error("Lỗi load", err);
       } finally {
+        setLoading(false);
         if (!cancelled) { }
       }
     };
@@ -336,6 +338,13 @@ const PostJobScreen = () => {
       }
     });
   }, [editorsReady, data]);
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0ea5e9" />
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       {/* ---------- HEADER ---------- */}
@@ -687,7 +696,7 @@ const PostJobScreen = () => {
           {benefits.map((benefit, index) => (
             <View key={benefit.type} style={styles.benefitItem}>
               <Text style={styles.benefitLabel}>
-              {BenefitType[benefit.type as keyof typeof BenefitType]}
+                {BenefitType[benefit.type as keyof typeof BenefitType]}
               </Text>
               <TextInput
                 style={styles.input}
@@ -1265,5 +1274,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     marginLeft: 10,
   },
-
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
 });

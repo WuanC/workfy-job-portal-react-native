@@ -227,6 +227,7 @@ const ExploreScreen = () => {
                         renderItem={({ item }) => (
                             <TouchableOpacity style={styles.articleCard}
                                 onPress={() => {
+                                    console.log(item.image)
                                     if (item?.id) {
                                         console.log("Đi đến bài viết ID:", item.id);
                                         navigation.navigate("ArticleDetail", { id: item.id }); // 👈 Truyền đúng key "id"

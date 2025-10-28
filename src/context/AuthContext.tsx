@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             const res = await loginEmployer({ email, password });
             const { accessToken, refreshToken } = res;
-
+            console.log("Employer login response:", accessToken);
             await AsyncStorage.setItem("accessToken", accessToken);
             await AsyncStorage.setItem("refreshToken", refreshToken);
             await AsyncStorage.setItem("role", "employer");

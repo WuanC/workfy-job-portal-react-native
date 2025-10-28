@@ -183,6 +183,13 @@ export default function EmployerJobScreen() {
       ]
     );
   };
+    if (loading) {
+      return (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#0ea5e9" />
+        </View>
+      );
+    }
   // Render component
   return (
     <View style={styles.container}>
@@ -382,5 +389,11 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     color: "#333",
+  },
+    center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });

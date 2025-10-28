@@ -59,7 +59,7 @@ const MyCompany = () => {
   // Lấy danh sách job khi có company.id
   useFocusEffect(
     useCallback(() => {
-      console.log("Fetching open jobs for companyId:", companyId);
+      //console.log("Fetching open jobs for companyId:", companyId);
       if (!companyId) return;
       const fetchOpenJobs = async () => {
         try {

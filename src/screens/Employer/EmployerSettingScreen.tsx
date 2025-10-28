@@ -52,7 +52,6 @@ const EmployerSettingScreen = () => {
 
   const handleLogout = async () => {
     await logout();
-    Alert.alert("Đăng xuất", "Bạn đã đăng xuất thành công.");
     navigation.replace("EmployerLogin"); // hoặc navigation.navigate("Login")
   };
   // 🔐 Đổi mật khẩu

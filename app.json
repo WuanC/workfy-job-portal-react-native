@@ -2,12 +2,13 @@
   "expo": {
     "name": "workify-job-portal-react-native",
     "slug": "workify-job-portal-react-native",
+    "owner": "bo11082007",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "scheme": "workify", 
+    "scheme": "workify",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -16,11 +17,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.workifyjobportalreactnative",
-      "associatedDomains": ["applinks:workify"],
+      "associatedDomains": [
+        "applinks:workify"
+      ],
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["workify"]
+            "CFBundleURLSchemes": [
+              "workify"
+            ]
           }
         ]
       }
@@ -39,7 +44,10 @@
               "scheme": "workify"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ],
       "package": "com.anonymous.workifyjobportalreactnative"
@@ -51,6 +59,9 @@
       "eas": {
         "projectId": "5cfd5b41-f4e7-4612-acf8-aaa4b63a69b5"
       }
-    }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }

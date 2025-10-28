@@ -98,7 +98,7 @@ export const getPostById = async (id: number): Promise<Post | null> => {
     try {
         const res = await apiInstance.get(`/posts/${id}`);
         const item = res.data.data;
-        console.log("Fetched post:", item);
+
         const post: Post = {
             id: item.id,
             updatedAt: item.updatedAt,
@@ -115,6 +115,31 @@ export const getPostById = async (id: number): Promise<Post | null> => {
     } catch (error: any) {
         console.error(`❌ Lỗi khi lấy bài viết ID=${id}:`, error.response?.data || error.message);
         return null;
+    }
+};
+
+export const getRelatedPosts = async (id: number, limit = 5) => {
+    try {
+        const res = await apiInstance.get(`/posts/public/${id}/related`, {
+            params: { limit },
+        });
+
+        const data = res.data.data;
+        const posts = data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            excerpt: item.excerpt,
+            thumbnailUrl: item.thumbnailUrl,
+            slug: item.slug,
+            readingTime: item.readingTimeMinutes?.toString() ?? "0",
+            category: item.category?.title ?? "Không có danh mục",
+            authorName: item.author?.fullName ?? "Không rõ",
+        }));
+
+        return posts;
+    } catch (error: any) {
+        console.error(`❌ Lỗi khi lấy bài viết liên quan (ID=${id}):`, error.response?.data || error.message);
+        return [];
     }
 };
 

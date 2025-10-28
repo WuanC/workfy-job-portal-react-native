@@ -22,6 +22,7 @@ export interface TokenResponse {
 
 export const loginUser = async (payload: LoginRequest) => {
     try {
+        console.log("Employee login")
         const res = await apiInstance.post("/auth/users/sign-in", payload);
         return res.data.data as TokenResponse;
     } catch (err: any) {
@@ -34,6 +35,7 @@ export const loginUser = async (payload: LoginRequest) => {
 };
 export const loginEmployer = async (payload: LoginRequest) => {
     try {
+        console.log("Employer login")
         const res = await apiInstance.post("/auth/employers/sign-in", payload);
         const { accessToken } = res.data?.data || {};
         console.log("Access Token:", accessToken);
@@ -219,26 +221,26 @@ export const getEmployerProfile = async () => {
 
 //LOG OUT
 export const logoutService = async () => {
-  try {
-    const accessToken = await AsyncStorage.getItem("accessToken");
-    const refreshToken = await AsyncStorage.getItem("refreshToken");
+    try {
+        const accessToken = await AsyncStorage.getItem("accessToken");
+        const refreshToken = await AsyncStorage.getItem("refreshToken");
 
-    if (!accessToken || !refreshToken) {
-      console.warn("Thiếu token khi logout.");
-      return;
+        if (!accessToken || !refreshToken) {
+            console.warn("Thiếu token khi logout.");
+            return;
+        }
+
+        await apiInstance.post(
+            "/auth/sign-out",
+            {},
+            {
+                headers: {
+                    "X-Token": accessToken,
+                    "Y-Token": refreshToken,
+                },
+            }
+        );
+    } catch (err) {
+        console.error("Logout request failed:", err);
     }
-
-    await apiInstance.post(
-      "/auth/sign-out",
-      {},
-      {
-        headers: {
-          "X-Token": accessToken,
-          "Y-Token": refreshToken,
-        },
-      }
-    );
-  } catch (err) {
-    console.error("Logout request failed:", err);
-  }
 };

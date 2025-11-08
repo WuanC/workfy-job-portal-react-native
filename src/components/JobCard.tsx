@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
+import { toggleSaveJob } from "../services/saveJobService";
 
 interface IJobCardProps {
   id: number;
@@ -42,7 +43,7 @@ const JobCard: React.FC<IJobCardProps> = ({
   const navigation = useNavigation<JobDetailNavigationProp>();
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const heartScale = useRef(new Animated.Value(1)).current;
-
+  const [heartApply, setheartApply] = useState<boolean>(applied)
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
       toValue: 0.97,
@@ -70,6 +71,15 @@ const JobCard: React.FC<IJobCardProps> = ({
       }),
     ]).start();
   };
+  const handleToggleSave = async (jobId: number) => {
+    try {
+      await toggleSaveJob(jobId)
+    }
+    catch (e) {
+      console.error(e)
+    }
+
+  };
 
   return (
     <Pressable
@@ -85,7 +95,7 @@ const JobCard: React.FC<IJobCardProps> = ({
         <View style={styles.cardContainer}>
           <LinearGradient
             colors={
-              applied
+              heartApply
                 ? ["rgba(102, 126, 234, 0.05)", "rgba(118, 75, 162, 0.05)"]
                 : ["#ffffff", "#ffffff"]
             }
@@ -112,12 +122,16 @@ const JobCard: React.FC<IJobCardProps> = ({
                   <Text numberOfLines={2} style={styles.jobTitle}>
                     {job_title}
                   </Text>
-                  <Pressable onPress={handleHeartPress}>
+                  <Pressable onPress={() => {
+                    handleHeartPress()
+                    handleToggleSave(id)
+                    setheartApply(!heartApply)
+                  }}>
                     <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                       <Ionicons
-                        name={applied ? "heart" : "heart-outline"}
+                        name={heartApply ? "heart" : "heart-outline"}
                         size={24}
-                        color={applied ? "#f5576c" : "#d1d5db"}
+                        color={heartApply ? "#f5576c" : "#d1d5db"}
                         style={styles.heartIcon}
                       />
                     </Animated.View>

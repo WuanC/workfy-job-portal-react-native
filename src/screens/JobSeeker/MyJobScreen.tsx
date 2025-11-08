@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert, ActivityIndicator, RefreshControl } from "react-native";
 
 import { FlatList } from "react-native-gesture-handler";
 import SimilarJobCard from "../../components/SimilarJobCard";
@@ -12,6 +12,7 @@ import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { getMyApplications } from "../../services/applicationService";
 import { formatDate } from "../../utilities/constant";
+import { getSavedJobs } from "../../services/saveJobService";
 
 type JobDetailNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -26,14 +27,24 @@ const MyJobScreen = () => {
         setModalVisible(!isModalVisible);
     };
     const navigation = useNavigation<JobDetailNavigationProp>();
-    const [applications, setApplications] = useState<any[]>([]);
-    const [pageNumber, setPageNumber] = useState(1);
-    const [isLoading, setIsLoading] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
-    const fetchApplications = async (page = 1) => {
-        if (isLoading || !hasMore) return;
 
-        setIsLoading(true);
+    const [isApplicationRefreshing, setIsApplicationRefreshing] = useState(false);
+    const [isSaveJobRefreshing, setIsSaveJobRefreshing] = useState(false);
+
+    const [applications, setApplications] = useState<any[]>([]);
+    const [saveJobs, setSaveJobs] = useState<any[]>([])
+
+    const [applicationPageNumber, setApplicationPageNumber] = useState(1);
+    const [isApplicationLoading, setIsApplicationLoading] = useState(false);
+    const [applicationHasMore, setApplicationHasMore] = useState(true);
+
+    const [saveJobPageNumber, setSaveJobPageNumber] = useState(1);
+    const [isSaveJobLoading, setIsSaveJobLoading] = useState(false);
+    const [saveJobHasMore, setSaveJobHasMore] = useState(true);
+    const fetchApplications = async (page = 1) => {
+        if (isApplicationLoading || !applicationHasMore) return;
+
+        setIsApplicationLoading(true);
         try {
             const res = await getMyApplications({
                 pageNumber: page,
@@ -46,17 +57,41 @@ const MyJobScreen = () => {
             } else {
                 setApplications(prev => [...prev, ...res.items]);
             }
-            setHasMore(page < res.totalPages);
-            setPageNumber(page);
+            setApplicationHasMore(page < res.totalPages);
+            setApplicationPageNumber(page);
         } catch (err) {
             console.error("❌ Lỗi khi tải danh sách:", err);
         } finally {
-            setIsLoading(false);
+            setIsApplicationLoading(false);
+        }
+    };
+
+    const fetchSaveJobs = async (page = 1) => {
+        if (isSaveJobLoading || !saveJobHasMore) return;
+        setIsSaveJobLoading(true);
+        try {
+            const res = await getSavedJobs({
+                pageNumber: page,
+                pageSize: 10,
+            });
+
+            if (page === 1) {
+                setSaveJobs(res.items);
+            } else {
+                setSaveJobs(prev => [...prev, ...res.items]);
+            }
+            setSaveJobHasMore(page < res.totalPages);
+            setSaveJobPageNumber(page);
+        } catch (err) {
+            setSaveJobHasMore(false)
+            console.error("❌ Lỗi khi tải danh sách:", err);
+        } finally {
+            setIsSaveJobLoading(false);
         }
     };
 
     useEffect(() => {
-
+        fetchSaveJobs()
         fetchApplications()
     }, []);
     const [similarJobs, setSimilarJobs] = useState([
@@ -66,49 +101,31 @@ const MyJobScreen = () => {
         { id: "4", title: "Market Research Executive", location: "Hà Nội", notificationState: false },
         { id: "5", title: "Market Research Executive", location: "Hà Nội", notificationState: true },
     ])
-    const handleLoadMore = () => {
-        if (hasMore && !isLoading) {
-            fetchApplications(pageNumber + 1);
+    const handleApplicationLoadMore = () => {
+        if (applicationHasMore && !isApplicationLoading) {
+            fetchApplications(applicationPageNumber + 1);
         }
     };
-    // const [appliedJobs, setAppliedJobs] = useState([
-    //     { id: "1", title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png"), },
-    //     { id: "2", title: "Backend Developer", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-    //     { id: "3", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-    //     { id: "4", title: "Market Research Executive", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-    //     { id: "5", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-    // ])
-    const [savedJobs, setSavedJobs] = useState([
-        {
-            id: "1",
-            logo_path: require("../../../assets/App/logoJob.png"),
-            job_title: "Market Research Executive",
-            company_name: "Công ty TNHH Became Tokyu",
-            job_location: "Bình Dương",
-            slary_range: "Thương lượng",
-            time_passed: "một giờ trước",
-        },
-        {
-            id: "2",
-            logo_path: require("../../../assets/App/logoJob.png"),
-            job_title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng",
-            company_name: "Công ty TNHH ABC",
-            job_location: "Hồ Chí Minh",
-            slary_range: "20-30 triệu",
-            time_passed: "2 giờ trước",
-        },
-        {
-            id: "3",
-            logo_path: require("../../../assets/App/logoJob.png"),
-            job_title: "UI/UX Designer",
-            company_name: "Công ty TNHH XYZ",
-            job_location: "Hà Nội",
-            slary_range: "15-25 triệu",
-            time_passed: "5 giờ trước",
-        },
+    const handleSaveJobLoadMore = () => {
+        if (saveJobHasMore && !isSaveJobLoading) {
+            fetchSaveJobs(saveJobPageNumber + 1);
+        }
+    };
+    const handleRefreshApplications = async () => {
+        setIsApplicationLoading(false)
+        setApplicationHasMore(true)
+        setIsApplicationRefreshing(true);
+        await fetchApplications(1); // tải lại trang đầu
+        setIsApplicationRefreshing(false);
+    };
 
-    ]);
-
+    const handleRefreshSaveJobs = async () => {
+        setIsSaveJobLoading(false)
+        setSaveJobHasMore(true)
+        setIsSaveJobRefreshing(true);
+        await fetchSaveJobs(1);
+        setIsSaveJobRefreshing(false);
+    };
 
 
     return (
@@ -201,16 +218,23 @@ const MyJobScreen = () => {
                                 company_name={item.job?.companyName}
                                 logo_path={item.logo_path}
                                 applied_time={formatDate(item.createdAt)}
-                                cvUrl= {item.cvUrl}
-                                coverLetter= {item.coverLetter}
-                                status= {item.status}
+                                cvUrl={item.cvUrl}
+                                coverLetter={item.coverLetter}
+                                status={item.status}
                             />
                         )}
                         ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
-                        onEndReached={handleLoadMore}
+                        onEndReached={handleApplicationLoadMore}
                         onEndReachedThreshold={0.2}
                         ListFooterComponent={
-                            isLoading ? <ActivityIndicator size="small" style={{ margin: 10 }} /> : null
+                            isApplicationLoading ? <ActivityIndicator size="small" style={{ margin: 10 }} /> : null
+                        }
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={isApplicationRefreshing}
+                                onRefresh={handleRefreshApplications}
+                                colors={["#0066CC"]}
+                            />
                         }
                     />
 
@@ -220,21 +244,40 @@ const MyJobScreen = () => {
                 <View style={styles.content}>
                     <FlatList
                         style={styles.content}
-                        data={savedJobs}
+                        data={saveJobs}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
                             <JobCard
-                                id={1}
-                                logo_path={item.logo_path}
-                                job_title={item.job_title}
-                                company_name={item.company_name}
-                                job_location={item.job_location}
-                                salary_range={item.slary_range}
-                                time_passed={item.time_passed}
+                                id={item.id}
+                                logo_path={item.avatarUrl}
+                                job_title={item.jobTitle}
+                                company_name={item.companyName}
+                                job_location={item.jobLocations[0]?.province?.name}
+                                salary_range={
+                                    item.salaryType === "RANGE"
+                                        ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
+                                        : item.salaryType === "NEGOTIABLE"
+                                            ? "Thỏa thuận"
+                                            : "Không rõ"
+                                }
+                                time_passed={item.expirationDate}
                                 applied={true}
                             />
                         )}
-                        ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
+                        ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa lưu công việc nào.</Text>}
+                        onEndReached={handleSaveJobLoadMore}
+                        onEndReachedThreshold={0.2}
+                        ListFooterComponent={
+                            isSaveJobLoading ? <ActivityIndicator size="small" style={{ margin: 10 }} /> : null
+                        }
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={isSaveJobRefreshing}
+                                onRefresh={handleRefreshSaveJobs}
+                                colors={["#0066CC"]}
+                                progressViewOffset={10}
+                            />
+                        }
 
                     />
 

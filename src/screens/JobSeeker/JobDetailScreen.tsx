@@ -27,6 +27,7 @@ import {
 } from "../../utilities/constant";
 import RenderHTML, { MixedStyleDeclaration } from "react-native-render-html";
 import { colors } from "../../theme/colors";
+import { checkJobSaved, toggleSaveJob } from "../../services/saveJobService";
 
 type JobSubmitNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -48,6 +49,7 @@ const JobDetailScreen = ({ route }: any) => {
   const { width } = useWindowDimensions();
 
   const [job, setJob] = useState<any>(null);
+  const [isSavedJob, setIsSaveJob] = useState<boolean>(false)
   const [loading, setLoading] = useState(true);
 
   // Header animation
@@ -80,6 +82,8 @@ const JobDetailScreen = ({ route }: any) => {
       try {
         setLoading(true);
         const jobData = await getJobById(id);
+        const isSavedJob = await checkJobSaved(id);
+        setIsSaveJob(isSavedJob);
         if (!cancelled) setJob(jobData);
       } catch (err) {
         console.error("Lỗi load job:", err);
@@ -93,7 +97,16 @@ const JobDetailScreen = ({ route }: any) => {
       cancelled = true;
     };
   }, [id]);
+  const handleToggleSave = async () => {
+    try {
+      await toggleSaveJob(id)
+      setIsSaveJob(!isSavedJob)
+    }
+    catch (e) {
+      console.error(e)
+    }
 
+  };
   // Loading
   if (loading) {
     return (
@@ -349,12 +362,17 @@ const JobDetailScreen = ({ route }: any) => {
           <TouchableOpacity style={styles.iconBtn}>
             <Ionicons name="notifications-outline" size={24} color={colors.primary.start} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="heart-outline" size={24} color="#f5576c" />
+          <TouchableOpacity style={styles.iconBtn} onPress={handleToggleSave}>
+            <Ionicons
+              name={isSavedJob ? "heart" : "heart-outline"}
+              size={24}
+              color={isSavedJob ? "#f5576c" : colors.primary.start}
+            />
           </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.applyBtn}
-            onPress={() => navigation.navigate("JobSubmit", {jobId: job.id, jobName: job.jobTitle})}
+            onPress={() => navigation.navigate("JobSubmit", { jobId: job.id, jobName: job.jobTitle })}
           >
             <LinearGradient
               colors={["#667eea", "#764ba2"]}

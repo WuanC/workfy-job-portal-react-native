@@ -89,9 +89,12 @@ const SearchStackScreen = () => (
 );
 
 const EmployeeApplicationStackScreen = () => (
-    <SearchStack.Navigator screenOptions={{ headerShown: false }}>
+  <SearchStack.Navigator screenOptions={{ headerShown: false }}>
     <SearchStack.Screen name="MyJob" component={MyJobScreen} />
     <SearchStack.Screen name="EmployeeDetailApplication" component={EmployeeDetailApplication} />
+    <SearchStack.Screen name="JobDetail" component={JobDetailScreen} />
+    <SearchStack.Screen name="JobSubmit" component={JobSubmitScreen} />
+    <SearchStack.Screen name="JobSubmitSuccess" component={JobSubmitSucessScreen} />
 
   </SearchStack.Navigator>
 )

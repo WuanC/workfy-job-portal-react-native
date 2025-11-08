@@ -52,6 +52,7 @@ import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
 import { useAuth } from "../context/AuthContext";
 import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "../screens/Auth/ResetPasswordScreen";
+import EmployeeDetailApplication from "../screens/JobSeeker/EmployeeDetailApplication";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -86,6 +87,14 @@ const SearchStackScreen = () => (
     <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
   </SearchStack.Navigator>
 );
+
+const EmployeeApplicationStackScreen = () => (
+    <SearchStack.Navigator screenOptions={{ headerShown: false }}>
+    <SearchStack.Screen name="MyJob" component={MyJobScreen} />
+    <SearchStack.Screen name="EmployeeDetailApplication" component={EmployeeDetailApplication} />
+
+  </SearchStack.Navigator>
+)
 
 const MessageStackScreen = () => (
   <MessageStack.Navigator screenOptions={{ headerShown: false }}>
@@ -165,7 +174,7 @@ const MainAppEmployee = () => (
   >
     <Tab.Screen name="ExploreStack" component={ExploreStackScreen} options={{ title: "Khám phá" }} />
     <Tab.Screen name="SearchStack" component={SearchStackScreen} options={{ title: "Tìm kiếm" }} />
-    <Tab.Screen name="MyJobStack" component={MyJobScreen} options={{ title: "Việc của tôi" }} />
+    <Tab.Screen name="MyJobStack" component={EmployeeApplicationStackScreen} options={{ title: "Việc của tôi" }} />
     <Tab.Screen name="MessageStack" component={MessageStackScreen} options={{ title: "Tin nhắn" }} />
     <Tab.Screen name="CVStack" component={CVScreen} options={{ title: "Viết CV" }} />
     <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: "Menu" }} />

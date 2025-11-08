@@ -36,6 +36,10 @@ export type RootStackParamList = {
 
   Blog: undefined
   ArticleDetail: { id: number }
+
+
+  //Application
+  EmployeeDetailApplication: {applicationId: number; status: string; coverLetter: string; jobTitle: string; cvUrl: string}
 };
 // type JobDetailNavigationProp = NativeStackNavigationProp<
 //   RootStackParamList,

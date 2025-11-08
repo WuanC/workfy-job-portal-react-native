@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert, ActivityIndicator } from "react-native";
 
 import { FlatList } from "react-native-gesture-handler";
 import SimilarJobCard from "../../components/SimilarJobCard";
@@ -10,6 +10,8 @@ import Modal from "react-native-modal";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+import { getMyApplications } from "../../services/applicationService";
+import { formatDate } from "../../utilities/constant";
 
 type JobDetailNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -24,8 +26,39 @@ const MyJobScreen = () => {
         setModalVisible(!isModalVisible);
     };
     const navigation = useNavigation<JobDetailNavigationProp>();
+    const [applications, setApplications] = useState<any[]>([]);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const fetchApplications = async (page = 1) => {
+        if (isLoading || !hasMore) return;
 
+        setIsLoading(true);
+        try {
+            const res = await getMyApplications({
+                pageNumber: page,
+                pageSize: 10,
+                sorts: "createdAt,desc"
+            });
 
+            if (page === 1) {
+                setApplications(res.items);
+            } else {
+                setApplications(prev => [...prev, ...res.items]);
+            }
+            setHasMore(page < res.totalPages);
+            setPageNumber(page);
+        } catch (err) {
+            console.error("❌ Lỗi khi tải danh sách:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+
+        fetchApplications()
+    }, []);
     const [similarJobs, setSimilarJobs] = useState([
         { id: "1", title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng", location: "Hà Nội", notificationState: true },
         { id: "2", title: "Backend Developer", location: "Hà Nội", notificationState: false },
@@ -33,14 +66,18 @@ const MyJobScreen = () => {
         { id: "4", title: "Market Research Executive", location: "Hà Nội", notificationState: false },
         { id: "5", title: "Market Research Executive", location: "Hà Nội", notificationState: true },
     ])
-
-    const [appliedJobs, setAppliedJobs] = useState([
-        { id: "1", title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png"), },
-        { id: "2", title: "Backend Developer", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-        { id: "3", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-        { id: "4", title: "Market Research Executive", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-        { id: "5", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
-    ])
+    const handleLoadMore = () => {
+        if (hasMore && !isLoading) {
+            fetchApplications(pageNumber + 1);
+        }
+    };
+    // const [appliedJobs, setAppliedJobs] = useState([
+    //     { id: "1", title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png"), },
+    //     { id: "2", title: "Backend Developer", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
+    //     { id: "3", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
+    //     { id: "4", title: "Market Research Executive", company_name: "Hà Nội", readState: false, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
+    //     { id: "5", title: "Market Research Executive", company_name: "Hà Nội", readState: true, applied_time: "tháng 0 20, 2025", logo_path: require("../../../assets/App/logoJob.png") },
+    // ])
     const [savedJobs, setSavedJobs] = useState([
         {
             id: "1",
@@ -129,7 +166,7 @@ const MyJobScreen = () => {
                         <View style={styles.modalContent}>
                             <TouchableOpacity style={styles.option} onPress={() => {
                                 toggleModal();
-                                navigation.navigate("JobDetail", {id: 1})
+                                navigation.navigate("JobDetail", { id: 1 })
                             }
                             }>
                                 <Ionicons name="eye-outline" size={20} color="#333" />
@@ -155,20 +192,26 @@ const MyJobScreen = () => {
                 <View style={styles.content}>
                     <FlatList
                         style={styles.content}
-                        data={appliedJobs}
+                        data={applications}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
                             <AppliedJobCard
                                 id={item.id}
-                                title={item.title}
-                                company_name={item.company_name}
+                                title={item.job?.jobTitle}
+                                company_name={item.job?.companyName}
                                 logo_path={item.logo_path}
-                                applied_time={item.applied_time}
-                                readState={item.readState}
+                                applied_time={formatDate(item.createdAt)}
+                                cvUrl= {item.cvUrl}
+                                coverLetter= {item.coverLetter}
+                                status= {item.status}
                             />
                         )}
                         ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
-
+                        onEndReached={handleLoadMore}
+                        onEndReachedThreshold={0.2}
+                        ListFooterComponent={
+                            isLoading ? <ActivityIndicator size="small" style={{ margin: 10 }} /> : null
+                        }
                     />
 
                 </View>
@@ -181,7 +224,7 @@ const MyJobScreen = () => {
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
                             <JobCard
-                                id = {1}
+                                id={1}
                                 logo_path={item.logo_path}
                                 job_title={item.job_title}
                                 company_name={item.company_name}

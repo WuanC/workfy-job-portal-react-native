@@ -113,3 +113,27 @@ export const getLatestApplicationByJob = async (jobId: number) => {
     }
   }
 };
+export const getMyApplications = async (params?: {
+  pageNumber?: number;
+  pageSize?: number;
+  sorts?: string; // ví dụ: "createdAt,desc" hoặc "updatedAt,asc"
+}) => {
+  try {
+    const res = await apiInstance.get("/applications/me", { params });
+    return res.data.data; // ✅ PageResponse<List<ApplicationResponse>>
+  } catch (error: any) {
+    console.error("❌ Lỗi khi lấy danh sách application của tôi:", error.response?.data || error.message);
+
+    // ✅ Xử lý lỗi cụ thể
+    switch (error.response?.status) {
+      case 400:
+        throw new Error("Tham số phân trang hoặc sắp xếp không hợp lệ.");
+      case 401:
+        throw new Error("Bạn cần đăng nhập để xem danh sách ứng tuyển của mình.");
+      case 403:
+        throw new Error("Bạn không có quyền truy cập danh sách này.");
+      default:
+        throw new Error("Không thể tải danh sách hồ sơ ứng tuyển.");
+    }
+  }
+};

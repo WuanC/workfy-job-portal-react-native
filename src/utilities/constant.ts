@@ -1,4 +1,17 @@
 export const LOGO_IMG = require('../../assets/App/logo.png');
+
+export const formatDate = (isoString: string) => {
+  const date = new Date(isoString);
+  return date.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+};
+
+
 export const LevelCompanySize = {
   LESS_THAN_10: "Dưới 10 nhân sự",
   FROM_10_TO_24: "10–24 nhân sự",

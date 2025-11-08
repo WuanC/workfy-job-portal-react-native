@@ -1,13 +1,21 @@
 import { TouchableOpacity, View, Text, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types/navigation";
+import { useNavigation } from "@react-navigation/native";
+type JobDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "EmployeeDetailApplication"
+>;
 interface IAppliedJobCardProps {
-  id: string;
+  id: number;
   logo_path: any;
   title: string;
   company_name: string;
-  readState: boolean;
   applied_time: string;
+  status: string;
+  cvUrl: string;
+  coverLetter: string
 }
 
 const AppliedJobCard = ({
@@ -15,20 +23,38 @@ const AppliedJobCard = ({
   title,
   logo_path,
   company_name,
-  readState,
   applied_time,
+  status,
+  cvUrl,
+  coverLetter
 }: IAppliedJobCardProps) => {
+
+  const navigation = useNavigation<JobDetailNavigationProp>()
   return (
-    <View style={styles.jobCard}>
+    <TouchableOpacity style={styles.jobCard} onPress={() =>
+      navigation.navigate("EmployeeDetailApplication", { applicationId: id, status: status, cvUrl: cvUrl, coverLetter: coverLetter, jobTitle: title })}>
       <View style={styles.row}>
         {/* Logo công ty */}
-        <Image source={logo_path} style={styles.logo} />
+        <Image source={
+          logo_path
+            ? typeof logo_path === "string"
+              ? { uri: logo_path }
+              : logo_path
+            : require("../../assets/App/companyLogoDefault.png")
+        } style={styles.logo} />
 
         {/* Nội dung job */}
         <View style={styles.textContainer}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.company}>{company_name}</Text>
-          <Text style={styles.applied}>Ứng tuyển vào: {applied_time}</Text>
+          <View style={styles.bottomRow}>
+            <Text style={styles.applied}>Ứng tuyển vào: {applied_time}</Text>
+            {/* Icon tin nhắn */}
+            <TouchableOpacity>
+              <Ionicons name="chatbox-outline" size={20} color="#555" />
+            </TouchableOpacity>
+          </View>
+
         </View>
 
         {/* Icon menu */}
@@ -37,25 +63,8 @@ const AppliedJobCard = ({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.bottomRow}>
-        {/* Tag trạng thái đọc/chưa đọc */}
-        {!readState && (
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>Chưa đọc</Text>
-          </View>
-        )}
-        {readState && (
-          <View style={[styles.tag, { backgroundColor: "#e0f7e9" }]}>
-            <Text style={[styles.tagText, { color: "#2e7d32" }]}>Đã đọc</Text>
-          </View>
-        )}
 
-        {/* Icon tin nhắn */}
-        <TouchableOpacity>
-          <Ionicons name="chatbox-outline" size={20} color="#555" />
-        </TouchableOpacity>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

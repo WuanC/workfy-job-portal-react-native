@@ -1,18 +1,24 @@
 // ChangePasswordScreen.tsx
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-
+import { useNavigation } from "@react-navigation/native";// 👈 đổi lại nếu service ở nơi khác
+import { updateUserPassword } from "../../../services/employeeService";
+import { useAuth } from "../../../context/AuthContext";
+import { RootStackParamList } from "../../../types/navigation";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+type MenuNavigationProp = NativeStackNavigationProp<RootStackParamList, "ChangePassword">;
 const ChangePasswordScreen = () => {
-  const navigation = useNavigation();
-
+  const navigation = useNavigation<MenuNavigationProp>();
+  const { logout } = useAuth()
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,6 +26,52 @@ const ChangePasswordScreen = () => {
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const handleLogout = async () => {
+    await logout()
+    navigation.replace("Login")
+  }
+  const handleChangePassword = async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      Alert.alert("Thiếu thông tin", "Vui lòng nhập đầy đủ các trường");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await updateUserPassword(
+        oldPassword,
+        newPassword,
+      );
+
+      if (res.status === 200) {
+        Alert.alert("Thành công", "Cập nhật mật khẩu thành công", [
+          { text: "OK", onPress: () => handleLogout() },
+        ]);
+      }
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message || "Đã xảy ra lỗi";
+
+      if (status === 400) {
+        Alert.alert("Lỗi", "Dữ liệu không hợp lệ hoặc mật khẩu mới sai định dạng");
+      } else if (status === 401) {
+        Alert.alert("Lỗi", "Token không hợp lệ, vui lòng đăng nhập lại");
+      } else if (status === 411) {
+        Alert.alert("Lỗi", "Mật khẩu hiện tại không khớp");
+      } else {
+        Alert.alert("Lỗi", message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -33,7 +85,6 @@ const ChangePasswordScreen = () => {
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Đổi mật khẩu</Text>
-
         <View style={styles.side} />
       </View>
 
@@ -108,8 +159,16 @@ const ChangePasswordScreen = () => {
         </View>
 
         {/* Nút đổi mật khẩu */}
-        <TouchableOpacity style={styles.submitBtn}>
-          <Text style={styles.submitText}>Đổi mật khẩu</Text>
+        <TouchableOpacity
+          style={styles.submitBtn}
+          onPress={handleChangePassword}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitText}>Đổi mật khẩu</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -118,6 +177,7 @@ const ChangePasswordScreen = () => {
 
 export default ChangePasswordScreen;
 
+// ====================== STYLES ======================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -136,7 +196,7 @@ const styles = StyleSheet.create({
     width: 48,
     alignItems: "center",
     justifyContent: "center",
-        marginTop: 10,
+    marginTop: 10,
   },
   headerTitle: {
     flex: 1,

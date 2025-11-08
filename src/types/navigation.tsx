@@ -2,7 +2,7 @@ import { AdvancedJobQuery } from "../services/jobService";
 
 export type RootStackParamList = {
   JobDetail: {id: number}
-  JobSubmit: undefined
+  JobSubmit: {jobId: number, jobName: string}
   JobSubmitSuccess: undefined
   MainApp: undefined
   MainAppEmployer: undefined
@@ -31,7 +31,8 @@ export type RootStackParamList = {
   Register: undefined
   EmployerLogin: undefined
   EmployerRegister: undefined
-
+  ForgotPassword: {isEmployee: boolean}
+  ResetPassword: { email: string; isEmployee: boolean }
 
   Blog: undefined
   ArticleDetail: { id: number }

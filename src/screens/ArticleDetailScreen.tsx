@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, use } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
     View,
     Text,
@@ -23,10 +23,12 @@ type Heading = {
     level: 1 | 2 | 3;
     text: string;
 };
+
 type DetailBlogNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
     "ArticleDetail"
->
+>;
+
 const ArticleDetailScreen = ({ route }: any) => {
     const navigation = useNavigation<DetailBlogNavigationProp>();
     const { id } = route.params as { id: number };
@@ -35,14 +37,11 @@ const ArticleDetailScreen = ({ route }: any) => {
     const [headings, setHeadings] = useState<Heading[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
     const scrollRef = useRef<ScrollView>(null);
     const screenWidth = Dimensions.get("window").width;
     const headingRefs = useRef<Record<string, { y: number }>>({});
+    const [careerAdvice, setCareerAdvice] = useState<any[]>([]);
 
-    const [careerAdvice, setCareerAdvice] = useState<any[]>([])
-
-    // 🟩 Trích xuất tiêu đề từ HTML
     const extractHeadings = (html: string): Heading[] => {
         const regex = /<h([1-3])[^>]*>(.*?)<\/h\1>/gi;
         const result: Heading[] = [];
@@ -59,7 +58,6 @@ const ArticleDetailScreen = ({ route }: any) => {
         return result;
     };
 
-    // 🟩 Gắn id vào các thẻ heading để định vị
     const injectIdsToHeadings = (html: string, list: Heading[]) => {
         let index = 0;
         return html.replace(/<h([1-3])([^>]*)>([\s\S]*?)<\/h\1>/gi, (match, level, attrs, content) => {
@@ -69,7 +67,6 @@ const ArticleDetailScreen = ({ route }: any) => {
         });
     };
 
-    // 🟩 Lấy bài viết
     useEffect(() => {
         const fetchPost = async () => {
             try {
@@ -83,8 +80,7 @@ const ArticleDetailScreen = ({ route }: any) => {
                 }
             } catch (err: any) {
                 if (err.response?.status === 404) setError("Không tìm thấy bài viết.");
-                else if (err.response?.status === 403)
-                    setError("Bài viết chưa được công khai.");
+                else if (err.response?.status === 403) setError("Bài viết chưa được công khai.");
                 else setError("Đã xảy ra lỗi khi tải bài viết.");
             } finally {
                 setLoading(false);
@@ -93,21 +89,15 @@ const ArticleDetailScreen = ({ route }: any) => {
         fetchPost();
     }, [id]);
 
-    // 🟩 Cuộn đến heading theo id
     const handleScrollToHeading = (id: string) => {
-
-        // Đợi layout ổn định trước khi cuộn
         InteractionManager.runAfterInteractions(() => {
             const y = headingRefs.current[id]?.y;
             if (scrollRef.current && y !== undefined) {
-                scrollRef.current.scrollTo({ y: y - 80, animated: true }); // trừ 80 để tiêu đề không bị che
-            } else {
-                console.log("❌ Không tìm thấy ref cho", id);
+                scrollRef.current.scrollTo({ y: y - 80, animated: true });
             }
         });
     };
 
-    // 🟩 Định dạng ngày
     const formatDate = (dateString?: string) => {
         if (!dateString) return "—";
         const date = new Date(dateString);
@@ -118,14 +108,14 @@ const ArticleDetailScreen = ({ route }: any) => {
     if (loading)
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#0ea5e9" />
+                <ActivityIndicator size="large" color="#1e293b" />
             </View>
         );
 
     if (error)
         return (
             <View style={styles.center}>
-                <Text style={{ color: "red", fontSize: 16 }}>{error}</Text>
+                <Text style={{ color: "#b91c1c", fontSize: 16 }}>{error}</Text>
                 <TouchableOpacity
                     style={styles.retryBtn}
                     onPress={() => {
@@ -144,81 +134,84 @@ const ArticleDetailScreen = ({ route }: any) => {
             : post?.content ?? "";
 
     return (
-        <ScrollView ref={scrollRef} style={styles.container}>
+        <ScrollView ref={scrollRef} style={styles.container} showsVerticalScrollIndicator={false}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={() => navigation.goBack()}
-                >
-                    <Ionicons name="arrow-back" size={22} color="#333" />
+                <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color="#1e293b" />
                 </TouchableOpacity>
-
-                <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">
+                <Text style={styles.headerTitle} numberOfLines={1}>
                     {post?.title ?? "Bài viết"}
                 </Text>
-
-                <View style={{ width: 38 }} />
+                <View style={{ width: 40 }} />
             </View>
 
-            {/* Thông tin bài viết */}
+            {/* Info Card */}
             <View style={styles.card}>
                 {post?.category?.title && (
                     <View style={styles.categoryTag}>
-                        <Text style={styles.categoryText}>{post.category.title}</Text>
+                        <Text style={styles.categoryText}> {post.category.title}</Text>
                     </View>
                 )}
 
                 <View style={styles.authorRow}>
-                    <Text style={styles.authorName}>{post?.authorName ?? "Ẩn danh"}</Text>
+                    <View style={styles.authorContainer}>
+                        <Ionicons name="person-circle-outline" size={20} color="#1e293b" />
+                        <Text style={styles.authorName}>{post?.authorName ?? "Ẩn danh"}</Text>
+                    </View>
                     <View style={styles.dateRow}>
-                        <MaterialIcons name="calendar-today" size={16} color="#333" />
+                        <MaterialIcons name="calendar-today" size={14} color="#6b7280" />
                         <Text style={styles.dateText}>{formatDate(post?.updatedAt)}</Text>
                     </View>
                 </View>
 
                 <View style={styles.readTime}>
-                    <Ionicons name="time-outline" size={16} color="#333" />
-                    <Text style={styles.readText}>
-                        {post?.readingTime ?? 0} phút đọc
-                    </Text>
+                    <View style={styles.readTimeBadge}>
+                        <Ionicons name="time-outline" size={14} color="#1e293b" />
+                        <Text style={styles.readText}>{post?.readingTime ?? 0} phút đọc</Text>
+                    </View>
                 </View>
             </View>
 
-            {/* Mục lục */}
+            {/* Table of Contents */}
             {headings.length > 0 && (
                 <View style={styles.tocContainer}>
-                    <Text style={styles.tocTitle}>📑 Mục lục</Text>
-                    {headings.map((h) => (
-                        <TouchableOpacity
-                            key={h.id}
-                            onPress={() => handleScrollToHeading(h.id)}
-                            activeOpacity={0.6}
-                        >
-                            <Text
-                                style={{
-                                    marginLeft: (h.level - 1) * 12,
-                                    fontSize: 14,
-                                    color: "#0f172a",
-                                    marginBottom: 4,
-                                }}
+                    <View style={styles.tocHeader}>
+                        <Ionicons name="list-outline" size={20} color="#1e293b" />
+                        <Text style={styles.tocTitle}>Mục lục</Text>
+                    </View>
+                    <View style={styles.tocContent}>
+                        {headings.map((h) => (
+                            <TouchableOpacity
+                                key={h.id}
+                                onPress={() => handleScrollToHeading(h.id)}
+                                activeOpacity={0.6}
+                                style={styles.tocItem}
                             >
-                                • {h.text}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+                                <View style={styles.tocBullet} />
+                                <Text
+                                    style={[
+                                        styles.tocText,
+                                        { marginLeft: (h.level - 1) * 16 },
+                                    ]}
+                                >
+                                    {h.text}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
             )}
 
-            {/* Nội dung */}
+            {/* Content */}
             <View style={styles.content}>
                 <RenderHtml
                     contentWidth={screenWidth - 32}
                     source={{ html: htmlWithIds }}
                     baseStyle={{
                         color: "#1e293b",
-                        fontSize: 15,
-                        lineHeight: 24,
+                        fontSize: 16,
+                        lineHeight: 26,
                         fontFamily: "System",
                     }}
                     renderers={{
@@ -227,11 +220,10 @@ const ArticleDetailScreen = ({ route }: any) => {
                             return (
                                 <View
                                     ref={(ref) => {
-                                        if (ref) {
+                                        if (ref)
                                             ref.measure((x, y, width, height, pageX, pageY) => {
                                                 headingRefs.current[id] = { y: pageY };
                                             });
-                                        }
                                     }}
                                 >
                                     <TDefaultRenderer {...props} />
@@ -243,11 +235,10 @@ const ArticleDetailScreen = ({ route }: any) => {
                             return (
                                 <View
                                     ref={(ref) => {
-                                        if (ref) {
+                                        if (ref)
                                             ref.measure((x, y, width, height, pageX, pageY) => {
                                                 headingRefs.current[id] = { y: pageY };
                                             });
-                                        }
                                     }}
                                 >
                                     <TDefaultRenderer {...props} />
@@ -259,11 +250,10 @@ const ArticleDetailScreen = ({ route }: any) => {
                             return (
                                 <View
                                     ref={(ref) => {
-                                        if (ref) {
+                                        if (ref)
                                             ref.measure((x, y, width, height, pageX, pageY) => {
                                                 headingRefs.current[id] = { y: pageY };
                                             });
-                                        }
                                     }}
                                 >
                                     <TDefaultRenderer {...props} />
@@ -272,57 +262,31 @@ const ArticleDetailScreen = ({ route }: any) => {
                         },
                     }}
                     tagsStyles={{
-                        h1: {
-                            fontSize: 24,
-                            fontWeight: "700",
-                            color: "#0f172a",
-                            marginBottom: 10,
-                            marginTop: 10,
-                        },
-                        h2: {
-                            fontSize: 20,
-                            fontWeight: "700",
-                            color: "#1e293b",
-                            marginBottom: 8,
-                            marginTop: 10,
-                        },
-                        h3: {
-                            fontSize: 18,
-                            fontWeight: "600",
-                            color: "#334155",
-                            marginBottom: 6,
-                            marginTop: 8,
-                        },
-                        p: { marginBottom: 8 },
-                        strong: { fontWeight: "700" },
-                        em: { fontStyle: "italic" },
-                        ul: { paddingLeft: 20, marginBottom: 8 },
-                        li: { marginBottom: 4 },
-                        a: {
-                            color: "#0ea5e9",
-                            textDecorationLine: "underline",
-                        },
+                        h1: { fontSize: 22, fontWeight: "700", color: "#111827", marginVertical: 10 },
+                        h2: { fontSize: 19, fontWeight: "700", color: "#1f2937", marginVertical: 8 },
+                        h3: { fontSize: 17, fontWeight: "600", color: "#374151", marginVertical: 6 },
+                        p: { marginBottom: 10, color: "#1e293b" },
+                        a: { color: "#2563eb", textDecorationLine: "underline" },
+                        ul: { paddingLeft: 20, marginBottom: 10 },
+                        li: { marginBottom: 6 },
                     }}
                 />
             </View>
+
+            {/* Related Articles */}
             <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Bài viết liên quan</Text>
-                </View>
+                <Text style={styles.sectionTitle}>Bài viết liên quan</Text>
                 <FlatList
                     data={careerAdvice}
                     keyExtractor={(item) => item.id.toString()}
                     horizontal
                     renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.articleCard}
-                            onPress={() => {
-                                if (item?.id) {
-                                    console.log("Đi đến bài viết ID:", item.id);
-                                    navigation.replace("ArticleDetail", { id: item.id }); // 👈 Truyền đúng key "id"
-                                } else {
-                                    console.warn("⚠️ Bài viết không có id hợp lệ:", item);
-                                }
-                            }}>
+                        <TouchableOpacity
+                            style={styles.articleCard}
+                            onPress={() =>
+                                navigation.replace("ArticleDetail", { id: item.id })
+                            }
+                        >
                             <Image source={{ uri: item.thumbnailUrl }} style={styles.articleImage} />
                             <View style={styles.articleContent}>
                                 <Text style={styles.articleCategory}>{item.category}</Text>
@@ -336,7 +300,6 @@ const ArticleDetailScreen = ({ route }: any) => {
                     showsHorizontalScrollIndicator={false}
                 />
             </View>
-
         </ScrollView>
     );
 };
@@ -344,117 +307,136 @@ const ArticleDetailScreen = ({ route }: any) => {
 export default ArticleDetailScreen;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#f8fafc" },
+    container: { flex: 1, backgroundColor: "#ffffff" },
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: "#fff",
+        paddingVertical: 14,
         borderBottomWidth: 1,
-        borderColor: "#e5e7eb",
+        borderBottomColor: "#e5e7eb",
+        backgroundColor: "#ffffff",
     },
-    iconButton: { padding: 8, borderRadius: 8 },
+    iconButton: {
+        width: 40,
+        height: 40,
+        alignItems: "center",
+        justifyContent: "center",
+    },
     headerTitle: {
         flex: 1,
         textAlign: "center",
-        fontSize: 17,
-        fontWeight: "600",
-        color: "#000",
+        fontSize: 18,
+        fontWeight: "700",
+        color: "#111827",
     },
     card: {
         margin: 16,
-        backgroundColor: "#fff",
+        backgroundColor: "#ffffff",
         borderRadius: 16,
         padding: 16,
-        elevation: 1,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
     },
     categoryTag: {
         alignSelf: "flex-start",
-        backgroundColor: "#0ea5e9",
+        backgroundColor: "#e0e7ff",
         paddingHorizontal: 10,
         paddingVertical: 4,
-        borderRadius: 10,
-        marginBottom: 8,
+        borderRadius: 8,
+        marginBottom: 12,
     },
-    categoryText: { color: "#fff", fontWeight: "600", fontSize: 12 },
+    categoryText: {
+        color: "#1e3a8a",
+        fontWeight: "600",
+        fontSize: 12,
+        textTransform: "uppercase",
+    },
     authorRow: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+        marginBottom: 12,
     },
-    authorName: { color: "#1e293b" },
-    dateRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-    dateText: { color: "#475569", fontSize: 12 },
-    readTime: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 },
-    readText: { color: "#475569", fontSize: 13 },
+    authorContainer: { flexDirection: "row", alignItems: "center", gap: 6 },
+    authorName: { color: "#111827", fontWeight: "600", fontSize: 14 },
+    dateRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+    dateText: { color: "#6b7280", fontSize: 12 },
+    readTime: { flexDirection: "row", alignItems: "center" },
+    readTimeBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+        backgroundColor: "#f3f4f6",
+        alignSelf: "flex-start",
+    },
+    readText: { color: "#111827", fontSize: 13 },
     tocContainer: {
-        backgroundColor: "#f1f5f9",
-        padding: 10,
-        borderRadius: 10,
         marginHorizontal: 16,
         marginBottom: 16,
+        backgroundColor: "#f9fafb",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
     },
-    tocTitle: {
-        fontWeight: "700",
-        color: "#0f172a",
-        marginBottom: 4,
+    tocHeader: { flexDirection: "row", alignItems: "center", padding: 12, gap: 8 },
+    tocTitle: { fontWeight: "700", color: "#111827", fontSize: 16 },
+    tocContent: { paddingHorizontal: 16, paddingBottom: 12 },
+    tocItem: { flexDirection: "row", alignItems: "center", paddingVertical: 8 },
+    tocBullet: {
+        width: 5,
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: "#1e3a8a",
+        marginRight: 12,
     },
+    tocText: { fontSize: 14, color: "#111827" },
     content: {
-        backgroundColor: "#fff",
+        backgroundColor: "#ffffff",
         marginHorizontal: 16,
         padding: 16,
-        borderRadius: 16,
-        marginBottom: 16,
-        elevation: 1,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
     },
-    center: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#fff",
-    },
+    center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#ffffff" },
     retryBtn: {
         marginTop: 10,
-        backgroundColor: "#0ea5e9",
+        backgroundColor: "#1e3a8a",
         paddingHorizontal: 20,
         paddingVertical: 10,
-        borderRadius: 8,
+        borderRadius: 6,
     },
-    section: {
-        marginTop: 20,
-        marginBottom: 30,
-        paddingHorizontal: 20,
-    },
-    sectionHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 15,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#333",
-    },
+    section: { marginTop: 20, marginBottom: 30, paddingHorizontal: 16 },
+    sectionTitle: { fontSize: 18, fontWeight: "700", color: "#111827", marginBottom: 12 },
     articleCard: {
-        backgroundColor: "white",
+        backgroundColor: "#ffffff",
         borderRadius: 12,
-        marginRight: 15,
+        marginRight: 12,
         width: 250,
-        overflow: "hidden",
         borderWidth: 1,
-        borderColor: "#e0e0e0",
+        borderColor: "#e5e7eb",
+        overflow: "hidden",
     },
-    articleImage: { width: "100%", height: 120, resizeMode: "cover" },
+    articleImage: { width: "100%", height: 140, resizeMode: "cover" },
     articleContent: { padding: 12 },
-    articleCategory: { fontSize: 12, color: "#ff6b35", fontWeight: "600" },
-    articleTitle: {
-        fontSize: 14,
+    articleCategory: {
+        fontSize: 12,
+        color: "#1e3a8a",
         fontWeight: "600",
-        color: "#333",
-        marginBottom: 8,
+        textTransform: "uppercase",
     },
-    articleDate: { fontSize: 12, color: "#999" },
+    articleTitle: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "#111827",
+        marginTop: 6,
+        marginBottom: 6,
+        lineHeight: 22,
+    },
+    articleDate: { fontSize: 12, color: "#6b7280" },
 });

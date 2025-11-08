@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
+import { colors } from "../../theme/colors"
 import BottomSheet, { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from "@gorhom/bottom-sheet"
 import Slider from "@react-native-community/slider"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
@@ -346,14 +347,14 @@ const CandidateFilter = () => {
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Chọn danh mục</Text>
             <TouchableOpacity onPress={() => setSelectedLocations([])}>
-              <Text style={{ color: "#007AFF" }}>Xóa tất cả</Text>
+              <Text style={{ color: colors.primary.start }}>Xóa tất cả</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 8 }} />
+            <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 8 }} />
             <TextInput
               placeholder="Tìm kiếm..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.text.tertiary}
               value={query}
               onChangeText={setQuery}
               style={styles.searchInput}
@@ -374,7 +375,7 @@ const CandidateFilter = () => {
                   <Ionicons
                     name={isSelected ? "checkbox" : "square-outline"}
                     size={22}
-                    color={isSelected ? "#007AFF" : "#666"}
+                    color={isSelected ? colors.primary.start : colors.text.secondary}
                     style={{ marginRight: 10 }}
                   />
                   <Text>{item.label}</Text>
@@ -405,14 +406,14 @@ const CandidateFilter = () => {
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Chọn danh mục</Text>
             <TouchableOpacity onPress={() => setSelectedJobs([])}>
-              <Text style={{ color: "#007AFF" }}>Xóa tất cả</Text>
+              <Text style={{ color: colors.primary.start }}>Xóa tất cả</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.searchBox}>
-            <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 8 }} />
+            <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 8 }} />
             <TextInput
               placeholder="Tìm kiếm..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.text.tertiary}
               value={query}
               onChangeText={setQuery}
               style={styles.searchInput}
@@ -433,7 +434,7 @@ const CandidateFilter = () => {
                   <Ionicons
                     name={isSelected ? "checkbox" : "square-outline"}
                     size={22}
-                    color={isSelected ? "#007AFF" : "#666"}
+                    color={isSelected ? colors.primary.start : colors.text.secondary}
                     style={{ marginRight: 10 }}
                   />
                   <Text>{item.label}</Text>
@@ -458,7 +459,7 @@ export default CandidateFilter
 
 // Styles
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: colors.surface },
   scroll: { padding: 16, paddingBottom: 80 },
   header: {
     flexDirection: "row",
@@ -466,76 +467,74 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  cancel: { color: "black", fontSize: 16 },
-  title: { fontWeight: "bold", fontSize: 18 },
-  reset: { color: "#007AFF", fontSize: 16 },
-  sectionTitle: { marginVertical: 10, fontSize: 16, fontWeight: "600" },
+  cancel: { color: colors.text.primary, fontSize: 16 },
+  title: { fontWeight: "bold", fontSize: 18, color: colors.text.primary },
+  reset: { color: colors.primary.start, fontSize: 16 },
+  sectionTitle: { marginVertical: 10, fontSize: 16, fontWeight: "600", color: colors.text.primary },
   row: { flexDirection: "row", marginBottom: 16 },
   rowWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    //gap: 10,
     marginBottom: 16,
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.medium,
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     marginRight: 10,
     marginBottom: 10,
-
   },
-  chipSelected: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
-  chipText: { fontSize: 14, color: "#333" },
-  chipTextSelected: { color: "#fff", fontWeight: "600" },
+  chipSelected: { backgroundColor: colors.primary.start, borderColor: colors.primary.start },
+  chipText: { fontSize: 14, color: colors.text.primary },
+  chipTextSelected: { color: colors.text.inverse, fontWeight: "600" },
   inputBox: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.medium,
     borderRadius: 6,
     padding: 12,
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  inputText: { flex: 1, marginLeft: 8, fontSize: 14, color: "#333" },
+  inputText: { flex: 1, marginLeft: 8, fontSize: 14, color: colors.text.primary },
   applyBtn: {
     position: "absolute",
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary.start,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
   },
-  applyText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 16 },
+  applyText: { color: colors.text.inverse, fontSize: 16, fontWeight: "bold" },
+  modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 16, color: colors.text.primary },
   modalItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
   },
-  modalItemText: { fontSize: 16, color: "#333" },
+  modalItemText: { fontSize: 16, color: colors.text.primary },
   salaryContainer: { marginBottom: 16, paddingHorizontal: 4 },
   salaryLabels: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 8,
   },
-  salaryLabel: { fontSize: 14, color: "#666" },
+  salaryLabel: { fontSize: 14, color: colors.text.secondary },
   slider: { width: "100%", height: 40 },
   salaryValue: {
     textAlign: "center",
     fontSize: 14,
-    color: "#007AFF",
+    color: colors.primary.start,
     fontWeight: "600",
     marginTop: 8,
   },
   saveButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary.start,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -548,7 +547,7 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     marginTop: 10,
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary.start,
     padding: 14,
     borderRadius: 6,
     alignItems: "center",
@@ -560,13 +559,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  sheetTitle: { fontSize: 16, fontWeight: "600" },
+  sheetTitle: { fontSize: 16, fontWeight: "600", color: colors.text.primary },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f2f2f2",
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: colors.border.light,
     borderRadius: 8,
     marginTop: 10,
     marginBottom: 6,
@@ -575,6 +574,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 8,
     fontSize: 14,
-    color: "#333",
+    color: colors.text.primary,
   },
 })

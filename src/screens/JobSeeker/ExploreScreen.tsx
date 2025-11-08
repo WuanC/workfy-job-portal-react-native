@@ -12,6 +12,7 @@ import {
     FlatList,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
+import { LinearGradient } from "expo-linear-gradient"
 import SearchBar from "../../components/SearchBar"
 import FeaturedJobsSection from "../../components/FeatureJobsSection"
 import { useAuth } from "../../context/AuthContext"
@@ -19,7 +20,10 @@ import { getLatestPosts } from "../../services/postService"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { RootStackParamList } from "../../types/navigation"
 import { useNavigation } from "@react-navigation/native"
-import { getPopularIndustries } from "../../services/jobService"
+import { getPopularIndustries, getTopAttractiveJobs } from "../../services/jobService"
+import { colors } from "../../theme/colors"
+import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { getTopHiringEmployers } from "../../services/employerService"
 
 type ExploreNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -30,36 +34,42 @@ const ExploreScreen = () => {
     const [searchValue, setSearchValue] = useState("")
     const [industries, setIndustries] = useState<any[]>([])
     const [careerAdvice, setCareerAdvice] = useState<any[]>([])
-    const { user, logout } = useAuth()
+    const [topCompanies, setTopCompanies] = useState<any[]>([])
+    const [topAttractiveJobs, setTopAttractiveJobs] = useState<any[]>([])
     const navigation = useNavigation<ExploreNavigationProp>()
 
-    const colorPalette = [
-        "#B3D9FF",
-        "#FFE4B3",
-        "#FFD1DC",
-        "#D1FFD1",
-        "#B3FFE6",
-        "#E6D1FF",
-        "#D1E6FF",
-        "#FFEBB3",
-    ]
-
-    const handleSearch = () => {
-        console.log("Searching for:", searchValue)
-    }
 
     useEffect(() => {
         const fetchPosts = async () => {
             const data = await getLatestPosts(5)
             setCareerAdvice(data)
         }
+        const fecthTopCompanies = async () => {
+            const datas = await getTopHiringEmployers(10)
+            setTopCompanies(datas)
+        }
+        const fetchTopAttractiveJobs = async () => {
+            const datas = await getTopAttractiveJobs(12)
+            setTopAttractiveJobs(datas)
+        }
         const fetchIndustries = async () => {
             try {
                 const data = await getPopularIndustries(10)
                 if (Array.isArray(data)) {
+                    const flatColors = [
+                        "#e0f2fe", // xanh nhạt
+                        "#fee2e2", // đỏ nhạt
+                        "#fef9c3", // vàng nhạt
+                        "#dcfce7", // xanh lá nhạt
+                        "#fae8ff", // tím nhạt
+                        "#f3f4f6", // xám nhạt
+                        "#ede9fe", // tím sáng
+                        "#fef3c7", // cam nhạt
+                    ]
+
                     const coloredIndustries = data.map((item: any, index: number) => ({
                         ...item,
-                        color: colorPalette[index % colorPalette.length],
+                        color: flatColors[index % flatColors.length],
                     }))
                     setIndustries(coloredIndustries)
                 }
@@ -69,75 +79,90 @@ const ExploreScreen = () => {
         }
         fetchIndustries()
         fetchPosts()
+        fecthTopCompanies()
+        fetchTopAttractiveJobs()
     }, [])
 
-    const featuredJobs = [
-        {
-            id: 1,
-            logo_path: require("../../../assets/App/logoJob.png"),
-            job_title: "Tenant Management Staff",
-            company_name: "Công Ty TNHH Becamex Tokyu",
-            job_location: "Bình Dương",
-            salary_range: "Thương lượng",
-            time_passed: "2 ngày trước",
-            applied: false,
-        },
-        {
-            id: 2,
-            logo_path: require("../../../assets/App/logoJob.png"),
-            job_title:
-                "[HCM - CẦN THƠ- ĐÀ NẴNG] NHÂN VIÊN TELESALE - ĐI LÀM NGAY",
-            company_name: "Công Ty Cổ Phần Dược Tâm Dược",
-            job_location: "Cần Thơ, Đà Nẵng, Hồ Chí Minh",
-            salary_range: "15 triệu - 20 triệu",
-            time_passed: "3 giờ trước",
-            applied: false,
-        },
-    ]
+    // const featuredJobs = [
+    //     {
+    //         id: 1,
+    //         logo_path: require("../../../assets/App/logoJob.png"),
+    //         job_title: "Tenant Management Staff",
+    //         company_name: "Công Ty TNHH Becamex Tokyu",
+    //         job_location: "Bình Dương",
+    //         salary_range: "Thương lượng",
+    //         time_passed: "2 ngày trước",
+    //         applied: false,
+    //     },
+    //     {
+    //         id: 2,
+    //         logo_path: require("../../../assets/App/logoJob.png"),
+    //         job_title:
+    //             "[HCM - CẦN THƠ- ĐÀ NẴNG] NHÂN VIÊN TELESALE - ĐI LÀM NGAY",
+    //         company_name: "Công Ty Cổ Phần Dược Tâm Dược",
+    //         job_location: "Cần Thơ, Đà Nẵng, Hồ Chí Minh",
+    //         salary_range: "15 triệu - 20 triệu",
+    //         time_passed: "3 giờ trước",
+    //         applied: false,
+    //     },
+    // ]
 
-    const topCompanies = [
-        {
-            id: 1,
-            name: "Công Ty TNHH Vietnam Concentrix Service",
-            jobCount: "Đang tuyển 226 công việc",
-            location: "Hồ Chí Minh",
-            logo: require("../../../assets/App/logoJob.png"),
-            bgImage: require("../../../assets/App/banner.jpg"),
-        },
-        {
-            id: 2,
-            name: "Công Ty TNHH Aeon Việt Nam",
-            jobCount: "Đang tuyển 19 công việc",
-            location: "Hà Nội",
-            logo: require("../../../assets/App/logoJob.png"),
-            bgImage: require("../../../assets/App/banner.jpg"),
-        },
-    ]
+    // const topCompanies = [
+    //     {
+    //         id: 1,
+    //         name: "Công Ty TNHH Vietnam Concentrix Service",
+    //         jobCount: "Đang tuyển 226 công việc",
+    //         location: "Hồ Chí Minh",
+    //         logo: require("../../../assets/App/logoJob.png"),
+    //         bgImage: require("../../../assets/App/banner.jpg"),
+    //     },
+    //     {
+    //         id: 2,
+    //         name: "Công Ty TNHH Aeon Việt Nam",
+    //         jobCount: "Đang tuyển 19 công việc",
+    //         location: "Hà Nội",
+    //         logo: require("../../../assets/App/logoJob.png"),
+    //         bgImage: require("../../../assets/App/banner.jpg"),
+    //     },
+    // ]
 
     const renderJobCategory = (category: any) => (
-        <TouchableOpacity
-            key={category.id}
-            style={[styles.categoryCard, { backgroundColor: category.color }]}
-        >
-            <Text style={styles.categoryTitle}>{category.name}</Text>
-            <Text style={styles.categoryCount}>{category.jobCount} Việc làm</Text>
+        <TouchableOpacity key={category.id}>
+            <View style={[styles.categoryCard, { backgroundColor: category.color }]}>
+                <Text style={styles.categoryTitle}>{category.name}</Text>
+                <Text style={styles.categoryCount}>{category.jobCount} việc làm</Text>
+            </View>
         </TouchableOpacity>
-    )
+    );
 
     const renderCompany = (company: any) => (
         <TouchableOpacity key={company.id} style={styles.companyCard}>
-            <Image source={company.bgImage} style={styles.companyBackground} />
+            <Image source={
+                company.backgroundUrl
+                    ? typeof company.backgroundUrl === "string"
+                        ? { uri: company.backgroundUrl }
+                        : company.backgroundUrl
+                    : require("../../../assets/App/companyBannerDefault.jpg")
+
+            } style={styles.companyBackground} />
             <View style={styles.logoWrap}>
-                <Image source={company.logo} style={styles.companyLogo} />
+                <Image source={
+                    company.avatarUrl
+                        ? typeof company.avatarUrl === "string"
+                            ? { uri: company.avatarUrl }
+                            : company.avatarUrl
+                        : require("../../../assets/App/companyLogoDefault.png")
+
+                } style={styles.companyLogo} />
             </View>
             <View style={styles.companyContent}>
                 <Text numberOfLines={2} style={styles.companyName}>
-                    {company.name}
+                    {company.companyName}
                 </Text>
-                <Text style={styles.companyJobCount}>{company.jobCount}</Text>
+                <Text style={styles.companyJobCount}>Đang tuyển {company.numberOfHiringJobs} công việc</Text>
                 <View style={styles.companyLocation}>
                     <Ionicons name="location-outline" size={14} color="#666" />
-                    <Text style={styles.locationText}>{company.location}</Text>
+                    <Text style={styles.locationText}>{company.province.name}</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -159,32 +184,32 @@ const ExploreScreen = () => {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor={"#667eea"} />
 
-            {/* Nội dung */}
-
-            <ScrollView style={styles.content}>
-                <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
-                {/* Header cố định */}
-                <View style={styles.header}>
-                    <Image
-                        source={require("../../../assets/App/logo.png")}
-                        style={styles.logo}
-                    />
-                    <Text style={styles.headerTitle}>Workify Job Portal</Text>
-                    <Text style={styles.headerSubtitle}>
-                        Ứng Dụng Tuyển Dụng dành cho{" "}
-                        <Text style={styles.highlightText}>Mọi Người</Text>
-                    </Text>
-
-                    {/* <View style={{ marginTop: 10, width: "100%", paddingHorizontal: 20 }}>
-                        <SearchBar
-                            value={searchValue}
-                            onChangeText={setSearchValue}
-                            onSubmit={handleSearch}
-                            placeholder="Tìm kiếm công việc, công ty..."
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {/* Modern Header with Gradient */}
+                <LinearGradient
+                    colors={["#667eea", "#764ba2"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.header}
+                >
+                    <View style={styles.headerContent}>
+                        <Image
+                            source={require("../../../assets/App/logo.png")}
+                            style={styles.logo}
                         />
-                    </View> */}
-                </View>
+                        <Text style={styles.headerTitle}>Workify Job Portal</Text>
+                        <Text style={styles.headerSubtitle}>
+                            Ứng Dụng Tuyển Dụng dành cho{" "}
+                            <Text style={styles.highlightText}>Mọi Người</Text>
+                        </Text>
+                    </View>
+
+                    {/* Decorative circles */}
+                    <View style={styles.decorativeCircle1} />
+                    <View style={styles.decorativeCircle2} />
+                </LinearGradient>
                 {/* Job Categories */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
@@ -201,7 +226,7 @@ const ExploreScreen = () => {
                 {/* Featured Jobs */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Gợi ý việc làm</Text>
-                    <FeaturedJobsSection featuredJobs={featuredJobs} />
+                    <FeaturedJobsSection featuredJobs={topAttractiveJobs} />
                 </View>
 
                 {/* Top Companies */}
@@ -227,9 +252,7 @@ const ExploreScreen = () => {
                         renderItem={({ item }) => (
                             <TouchableOpacity style={styles.articleCard}
                                 onPress={() => {
-                                    console.log(item.image)
                                     if (item?.id) {
-                                        console.log("Đi đến bài viết ID:", item.id);
                                         navigation.navigate("ArticleDetail", { id: item.id }); // 👈 Truyền đúng key "id"
                                     } else {
                                         console.warn("⚠️ Bài viết không có id hợp lệ:", item);
@@ -254,133 +277,87 @@ const ExploreScreen = () => {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#f8f9fa" },
-    header: {
-        backgroundColor: "#1e3a8a",
-        paddingTop: 50,
-        paddingBottom: 20,
-        alignItems: "center",
-    },
-    logo: {
-        width: 60,
-        height: 60,
-        resizeMode: "contain",
-        marginBottom: 8,
-    },
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: "bold",
-        color: "white",
-    },
-    headerSubtitle: {
-        fontSize: 16,
-        color: "white",
-        textAlign: "center",
-    },
-    highlightText: { color: "#ff6b35", fontWeight: "bold" },
+    container: { flex: 1, backgroundColor: colors.background },
     content: { flex: 1 },
+    header: {
+        paddingTop: 50,
+        paddingBottom: 20, // giảm từ 30 xuống 20
+        position: "relative",
+        overflow: "hidden",
+    },
+    headerContent: { alignItems: "center", zIndex: 2 },
+    decorativeCircle1: { position: "absolute", width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(255,255,255,0.1)", top: -50, right: -50 },
+    decorativeCircle2: { position: "absolute", width: 150, height: 150, borderRadius: 75, backgroundColor: "rgba(255,255,255,0.08)", bottom: -30, left: -30 },
+    logo: { width: 70, height: 70, resizeMode: "contain", marginBottom: 8 }, // giảm marginBottom
+    headerTitle: { fontSize: 32, fontWeight: "800", color: colors.text.inverse },
+    headerSubtitle: { fontSize: 16, color: "rgba(255,255,255,0.95)", textAlign: "center", marginTop: 4 },
+    highlightText: { color: "#ffd700", fontWeight: "800" },
     section: {
-        marginTop: 20,
-        marginBottom: 30,
+        marginTop: 16,    // giảm từ 24 xuống 16
+        marginBottom: 24, // giảm từ 32 xuống 24
         paddingHorizontal: 20,
     },
     sectionHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 15,
+        marginBottom: 12, // giảm từ 16 xuống 12
     },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#333",
-    },
-    seeAllText: {
-        fontSize: 16,
-        color: "#007AFF",
-        fontWeight: "600",
-    },
-    categoriesWrapper: { gap: 10 },
-    categoryRow: { flexDirection: "row" },
-    categoryCard: {
-        width: 160,
-        padding: 15,
-        borderRadius: 12,
-        marginRight: 12,
-        minHeight: 85,
-        justifyContent: "center",
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 3,
-        elevation: 5,
-        marginBottom: 10,
-    },
-    categoryTitle: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 4,
-    },
-    categoryCount: {
-        fontSize: 12,
-        color: "#666",
-        fontWeight: "500",
-    },
-    companyCard: {
-        backgroundColor: "white",
-        borderRadius: 12,
-        marginRight: 15,
-        marginTop: 10,
-        width: 280,
-        borderWidth: 1,
-        borderColor: "#e0e0e0",
-        overflow: "hidden",
-    },
-    companyBackground: {
-        width: "100%",
-        height: 80,
-        resizeMode: "cover",
-    },
-    logoWrap: {
-        position: "absolute",
-        top: 50,
-        left: 15,
-        backgroundColor: "#fff",
-        padding: 6,
-        borderRadius: 8,
-        elevation: 3,
-    },
-    companyLogo: { width: 40, height: 40, resizeMode: "contain" },
-    companyContent: { paddingTop: 30, paddingHorizontal: 15, paddingBottom: 12 },
-    companyName: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 5,
-    },
-    companyJobCount: { fontSize: 14, color: "#007AFF", marginBottom: 5 },
+    sectionTitle: { fontSize: 22, fontWeight: "800", color: colors.text.primary },
+    seeAllText: { fontSize: 15, color: colors.primary.start, fontWeight: "700" },
+    categoriesWrapper: { gap: 8 }, // giảm gap
+    categoryRow: { flexDirection: "row", marginBottom: 5 },
+    companyCard: { backgroundColor: colors.surface, borderRadius: 20, marginRight: 12, marginTop: 8, width: 260, overflow: "hidden" },
+    companyBackground: { width: "100%", height: 70, resizeMode: "cover" }, // giảm height
+    logoWrap: { position: "absolute", top: 45, left: 12, backgroundColor: colors.surface, padding: 4, borderRadius: 6 },
+    companyLogo: { width: 36, height: 36 },
+    companyContent: { paddingTop: 26, paddingHorizontal: 12, paddingBottom: 10 },
+    companyName: { fontSize: 15, fontWeight: "700", color: colors.text.primary, marginBottom: 4 },
+    companyJobCount: { fontSize: 13, color: colors.primary.start, marginBottom: 4, fontWeight: "600" },
     companyLocation: { flexDirection: "row", alignItems: "center" },
-    locationText: { fontSize: 13, color: "#666", marginLeft: 4 },
-    articleCard: {
-        backgroundColor: "white",
-        borderRadius: 12,
-        marginRight: 15,
-        width: 250,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "#e0e0e0",
-    },
-    articleImage: { width: "100%", height: 120, resizeMode: "cover" },
+    locationText: { fontSize: 12, color: colors.text.secondary, marginLeft: 4 },
+    articleCard: { backgroundColor: colors.surface, borderRadius: 18, marginRight: 12, width: 240, overflow: "hidden" },
+    articleImage: { width: "100%", height: 130, resizeMode: "cover" }, // giảm height
     articleContent: { padding: 12 },
-    articleCategory: { fontSize: 12, color: "#ff6b35", fontWeight: "600" },
-    articleTitle: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 8,
+    articleCategory: { fontSize: 11, color: "#f5576c", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+    articleTitle: { fontSize: 14, fontWeight: "700", color: colors.text.primary, marginTop: 4, marginBottom: 4, lineHeight: 20 },
+    articleDate: { fontSize: 11, color: colors.text.tertiary, fontWeight: "500" },
+    categoryCard: {
+        width: 170,
+        padding: 16,
+        borderRadius: 24,
+        marginRight: 12,
+        minHeight: 100,
+        justifyContent: "center",
+        backgroundColor: "#ffffff",
+
+        // đổ bóng mềm như JobCard
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+
+        // viền nhẹ cho rõ ranh giới
+        borderWidth: 1,
+        borderColor: "#f2f2f2",
     },
-    articleDate: { fontSize: 12, color: "#999" },
+
+    categoryTitle: {
+        fontSize: 16,
+        fontWeight: "700",
+        color: "#111827",
+        marginBottom: 6,
+    },
+
+    categoryCount: {
+        fontSize: 13,
+        fontWeight: "500",
+        color: "#6b7280",
+    },
+
+
+
 })
 
 export default ExploreScreen

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     FlatList,
     Image,
@@ -12,14 +11,16 @@ import {
     RefreshControl,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Category, getAllCategories, getPublicPosts, Post } from "../services/postService";
+import { getAllCategories, getPublicPosts, Category, Post } from "../services/postService";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+
 type ExploreNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
     "ArticleDetail"
 >;
+
 export default function BlogScreen() {
     const navigation = useNavigation<ExploreNavigationProp>();
     const [posts, setPosts] = useState<Post[]>([]);
@@ -27,19 +28,16 @@ export default function BlogScreen() {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [filterExpanded, setFilterExpanded] = useState(false);
 
-    // Pagination state
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    // --- Gọi API khi khởi tạo ---
     useEffect(() => {
         fetchCategories();
         fetchPosts(1, true);
     }, []);
 
-    // --- Lấy danh mục ---
     const fetchCategories = async () => {
         try {
             const data = await getAllCategories();
@@ -49,7 +47,6 @@ export default function BlogScreen() {
         }
     };
 
-    // --- Lấy bài viết public ---
     const fetchPosts = async (pageNum = 1, reset = false) => {
         if (isLoading || (!hasMore && !reset)) return;
         setIsLoading(true);
@@ -72,20 +69,17 @@ export default function BlogScreen() {
         }
     };
 
-    // --- Load thêm khi cuộn ---
     const handleLoadMore = () => {
         if (!isLoading && hasMore) {
             fetchPosts(page + 1);
         }
     };
 
-    // --- Làm mới (kéo xuống) ---
     const handleRefresh = () => {
         setRefreshing(true);
         fetchPosts(1, true);
     };
 
-    // --- Lọc danh mục ---
     const toggleCategory = (cat: string) => {
         if (selectedCategories.includes(cat)) {
             setSelectedCategories(selectedCategories.filter((c) => c !== cat));
@@ -105,42 +99,46 @@ export default function BlogScreen() {
             : posts.filter((p) => selectedCategories.includes(p.category.title));
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f8ff" }}>
+        <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.headerContainer}>
                 <TouchableOpacity
                     onPress={() => navigation?.goBack?.()}
                     style={styles.backButton}
                 >
-                    <Ionicons name="arrow-back" size={22} color="#000000ff" />
+                    <Ionicons name="arrow-back" size={22} color="#1f2937" />
                 </TouchableOpacity>
 
-                {/* Thêm tiêu đề ở giữa */}
                 <Text style={styles.headerTitle}>Danh sách bài viết</Text>
+                <View style={{ width: 40 }} />
             </View>
 
-            {/* Bộ lọc */}
+            {/* Filter Section */}
             <View style={styles.filterContainer}>
                 <TouchableOpacity
                     style={styles.filterHeader}
                     onPress={() => setFilterExpanded(!filterExpanded)}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                 >
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Ionicons name="filter-outline" size={18} color="#084C9E" />
+                        <View style={styles.filterIconContainer}>
+                            <Ionicons name="filter-outline" size={18} color="#1f2937" />
+                        </View>
                         <Text style={styles.filterTitle}>Bộ lọc</Text>
                     </View>
 
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Text style={{ marginRight: 6, color: "#555" }}>
-                            {selectedCategories.length > 0
-                                ? `${selectedCategories.length} mục`
-                                : "Tất cả"}
-                        </Text>
+                        {selectedCategories.length > 0 && (
+                            <View style={styles.filterBadge}>
+                                <Text style={styles.filterBadgeText}>
+                                    {selectedCategories.length}
+                                </Text>
+                            </View>
+                        )}
                         <MaterialCommunityIcons
                             name={filterExpanded ? "chevron-up" : "chevron-down"}
-                            size={18}
-                            color="#555"
+                            size={20}
+                            color="#1f2937"
                         />
                     </View>
                 </TouchableOpacity>
@@ -153,65 +151,107 @@ export default function BlogScreen() {
                             return (
                                 <TouchableOpacity
                                     key={item.id}
-                                    style={[
-                                        styles.dropdownItem,
-                                        isSelected && styles.dropdownItemActive,
-                                    ]}
                                     onPress={() => toggleCategory(item.title)}
+                                    activeOpacity={0.8}
                                 >
-                                    <Ionicons
-                                        name={isSelected ? "checkbox-outline" : "square-outline"}
-                                        size={18}
-                                        color={isSelected ? "#fff" : "#333"}
-                                        style={{ marginRight: 8 }}
-                                    />
-                                    <Text
+                                    <View
                                         style={[
-                                            styles.dropdownText,
-                                            isSelected && { color: "#fff" },
+                                            styles.dropdownItem,
+                                            isSelected && styles.dropdownItemSelected,
                                         ]}
                                     >
-                                        {item.title}
-                                    </Text>
+                                        <Ionicons
+                                            name={
+                                                isSelected
+                                                    ? "checkmark-circle"
+                                                    : "ellipse-outline"
+                                            }
+                                            size={20}
+                                            color={isSelected ? "#0f172a" : "#9ca3af"}
+                                            style={{ marginRight: 8 }}
+                                        />
+                                        <Text
+                                            style={[
+                                                styles.dropdownText,
+                                                isSelected && styles.dropdownTextSelected,
+                                            ]}
+                                        >
+                                            {item.title}
+                                        </Text>
+                                    </View>
                                 </TouchableOpacity>
                             );
                         })}
 
                         {selectedCategories.length > 0 && (
-                            <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
-                                <Text style={{ color: "#333", fontWeight: "600" }}>Xóa bộ lọc</Text>
+                            <TouchableOpacity
+                                style={styles.clearButton}
+                                onPress={clearFilters}
+                            >
+                                <Text style={styles.clearButtonText}>Xóa bộ lọc</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 )}
             </View>
 
-            {/* Danh sách bài viết */}
+            {/* Articles */}
             <FlatList
                 data={filteredPosts}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <TouchableOpacity style={styles.card}
+                    <TouchableOpacity
                         onPress={() => {
                             if (item?.id) {
-                                console.log("Đi đến bài viết ID:", item.id);
-                                navigation.navigate("ArticleDetail", { id: item.id }); // 👈 Truyền đúng key "id"
-                            } else {
-                                console.warn("⚠️ Bài viết không có id hợp lệ:", item);
+                                navigation.navigate("ArticleDetail", { id: item.id });
                             }
                         }}
+                        activeOpacity={0.7}
                     >
-
-                        <Image source={{ uri: item.thumbnailUrl }} style={styles.thumbnail} />
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.title}>{item.title}</Text>
-                            <Text style={styles.meta}>
-                                {new Date(item.updatedAt).toLocaleDateString("vi-VN")} ·{" "}
-                                {item.category.title}
-                            </Text>
-                            <Text style={styles.author}>
-                                {item.authorName} ·  {item.readingTime} phút đọc
-                            </Text>
+                        <View style={styles.card}>
+                            <Image
+                                source={{ uri: item.thumbnailUrl }}
+                                style={styles.thumbnail}
+                            />
+                            <View style={{ flex: 1 }}>
+                                <View style={styles.categoryBadge}>
+                                    <Text style={styles.categoryBadgeText}>
+                                        {item.category.title}
+                                    </Text>
+                                </View>
+                                <Text style={styles.title} numberOfLines={2}>
+                                    {item.title}
+                                </Text>
+                                <View style={styles.metaRow}>
+                                    <Ionicons
+                                        name="calendar-outline"
+                                        size={14}
+                                        color="#6b7280"
+                                    />
+                                    <Text style={styles.meta}>
+                                        {new Date(
+                                            item.updatedAt
+                                        ).toLocaleDateString("vi-VN")}
+                                    </Text>
+                                </View>
+                                <View style={styles.authorRow}>
+                                    <Ionicons
+                                        name="person-outline"
+                                        size={14}
+                                        color="#0f172a"
+                                    />
+                                    <Text style={styles.author}>{item.authorName}</Text>
+                                    <Ionicons
+                                        name="time-outline"
+                                        size={14}
+                                        color="#6b7280"
+                                        style={{ marginLeft: 12 }}
+                                    />
+                                    <Text style={styles.readTime}>
+                                        {item.readingTime} phút
+                                    </Text>
+                                </View>
+                            </View>
                         </View>
                     </TouchableOpacity>
                 )}
@@ -223,7 +263,7 @@ export default function BlogScreen() {
                 ListFooterComponent={
                     isLoading ? (
                         <View style={{ paddingVertical: 16 }}>
-                            <ActivityIndicator size="small" color="#084C9E" />
+                            <ActivityIndicator size="small" color="#0f172a" />
                         </View>
                     ) : null
                 }
@@ -233,122 +273,178 @@ export default function BlogScreen() {
 }
 
 const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: "#f9fafb" },
+
     headerContainer: {
-        backgroundColor: "#ffffffff",
-        paddingHorizontal: 12,
-        paddingVertical: 12,
-        borderWidth: 0.5,
-        borderColor: "#e5e7eb",
+        paddingHorizontal: 16,
+        paddingVertical: 14,
         flexDirection: "row",
         alignItems: "center",
-    },
-    headerTitle: {
-        flex: 1,
-        textAlign: "center",
-        fontSize: 17,
-        fontWeight: "600",
-        color: "#000000ff",
-        marginRight: 50, // để cân giữa vì có nút back bên trái
+        justifyContent: "space-between",
+        backgroundColor: "#ffffff",
+        borderBottomWidth: 1,
+        borderColor: "#e5e7eb",
     },
     backButton: {
-        padding: 8,
-        borderRadius: 8,
-        marginRight: 10,
-
-    },
-    searchBox: {
-        flex: 1,
-        flexDirection: "row",
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: "#f3f4f6",
         alignItems: "center",
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        height: 40,
+        justifyContent: "center",
     },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        color: "#0f172a",
+    },
+
     filterContainer: {
-        backgroundColor: "#fff",
-        marginHorizontal: 10,
-        marginTop: 10,
+        backgroundColor: "#ffffff",
+        marginHorizontal: 16,
+        marginTop: 12,
         borderRadius: 12,
-        elevation: 2,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
     },
     filterHeader: {
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
     },
-    filterTitle: {
-        marginLeft: 5,
-        fontWeight: "600",
-        color: "#084C9E",
-        fontSize: 15,
+    filterIconContainer: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: "#f3f4f6",
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 8,
     },
+    filterTitle: { fontWeight: "700", color: "#0f172a", fontSize: 16 },
+    filterBadge: {
+        backgroundColor: "#0f172a",
+        borderRadius: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginRight: 8,
+    },
+    filterBadgeText: {
+        color: "#fff",
+        fontSize: 12,
+        fontWeight: "700",
+    },
+
     dropdown: {
-        marginTop: 8,
-        backgroundColor: "#f9fbff",
-        borderRadius: 12,
+        marginTop: 10,
+        backgroundColor: "#f9fafb",
+        borderRadius: 10,
         padding: 10,
     },
     dropdownLabel: {
-        fontWeight: "600",
+        fontWeight: "700",
         fontSize: 15,
-        marginBottom: 6,
+        marginBottom: 8,
+        color: "#0f172a",
     },
     dropdownItem: {
         paddingVertical: 10,
         paddingHorizontal: 12,
-        borderRadius: 10,
+        borderRadius: 8,
         marginTop: 4,
-        backgroundColor: "#EAF2FF",
+        backgroundColor: "#fff",
         flexDirection: "row",
         alignItems: "center",
     },
-    dropdownItemActive: {
-        backgroundColor: "#084C9E",
+    dropdownItemSelected: {
+        backgroundColor: "#e0e7ff",
+        borderColor: "#1e3a8a",
     },
     dropdownText: {
-        fontSize: 15,
-        color: "#333",
+        fontSize: 14,
+        color: "#0f172a",
+        fontWeight: "500",
+    },
+    dropdownTextSelected: {
+        color: "#1e3a8a",
+        fontWeight: "600",
     },
     clearButton: {
+        backgroundColor: "#fff",
         borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 10,
+        borderColor: "#1e3a8a",
+        borderRadius: 8,
         paddingVertical: 10,
         alignItems: "center",
-        marginTop: 12,
+        marginTop: 10,
     },
+    clearButtonText: {
+        color: "#1e3a8a",
+        fontWeight: "700",
+        fontSize: 14,
+    },
+
     card: {
-        backgroundColor: "#fff",
-        marginHorizontal: 10,
-        marginVertical: 6,
-        borderRadius: 10,
+        backgroundColor: "#ffffff",
+        marginHorizontal: 16,
+        marginVertical: 8,
+        borderRadius: 12,
         flexDirection: "row",
-        padding: 10,
-        elevation: 2,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
     },
     thumbnail: {
-        width: 90,
-        height: 90,
-        borderRadius: 10,
-        marginRight: 10,
+        width: 100,
+        height: 100,
+        borderRadius: 8,
+        marginRight: 12,
+    },
+    categoryBadge: {
+        alignSelf: "flex-start",
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 4,
+        backgroundColor: "#1e3a8a",
+        marginBottom: 6,
+    },
+    categoryBadgeText: {
+        color: "#fff",
+        fontSize: 11,
+        fontWeight: "600",
+        textTransform: "uppercase",
     },
     title: {
-        fontWeight: "600",
+        fontWeight: "700",
         fontSize: 15,
         marginBottom: 4,
-        color: "#222",
+        color: "#0f172a",
+        lineHeight: 20,
+    },
+    metaRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 6,
     },
     meta: {
-        fontSize: 13,
-        color: "#777",
+        fontSize: 12,
+        color: "#6b7280",
+        marginLeft: 4,
+    },
+    authorRow: {
+        flexDirection: "row",
+        alignItems: "center",
     },
     author: {
-        fontSize: 13,
-        color: "#555",
-        marginTop: 4,
+        fontSize: 12,
+        color: "#1e3a8a",
+        marginLeft: 4,
+        fontWeight: "600",
     },
-    center: { flex: 1, alignItems: "center", justifyContent: "center" },
+    readTime: {
+        fontSize: 12,
+        color: "#6b7280",
+        marginLeft: 4,
+    },
 });

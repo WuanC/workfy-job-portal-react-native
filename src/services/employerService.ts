@@ -11,8 +11,6 @@ export const getEmployerProfile = async () => {
 };
 export const updateEmployerAvatar = async (uri: string) => {
     const formData = new FormData();
-
-    // 👇 Lấy tên file và loại mime (quan trọng)
     const filename = uri.split("/").pop() || "avatar.jpg";
     const match = /\.(\w+)$/.exec(filename);
     const type = match ? `image/${match[1]}` : `image`;
@@ -117,5 +115,23 @@ export const updateEmployerPassword = async (
             throw new Error("Mật khẩu hiện tại không chính xác.");
         }
         throw new Error("Không thể cập nhật mật khẩu.");
+    }
+};
+
+export const getTopHiringEmployers = async (limit: number = 10) => {
+    try {
+        const res = await apiInstance.get(`/employers/top-hiring`, {
+            params: { limit },
+        });
+        return res.data.data; 
+    } catch (error: any) {
+        console.error("❌ Lỗi lấy danh sách nhà tuyển dụng top tuyển dụng:", error.response?.data || error.message);
+
+        // Xử lý lỗi cụ thể hơn
+        if (error.response?.status === 400) {
+            throw new Error("Giá trị 'limit' không hợp lệ (phải >= 1).");
+        }
+
+        throw new Error("Không thể lấy danh sách nhà tuyển dụng top tuyển dụng.");
     }
 };

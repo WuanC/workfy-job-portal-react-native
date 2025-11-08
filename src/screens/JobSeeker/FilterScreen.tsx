@@ -14,6 +14,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../../theme/colors";
 import BottomSheet, {
   BottomSheetModalProvider,
   BottomSheetFlatList,
@@ -199,7 +200,7 @@ const FilterScreen = ({ route }: any) => {
       : "Danh mục công việc";
 
   const resetFilters = () => {
-    setSelectedSort("");
+    setSelectedSort("createdAt");
     setSelectedJobLevels([]);
     setSelectedExperienceLevels([]);
     setSelectedEducationLevels([]);
@@ -547,15 +548,15 @@ const FilterScreen = ({ route }: any) => {
                   setQuery("")
                   setSelectedLocations([])
                 }}>
-                  <Text style={{ color: "#007AFF", fontSize: 18 }}>Xóa tất cả</Text>
+                  <Text style={{ color: colors.primary.start, fontSize: 18 }}>Xóa tất cả</Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.searchBox}>
-                <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 10 }} />
+                <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 10 }} />
                 <TextInput
                   placeholder="Tìm kiếm..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.text.tertiary}
                   value={query}
                   onChangeText={setQuery}
                   style={styles.searchInput}
@@ -584,7 +585,7 @@ const FilterScreen = ({ route }: any) => {
                       <Ionicons
                         name={isSelected ? "checkbox" : "square-outline"}
                         size={22}
-                        color={isSelected ? "#007AFF" : "#666"}
+                        color={isSelected ? colors.primary.start : colors.text.secondary}
                         style={{ marginRight: 10 }}
                       />
                       <Text>{item.name}</Text>
@@ -628,15 +629,15 @@ const FilterScreen = ({ route }: any) => {
                   setQuery("")
                   setSelectedIndustry([])
                 }}>
-                  <Text style={{ color: "#007AFF", fontSize: 18 }}>Xóa tất cả</Text>
+                  <Text style={{ color: colors.primary.start, fontSize: 18 }}>Xóa tất cả</Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.searchBox}>
-                <Ionicons name="search" size={18} color="#999" style={{ marginLeft: 10 }} />
+                <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 10 }} />
                 <TextInput
                   placeholder="Tìm kiếm..."
-                  placeholderTextColor="#999"
+                  placeholderTextColor={colors.text.tertiary}
                   value={query}
                   onChangeText={setQuery}
                   style={styles.searchInput}
@@ -666,7 +667,7 @@ const FilterScreen = ({ route }: any) => {
                       <Ionicons
                         name={isSelected ? "checkbox" : "square-outline"}
                         size={22}
-                        color={isSelected ? "#007AFF" : "#666"}
+                        color={isSelected ? colors.primary.start : colors.text.secondary}
                         style={{ marginRight: 10 }}
                       />
                       <Text>{item.name}</Text>
@@ -704,7 +705,7 @@ export default FilterScreen;
 
 // Styles
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: colors.surface },
   scroll: { padding: 16, paddingBottom: 80 },
   header: {
     flexDirection: "row",
@@ -712,66 +713,64 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  cancel: { color: "black", fontSize: 16 },
-  title: { fontWeight: "bold", fontSize: 18 },
-  reset: { color: "#007AFF", fontSize: 16 },
-  sectionTitle: { marginVertical: 10, fontSize: 16, fontWeight: "600" },
+  cancel: { color: colors.text.primary, fontSize: 16 },
+  title: { fontWeight: "bold", fontSize: 18, color: colors.text.primary },
+  reset: { color: colors.primary.start, fontSize: 16 },
+  sectionTitle: { marginVertical: 10, fontSize: 16, fontWeight: "600", color: colors.text.primary },
   row: { flexDirection: "row", marginBottom: 16 },
   rowWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    //gap: 10,
     marginBottom: 16,
   },
   chip: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.medium,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 8,
     marginRight: 10,
     marginBottom: 10,
-
   },
-  chipSelected: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
-  chipText: { fontSize: 14, color: "#333" },
-  chipTextSelected: { color: "#fff", fontWeight: "600" },
+  chipSelected: { backgroundColor: colors.primary.start, borderColor: colors.primary.start },
+  chipText: { fontSize: 14, color: colors.text.primary },
+  chipTextSelected: { color: colors.text.inverse, fontWeight: "600" },
   inputBox: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.medium,
     borderRadius: 6,
     padding: 12,
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  inputText: { flex: 1, marginLeft: 8, fontSize: 14, color: "#333" },
+  inputText: { flex: 1, marginLeft: 8, fontSize: 14, color: colors.text.primary },
   applyBtn: {
     position: "absolute",
     bottom: 20,
     left: 16,
     right: 16,
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary.start,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
   },
-  applyText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 16 },
+  applyText: { color: colors.text.inverse, fontSize: 16, fontWeight: "bold" },
+  modalTitle: { fontSize: 18, fontWeight: "600", marginBottom: 16, color: colors.text.primary },
   modalItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
   },
-  modalItemText: { fontSize: 16, color: "#333" },
+  modalItemText: { fontSize: 16, color: colors.text.primary },
   salaryBox: {
     marginTop: 20,
     paddingVertical: 18,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: colors.background,
     paddingHorizontal: 16,
     borderRadius: 14,
-    shadowColor: "#000",
+    shadowColor: colors.shadow.medium,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
@@ -783,11 +782,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   salaryValueBox: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    shadowColor: "#000",
+    shadowColor: colors.shadow.light,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -797,13 +796,13 @@ const styles = StyleSheet.create({
   },
   salaryValueLabel: {
     fontSize: 12,
-    color: "#888",
+    color: colors.text.tertiary,
     marginBottom: 2,
   },
   salaryValueText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#007AFF",
+    color: colors.primary.start,
   },
   salaryLabels: {
     flexDirection: "row",
@@ -812,11 +811,11 @@ const styles = StyleSheet.create({
   },
   salaryLabel: {
     fontSize: 13,
-    color: "#666",
+    color: colors.text.secondary,
   },
 
   saveButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary.start,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -829,7 +828,7 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     marginTop: 10,
-    backgroundColor: "#007AFF",
+    backgroundColor: colors.primary.start,
     padding: 14,
     borderRadius: 6,
     alignItems: "center",
@@ -842,13 +841,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  sheetTitle: { fontSize: 16, fontWeight: "600" },
+  sheetTitle: { fontSize: 16, fontWeight: "600", color: colors.text.primary },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f2f2f2",
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: colors.border.light,
     borderRadius: 8,
     marginTop: 10,
     marginBottom: 6,
@@ -858,7 +857,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 8,
     fontSize: 14,
-    color: "#333",
+    color: colors.text.primary,
   },
 
   emptyBox: {
@@ -868,42 +867,42 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyText: {
-    color: "#999",
+    color: colors.text.tertiary,
     fontSize: 16,
     fontStyle: "italic",
   },
 
-  ////
   optionContainer: { flexDirection: "row", marginTop: 10, marginBottom: 20 },
   optionButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.medium,
     padding: 10,
     borderRadius: 8,
     alignItems: "center",
     marginRight: 10,
   },
-  optionButtonActive: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
-  optionText: { color: "#333" },
-  optionTextActive: { color: "#fff" },
+  optionButtonActive: { backgroundColor: colors.primary.start, borderColor: colors.primary.start },
+  optionText: { color: colors.text.primary },
+  optionTextActive: { color: colors.text.inverse },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.medium,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
+    color: colors.text.primary,
   },
-  inputLabel: { fontWeight: "500", marginBottom: 5 },
+  inputLabel: { fontWeight: "500", marginBottom: 5, color: colors.text.primary },
   dropdown: {
     marginTop: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.border.medium,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  placeholderStyle: { color: "#999" },
-  selectedTextStyle: { color: "#000" },
+  placeholderStyle: { color: colors.text.tertiary },
+  selectedTextStyle: { color: colors.text.primary },
 
 })

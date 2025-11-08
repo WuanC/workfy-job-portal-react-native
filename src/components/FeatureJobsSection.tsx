@@ -51,7 +51,22 @@ const FeaturedJobsSection = ({ featuredJobs }: { featuredJobs: any[] }) => {
             <View style={{ width: containerWidth, paddingHorizontal: 10 }}>
               {item.map((job: any, idx: number) => (
                 <View key={job.id} style={{ marginBottom: 12 }}>
-                  <JobCard {...job} />
+                  {/* <JobCard {...job} /> */}
+                  <JobCard
+                    id={job.id}
+                    logo_path={job.avatarUrl}
+                    job_title={job.jobTitle}
+                    company_name={job.companyName}
+                    job_location={job.jobLocations[0]?.province?.name}
+                    salary_range={
+                      job.salaryType === "RANGE"
+                        ? `${job.minSalary} - ${job.maxSalary} ${job.salaryUnit}`
+                        : job.salaryType === "NEGOTIABLE"
+                          ? "Thỏa thuận"
+                          : "Không rõ"
+                    }
+                    time_passed={job.expirationDate}
+                  />
                 </View>
               ))}
             </View>
@@ -78,7 +93,6 @@ const FeaturedJobsSection = ({ featuredJobs }: { featuredJobs: any[] }) => {
 const styles = StyleSheet.create({
   section: {
     marginTop: 7,
-    marginBottom: 30,
   },
   sectionTitle: {
     fontSize: 20,

@@ -311,3 +311,22 @@ export const getEmployerJobOpenings = async (
     }
   }
 };
+export const getTopAttractiveJobs = async (limit: number = 10) => {
+    try {
+        const res = await apiInstance.get("/jobs/top-attractive", {
+            params: { limit },
+        });
+
+        // Trả về danh sách công việc
+        return res.data.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi lấy danh sách công việc hấp dẫn:", error.response?.data || error.message);
+
+        // Xử lý lỗi cụ thể
+        if (error.response?.status === 400) {
+            throw new Error("Giá trị 'limit' không hợp lệ (phải >= 1).");
+        }
+
+        throw new Error("Không thể lấy danh sách công việc hấp dẫn.");
+    }
+};

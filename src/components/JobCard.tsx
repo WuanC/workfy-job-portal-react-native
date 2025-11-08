@@ -41,10 +41,11 @@ const JobCard: React.FC<IJobCardProps> = ({
 }) => {
   const navigation = useNavigation<JobDetailNavigationProp>();
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const heartScale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.96,
+      toValue: 0.97,
       useNativeDriver: true,
     }).start();
   };
@@ -57,6 +58,19 @@ const JobCard: React.FC<IJobCardProps> = ({
     }).start();
   };
 
+  const handleHeartPress = () => {
+    Animated.sequence([
+      Animated.spring(heartScale, {
+        toValue: 1.3,
+        useNativeDriver: true,
+      }),
+      Animated.spring(heartScale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
     <Pressable
       onPressIn={handlePressIn}
@@ -64,70 +78,80 @@ const JobCard: React.FC<IJobCardProps> = ({
       onPress={() => navigation.navigate("JobDetail", { id })}
       style={({ pressed }) => [
         styles.card,
-        pressed && { opacity: 0.9 },
+        pressed && { opacity: 0.95 },
       ]}
     >
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-        <LinearGradient
-          colors={
-            applied
-              ? ["#f8f8f8", "#ece9f1"]
-              : ["#ffffff", "#fef3e6"]
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradient}
-        >
-          <View style={styles.row}>
-            <Image
-              source={
-                logo_path
-                  ? typeof logo_path === "string"
-                    ? { uri: logo_path }
-                    : logo_path
-                  : require("../../assets/App/companyLogoDefault.png")
-              }
-              style={styles.logo}
-            />
-
-            <View style={styles.info}>
-              <View style={styles.titleRow}>
-                <Text numberOfLines={2} style={styles.jobTitle}>
-                  {job_title}
-                </Text>
-                <Ionicons
-                  name={applied ? "heart" : "heart-outline"}
-                  size={22}
-                  color={applied ? "#ff4d6d" : "#aaa"}
-                  style={styles.heartIcon}
+        <View style={styles.cardContainer}>
+          <LinearGradient
+            colors={
+              applied
+                ? ["rgba(102, 126, 234, 0.05)", "rgba(118, 75, 162, 0.05)"]
+                : ["#ffffff", "#ffffff"]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradient}
+          >
+            <View style={styles.row}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={
+                    logo_path
+                      ? typeof logo_path === "string"
+                        ? { uri: logo_path }
+                        : logo_path
+                      : require("../../assets/App/companyLogoDefault.png")
+                  }
+                  style={styles.logo}
                 />
               </View>
 
-              <Text style={styles.company} numberOfLines={1}>
-                {company_name}
-              </Text>
-              <Text style={styles.location} numberOfLines={1}>
-                <Ionicons name="location-outline" size={13} color="#999" />{" "}
-                {job_location}
-              </Text>
+              <View style={styles.info}>
+                <View style={styles.titleRow}>
+                  <Text numberOfLines={2} style={styles.jobTitle}>
+                    {job_title}
+                  </Text>
+                  <Pressable onPress={handleHeartPress}>
+                    <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                      <Ionicons
+                        name={applied ? "heart" : "heart-outline"}
+                        size={24}
+                        color={applied ? "#f5576c" : "#d1d5db"}
+                        style={styles.heartIcon}
+                      />
+                    </Animated.View>
+                  </Pressable>
+                </View>
 
-              <View style={styles.bottomRow}>
-                <LinearGradient
-                  colors={["#ffb347", "#ffcc33"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.salaryBadge}
-                >
-                  <Text style={styles.salary}>{salary_range}</Text>
-                </LinearGradient>
-                <View style={styles.timeBadge}>
-                  <Ionicons name="time-outline" size={13} color="#777" />
-                  <Text style={styles.time}>{time_passed}</Text>
+                <Text style={styles.company} numberOfLines={1}>
+                  {company_name}
+                </Text>
+                <View style={styles.locationRow}>
+                  <Ionicons name="location" size={14} color="#667eea" />
+                  <Text style={styles.location} numberOfLines={1}>
+                    {job_location}
+                  </Text>
+                </View>
+
+                <View style={styles.bottomRow}>
+                  <LinearGradient
+                    colors={["#f2994a", "#f2c94c"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.salaryBadge}
+                  >
+                    <Text style={styles.salary}>💰 {salary_range}</Text>
+                  </LinearGradient>
+                  <View style={styles.timeBadge}>
+                    <Ionicons name="time-outline" size={12} color="#999" />
+                    <Text style={styles.time}>{time_passed}</Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
-        </LinearGradient>
+          </LinearGradient>
+        </View>
       </Animated.View>
     </Pressable>
   );
@@ -135,33 +159,46 @@ const JobCard: React.FC<IJobCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
+    marginVertical: 8,
+    marginHorizontal: 4,
+  },
+  cardContainer: {
+    borderRadius: 24,
     overflow: "hidden",
-    marginVertical: 10,
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowColor: "#667eea",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 6,
   },
   gradient: {
-    borderRadius: 20,
-    padding: 14,
+    borderRadius: 24,
+    padding: 16,
     borderWidth: 1,
-    borderColor: "#f0d8a8",
+    borderColor: "rgba(102, 126, 234, 0.1)",
   },
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
   },
+  logoContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: "#f8f9fa",
+    padding: 8,
+    marginRight: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   logo: {
-    width: 60,
-    height: 60,
+    width: "100%",
+    height: "100%",
     resizeMode: "contain",
-    marginRight: 14,
-    borderRadius: 14,
-    backgroundColor: "#f9f9f9",
   },
   info: {
     flex: 1,
@@ -170,56 +207,68 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
+    marginBottom: 6,
   },
   jobTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#2c3e50",
+    color: "#1a1a1a",
     flex: 1,
     marginRight: 8,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   company: {
     fontSize: 14,
-    color: "#555",
-    marginTop: 4,
+    color: "#666666",
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
   },
   location: {
     fontSize: 13,
-    color: "#777",
-    marginTop: 2,
+    color: "#999999",
+    marginLeft: 4,
   },
   bottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
     alignItems: "center",
   },
   salaryBadge: {
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    shadowColor: "#f2994a",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   salary: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#fff",
   },
   timeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
   time: {
-    fontSize: 12,
-    color: "#777",
+    fontSize: 11,
+    color: "#999",
     marginLeft: 4,
+    fontWeight: "500",
   },
   heartIcon: {
-    marginLeft: 6,
+    marginLeft: 4,
   },
 });
 

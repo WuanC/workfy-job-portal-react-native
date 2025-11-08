@@ -13,6 +13,7 @@ import {
   Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { RootStackParamList } from "../../types/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -190,47 +191,71 @@ export default function EmployerJobScreen() {
         </View>
       );
     }
-  // Render component
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Công việc của tôi</Text>
-
-      <TouchableOpacity
-        style={styles.newJobButton}
-        onPress={() => navigation.navigate("PostJob")}
+      {/* Modern Header */}
+      <LinearGradient
+        colors={["#667eea", "#764ba2"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
       >
-        <Text style={{ color: "#fff", fontWeight: "600" }}>+ Đăng công việc mới</Text>
+        <Text style={styles.title}>Công việc của tôi</Text>
+      </LinearGradient>
+
+      {/* Modern New Job Button */}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("PostJob")}
+        activeOpacity={0.8}
+      >
+        <LinearGradient
+          colors={["#11998e", "#38ef7d"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.newJobButton}
+        >
+          <Ionicons name="add-circle-outline" size={24} color="#fff" />
+          <Text style={styles.newJobButtonText}>Đăng công việc mới</Text>
+        </LinearGradient>
       </TouchableOpacity>
 
-      <TextInput
-        placeholder="Tìm công việc"
-        style={styles.searchInput}
-        value={search}
-        onChangeText={setSearch}
-      />
+      {/* Modern Search */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
+        <TextInput
+          placeholder="Tìm công việc..."
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholderTextColor="#999"
+        />
+      </View>
 
-      {/* Filter buttons */}
+      {/* Modern Filter Chips */}
       <View style={styles.filterRow}>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={styles.filterChip}
           onPress={() => setFilterModal("status")}
         >
-          <Text>Trạng thái</Text>
-          <Ionicons name="chevron-down" size={16} />
+          <Ionicons name="funnel-outline" size={16} color="#667eea" />
+          <Text style={styles.filterChipText}>Trạng thái</Text>
+          <Ionicons name="chevron-down" size={14} color="#667eea" />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={styles.filterChip}
           onPress={() => setFilterModal("career")}
         >
-          <Text>Ngành nghề</Text>
-          <Ionicons name="chevron-down" size={16} />
+          <Ionicons name="briefcase-outline" size={16} color="#667eea" />
+          <Text style={styles.filterChipText}>Ngành nghề</Text>
+          <Ionicons name="chevron-down" size={14} color="#667eea" />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.filterButton}
+          style={styles.filterChip}
           onPress={() => setFilterModal("location")}
         >
-          <Text>Nơi làm việc</Text>
-          <Ionicons name="chevron-down" size={16} />
+          <Ionicons name="location-outline" size={16} color="#667eea" />
+          <Text style={styles.filterChipText}>Địa điểm</Text>
+          <Ionicons name="chevron-down" size={14} color="#667eea" />
         </TouchableOpacity>
       </View>
 
@@ -320,75 +345,136 @@ export default function EmployerJobScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa", padding: 12 },
-  title: { fontSize: 18, fontWeight: "700", marginBottom: 8 },
+  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    paddingTop: 50,
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: "800", 
+    color: "#ffffff",
+  },
   newJobButton: {
-    backgroundColor: "#007bff",
-    padding: 10,
-    borderRadius: 8,
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    justifyContent: "center",
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 20,
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: "#11998e",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  newJobButtonText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 8,
   },
   searchInput: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    marginBottom: 8,
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: "#1a1a1a",
   },
-  filterRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  filterButton: {
+  filterRow: { 
+    flexDirection: "row", 
+    paddingHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 16,
+    gap: 8,
+  },
+  filterChip: {
+    flex: 1,
     backgroundColor: "#fff",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
-    flex: 1,
-    marginHorizontal: 2,
+    borderColor: "#e5e7eb",
+  },
+  filterChipText: {
+    fontSize: 13,
+    color: "#667eea",
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalBox: {
-    width: "80%",
+    width: "85%",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    maxHeight: 300,
-    paddingVertical: 10,
+    borderRadius: 24,
+    maxHeight: 400,
+    paddingVertical: 20,
   },
-  optionRow: { flexDirection: "row", alignItems: "center", padding: 10 },
-  optionText: { fontSize: 15 },
+  optionRow: { 
+    flexDirection: "row", 
+    alignItems: "center", 
+    padding: 16,
+    marginHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  optionText: { 
+    fontSize: 15,
+    color: "#1a1a1a",
+    fontWeight: "500",
+  },
 
-  // Action menu
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   menuBox: {
     backgroundColor: "#fff",
-    borderRadius: 10,
-    width: 220,
-    paddingVertical: 5,
-    elevation: 5,
+    borderRadius: 24,
+    width: 240,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
   },
   menuItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
   menuText: {
     fontSize: 16,
-    color: "#333",
+    color: "#1a1a1a",
+    fontWeight: "600",
   },
     center: {
     flex: 1,

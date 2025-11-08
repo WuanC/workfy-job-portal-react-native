@@ -3,626 +3,532 @@ import {
   View,
   Text,
   Image,
-  ScrollView,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   Animated,
   ActivityIndicator,
-  useWindowDimensions
+  useWindowDimensions,
+  ScrollView,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../types/navigation";
 import { Benefit, getJobById } from "../../services/jobService";
-import { getCompanySizeLabel, getEducationLevelLabel, getExperienceLevelLabel, getJobGenderLabel, getJobLevelLabel, getJobTypeLabel } from "../../utilities/constant";
-import RenderHTML from "react-native-render-html";
+import {
+  getCompanySizeLabel,
+  getEducationLevelLabel,
+  getExperienceLevelLabel,
+  getJobGenderLabel,
+  getJobLevelLabel,
+  getJobTypeLabel,
+} from "../../utilities/constant";
+import RenderHTML, { MixedStyleDeclaration } from "react-native-render-html";
+import { colors } from "../../theme/colors";
 
-const keywords = [
-  "Tiếng Anh",
-  "Marketing",
-  "TP Thủ Dầu Một",
-  "Nghiên cứu và phát triển (R&D)",
-  "Nhân viên nghiên cứu thị trường",
-];
 type JobSubmitNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "JobSubmit" | "CompanyDetail"
 >;
 
+const keywords = [
+  "Tiếng Anh",
+  "Marketing",
+  "TP Thủ Dầu Một",
+  "R&D",
+  "Nhân viên nghiên cứu thị trường",
+];
+
 const JobDetailScreen = ({ route }: any) => {
   const { id } = route.params as { id: number };
+  const navigation = useNavigation<JobSubmitNavigationProp>();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const { width } = useWindowDimensions();
+
+  const [job, setJob] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Header animation
+  const HEADER_MAX_HEIGHT = 76;
+  const HEADER_MIN_HEIGHT = 76;
+  const HEADER_SCROLL_DISTANCE = 120;
+
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE],
+    outputRange: [HEADER_MAX_HEIGHT, HEADER_MIN_HEIGHT],
+    extrapolate: "clamp",
+  });
 
   const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 100],
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 1.5],
     outputRange: [0, 1],
     extrapolate: "clamp",
   });
-  const navigation = useNavigation<JobSubmitNavigationProp>();
-  const [job, setJob] = useState<any>();
-  const [loading, setLoading] = useState(true);
-  const { width } = useWindowDimensions();
+
+  const headerTranslateY = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE],
+    outputRange: [0, -10],
+    extrapolate: "clamp",
+  });
+
   useEffect(() => {
-    let cancelled = false; // flag để tránh setState sau unmount
+    let cancelled = false;
 
     const load = async () => {
       try {
         setLoading(true);
         const jobData = await getJobById(id);
-        setJob(jobData)
-        if (cancelled) return;
-
-      } catch (err: any) {
-        if (cancelled) return;
-        console.error("Lỗi load", err);
+        if (!cancelled) setJob(jobData);
+      } catch (err) {
+        console.error("Lỗi load job:", err);
       } finally {
-        if (!cancelled) { }
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     load();
-
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [id]);
+
+  // Loading
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066ff" />
-        <Text style={{ marginTop: 10, color: "#333" }}>Đang tải dữ liệu...</Text>
+        <ActivityIndicator size="large" color={colors.primary.start} />
+        <Text style={styles.loadingText}>Đang tải tin tuyển dụng...</Text>
       </View>
     );
   }
 
-  // ❌ Nếu không có dữ liệu
+  // Not found
   if (!job) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={{ color: "red" }}>Không tìm thấy thông tin công việc</Text>
-        <TouchableOpacity onPress={() => {
-          console.log("Back 1")
-          navigation.goBack()
-        }
-
-        } style={{ marginTop: 10 }}>
-          <Text style={{ color: "#0066ff" }}>← Quay lại</Text>
+        <Ionicons name="alert-circle" size={48} color={colors.error.start} />
+        <Text style={styles.errorText}>Không tìm thấy công việc</Text>
+        <TouchableOpacity
+          style={styles.backErrorBtn}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backErrorText}>Quay lại</Text>
         </TouchableOpacity>
       </View>
     );
   }
+
   return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.headerHide, { opacity: headerOpacity }]}>
-        <TouchableOpacity style={[styles.backBtnHide]} onPress={() => {
-          console.log("Back 2")
-          navigation.goBack()
-
-        }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <View style={styles.container}>
+        {/* Header khi scroll xuống */}
+        <Animated.View
+          style={[
+            styles.scrollHeader,
+            {
+              height: headerHeight,
+              opacity: headerOpacity,
+              transform: [{ translateY: headerTranslateY }],
+            },
+          ]}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{job.jobTitle}</Text>
-      </Animated.View>
-      <Animated.ScrollView
-        contentContainerStyle={{ paddingBottom: 80 }}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
-      >
-        {/* Banner */}
-        <View style={{ position: "relative" }}>
-          {/* <Image
-            source={bannerImg}
-            style={styles.banner}
-          /> */}
-          <Image
-            source={
-              job.author.backgroundUrl
-                ? typeof job.author.backgroundUrl === "string"
-                  ? { uri: job.author.backgroundUrl }
-                  : job.author.backgroundUrl
-                : require("../../../assets/App/companyBannerDefault.jpg")
-
-            }
-            style={styles.banner}
-          />
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => {
-              navigation.goBack()
-
-            }}
-          >
-            <Ionicons name="arrow-back" size={28} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Header: Logo + Công ty + Chức danh */}
-        <View style={styles.infoContainerHeader}>
-          <View style={styles.header}>
-            {/* <Image
-              source={logoImg}
-              style={styles.logo}
-            /> */}
-            <Image
-              source={
-                job.author.avatarUrl
-                  ? typeof job.author.avatarUrl === "string"
-                    ? { uri: job.author.avatarUrl }
-                    : job.author.avatarUrl
-                  : require("../../../assets/App/companyLogoDefault.png")
-
-              }
-              style={styles.logo}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.company}>{job.companyName}</Text>
-              <Text style={styles.title}>{job.jobTitle}</Text>
-            </View>
-
-          </View>
-
-          {/* Box thông tin */}
-
-          <View style={styles.infoBox}>
-            <Text style={styles.info}>📍 {job.jobLocations[0].district.name}, {job.jobLocations[0].province.name}</Text>
-            <Text
-              style={[
-                styles.info,
-                job.salaryType === "NEGOTIABLE"
-                  ? { color: "orange" }
-                  : job.salaryType === "COMPETITIVE"
-                    ? { color: "green" }
-                    : { color: "#000" }, // mặc định
-              ]}
+          <View style={styles.scrollHeaderContent}>
+            <TouchableOpacity
+              style={styles.backBtnScroll}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
             >
-              {job.salaryType === "RANGE"
-                ? `💰 ${job.minSalary?.toLocaleString() || "?"} ${job.salaryUnit || ""} - ${job.maxSalary?.toLocaleString() || "?"} ${job.salaryUnit || ""}`
-                : job.salaryType === "GREATER_THAN"
-                  ? `💰 Trên ${job.minSalary?.toLocaleString() || "?"} ${job.salaryUnit || ""}`
-                  : job.salaryType === "NEGOTIABLE"
-                    ? "💰 Thỏa thuận"
-                    : job.salaryType === "COMPETITIVE"
-                      ? "💰 Cạnh tranh"
-                      : "💰 Không rõ"}
+              <Ionicons name="arrow-back" size={22} color="#1a1a1a" />
+            </TouchableOpacity>
+
+            <Text style={styles.scrollHeaderTitle} numberOfLines={1}>
+              {job.jobTitle}
             </Text>
-            <Text style={styles.info}>🧰 {getExperienceLevelLabel(job.experienceLevel)}</Text>
-            <Text style={styles.info}>
-              📅 {job.expirationDate}
-            </Text>
+            <View style={{ width: 40 }} />
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Mô tả công việc */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Mô tả công việc</Text>
-          <View style={styles.section}>
-            {job?.jobDescription ? (
-              <RenderHTML
-                contentWidth={width}
-                source={{ html: job.jobDescription }}
-                tagsStyles={{
-                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
-                  b: { fontWeight: "bold" },
-                  strong: { fontWeight: "bold" },
-                  i: { fontStyle: "italic" },
-                }}
-              />
-            ) : (
-              <Text>Chưa có mô tả về công ty.</Text>
-            )}
-          </View>
-        </View>
-
-        {/* Phúc lợi */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Yêu cầu công việc</Text>
-          <View style={styles.section}>
-            {job?.requirement ? (
-              <RenderHTML
-                contentWidth={width}
-                source={{ html: job.requirement }}
-                tagsStyles={{
-                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
-                  b: { fontWeight: "bold" },
-                  strong: { fontWeight: "bold" },
-                  i: { fontStyle: "italic" },
-                }}
-              />
-            ) : (
-              <Text>Chưa có mô tả về công ty.</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Chi tiết công việc</Text>
-          <View style={styles.detailGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Loại công việc</Text>
-              <Text style={styles.detailValue}> {getJobTypeLabel(job.jobType)}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Giới tính</Text>
-              <Text style={styles.detailValue}>{getJobGenderLabel(job.gender)}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Cấp bậc</Text>
-              <Text style={styles.detailValue}>{getJobLevelLabel(job.jobLevel)}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Trình độ học vấn</Text>
-              <Text style={styles.detailValue}> {getEducationLevelLabel(job.educationLevel)}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Ngành nghề</Text>
-              <Text style={styles.detailValue}>
-                {job.industries && job.industries.length > 0
-                  ? job.industries.map((ind: any) => ind.name).join(", ")
-                  : "Không rõ"}
-              </Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
-          <View style={styles.section}>
-            {job?.description ? (
-              <RenderHTML
-                contentWidth={width}
-                source={{ html: job.description }}
-                tagsStyles={{
-                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
-                  b: { fontWeight: "bold" },
-                  strong: { fontWeight: "bold" },
-                  i: { fontStyle: "italic" },
-                }}
-              />
-            ) : (
-              <Text>Chưa có mô tả về công ty.</Text>
-            )}
-
-          </View>
-        </View>
-
-
-        <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Phúc lợi</Text>
-          <View style={styles.section}>
-            {job.jobBenefits && job.jobBenefits.length > 0 ? (
-              job.jobBenefits.map((benefit: Benefit) => (
-                <Text key={benefit.type} style={styles.benefitText}>
-                  • {benefit.description}
-                </Text>
-              ))
-            ) : (
-              <Text style={styles.emptyText}>Chưa cập nhật</Text>
-            )}
-          </View>
-        </View>
-        <View style={styles.infoContainer}>
-          <Text style={styles.sectionTitle}>Về công ty</Text>
-          <View style={styles.section}>
-            {job?.aboutCompany ? (
-              <RenderHTML
-                contentWidth={width}
-                source={{ html: job.aboutCompany }}
-                tagsStyles={{
-                  p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
-                  b: { fontWeight: "bold" },
-                  strong: { fontWeight: "bold" },
-                  i: { fontStyle: "italic" },
-                }}
-              />
-            ) : (
-              <Text>Chưa có mô tả về công ty.</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.infoContainer}>
-          {/* Về công ty */}
-          <Text style={styles.sectionTitle}>Về công ty</Text>
-          <TouchableOpacity style={styles.companyBox} onPress={() => {
-            console.log(job.author.id)
-            navigation.navigate("CompanyDetail", { id: job.author.id })
-          }}>
+        {/* Nội dung */}
+        <Animated.ScrollView
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
+          {/* Banner */}
+          <View style={styles.bannerContainer}>
             <Image
               source={
-                job.author.avatarUrl
-                  ? typeof job.author.avatarUrl === "string"
-                    ? { uri: job.author.avatarUrl }
-                    : job.author.avatarUrl
-                  : require("../../../assets/App/companyLogoDefault.png")
-
+                job.author.backgroundUrl
+                  ? { uri: job.author.backgroundUrl }
+                  : require("../../../assets/App/companyBannerDefault.jpg")
               }
-              style={styles.logo}
+              style={styles.banner}
             />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.companyName}>{job.companyName}</Text>
-              <View style={styles.row}>
-                <Ionicons name="briefcase-outline" size={16} color="#555" />
-                <Text style={styles.companyInfo}> 15 việc đang tuyển</Text>
-                <Ionicons
-                  name="people-outline"
-                  size={16}
-                  color="#555"
-                  style={{ marginLeft: 10 }}
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.6)"]}
+              style={styles.bannerOverlay}
+            />
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Header Card */}
+          <View style={styles.headerCard}>
+            <View style={styles.companyHeader}>
+              <View style={styles.logoWrapper}>
+                <Image
+                  source={
+                    job.author.avatarUrl
+                      ? { uri: job.author.avatarUrl }
+                      : require("../../../assets/App/companyLogoDefault.png")
+                  }
+                  style={styles.logo}
                 />
-                <Text style={styles.companyInfo}> {getCompanySizeLabel(job.companySize)}</Text>
+              </View>
+              <View style={styles.companyInfo}>
+                <Text style={styles.companyName}>{job.companyName}</Text>
+                <Text style={styles.jobTitle}>{job.jobTitle}</Text>
               </View>
             </View>
-          </TouchableOpacity>
 
-          {/* Nơi làm việc */}
-          <Text style={styles.sectionTitle}>Nơi làm việc:</Text>
-          <View style={styles.mapBox}>
-            {/* Fake map bằng 1 hình demo, thực tế có thể dùng react-native-maps */}
-            <Image
-              source={{ uri: "https://via.placeholder.com/400x200.png?text=Map" }}
-              style={{ width: "100%", height: 150, borderRadius: 8 }}
+            {/* Info */}
+            <View style={styles.infoGrid}>
+              <InfoBox
+                icon="location"
+                gradient={["#667eea", "#764ba2"]}
+                label="Địa điểm"
+                value={`${job.jobLocations[0]?.district?.name || ""}, ${job.jobLocations[0]?.province?.name || ""}`}
+              />
+              <InfoBox
+                icon="cash"
+                gradient={["#f2994a", "#f2c94c"]}
+                label="Mức lương"
+                value={
+                  job.salaryType === "RANGE"
+                    ? `${(job.minSalary || 0).toLocaleString()} - ${(job.maxSalary || 0).toLocaleString()} ${job.salaryUnit || ""}`
+                    : job.salaryType === "GREATER_THAN"
+                      ? `Trên ${(job.minSalary || 0).toLocaleString()} ${job.salaryUnit || ""}`
+                      : job.salaryType === "NEGOTIABLE"
+                        ? "Thỏa thuận"
+                        : job.salaryType === "COMPETITIVE"
+                          ? "Cạnh tranh"
+                          : "Không rõ"
+                }
+              />
+              <InfoBox
+                icon="briefcase"
+                gradient={["#11998e", "#38ef7d"]}
+                label="Kinh nghiệm"
+                value={getExperienceLevelLabel(job.experienceLevel)}
+              />
+              <InfoBox
+                icon="calendar"
+                gradient={["#4facfe", "#00f2fe"]}
+                label="Hạn nộp"
+                value={job.expirationDate}
+              />
+            </View>
+          </View>
+
+          {/* Mô tả */}
+          <Section title="Mô tả công việc">
+            <RenderHTML
+              contentWidth={width - 40}
+              source={{ html: job.jobDescription || "<p>Chưa có mô tả.</p>" }}
+              tagsStyles={htmlStyles}
             />
-          </View>
+          </Section>
+          <Section title="Phúc lợi">
+            {job.jobBenefits?.length > 0 ? (
+              job.jobBenefits.map((b: Benefit, i: number) => (
+                <View key={i} style={styles.benefitItem}>
+                  <View style={styles.benefitDot} />
+                  <Text style={styles.benefitText}>{b.description}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>Chưa cập nhật phúc lợi</Text>
+            )}
+          </Section>
+          {/* Yêu cầu */}
+          <Section title="Yêu cầu công việc">
+            <RenderHTML
+              contentWidth={width - 40}
+              source={{ html: job.requirement || "<p>Chưa có yêu cầu.</p>" }}
+              tagsStyles={htmlStyles}
+            />
+          </Section>
 
-          {/* VP Chính */}
-          <View style={styles.addressBox}>
-            <MaterialCommunityIcons name="office-building" size={20} color="#004aad" />
-            <View style={{ marginLeft: 8, flex: 1 }}>
-              <Text style={styles.addressTitle}>VP Chính</Text>
-              <Text style={styles.addressDetail}>
-                Tầng 15, Tòa nhà WTC Tower, Số 1 đường Hùng Vương, phường Hòa Phú,
-                TP Thủ Dầu Một, Bình Dương
+          {/* Chi tiết */}
+          <Section title="Chi tiết tuyển dụng">
+            <View style={styles.detailGrid}>
+              <DetailBox label="Loại công việc" value={getJobTypeLabel(job.jobType)} />
+              <DetailBox label="Giới tính" value={getJobGenderLabel(job.gender)} />
+              <DetailBox label="Cấp bậc" value={getJobLevelLabel(job.jobLevel)} />
+              <DetailBox label="Học vấn" value={getEducationLevelLabel(job.educationLevel)} />
+            </View>
+            <View style={styles.detailBoxFull}>
+              <Text style={styles.detailLabel}>Ngành nghề</Text>
+              <Text style={styles.detailValue}>
+                {job.industries?.length > 0
+                  ? job.industries.map((i: any) => i.name).join(", ")
+                  : "Không xác định"}
               </Text>
             </View>
-          </View>
+          </Section>
 
-          {/* Tòa nhà WESTGATE */}
-          <View style={styles.addressBox}>
-            <MaterialCommunityIcons name="office-building" size={20} color="#004aad" />
-            <View style={{ marginLeft: 8, flex: 1 }}>
-              <Text style={styles.addressTitle}>Tòa nhà WESTGATE</Text>
-              <Text style={styles.addressDetail}>
-                TT. Tân Túc, Bình Chánh, HCM, Huyện Bình Chánh, Hồ Chí Minh
-              </Text>
-            </View>
-          </View>
-        </View>
+          {/* Phúc lợi */}
 
-
-        <View style={styles.infoContainer}>
+          {/* Thông tin liên hệ*/}
+          <Section title="Thông tin liên hệ">
+            <RenderHTML
+              contentWidth={width - 40}
+              source={{ html: job.description || "<p>Chưa có yêu cầu.</p>" }}
+              tagsStyles={htmlStyles}
+            />
+          </Section>
           {/* Về công ty */}
-          <Text style={styles.sectionTitle}>Từ khóa</Text>
-          <View style={styles.keywordContainer}>
-            {keywords.map((item, index) => (
-              <TouchableOpacity key={index} style={styles.keywordTag}>
-                <Text style={styles.keywordText}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Section title="Về công ty">
+            <TouchableOpacity
+              style={styles.companyCard}
+              onPress={() => navigation.navigate("CompanyDetail", { id: job.author.id })}
+            >
+              <Image
+                source={
+                  job.author.avatarUrl
+                    ? { uri: job.author.avatarUrl }
+                    : require("../../../assets/App/companyLogoDefault.png")
+                }
+                style={styles.companyLogo}
+              />
+              <View style={styles.companyCardInfo}>
+                <Text style={styles.companyCardName}>{job.companyName}</Text>
+                <View style={styles.row}>
+                  <Ionicons name="briefcase-outline" size={14} color="#666" />
+                  <Text style={styles.companyMeta}>15 việc đang tuyển</Text>
+                  <Ionicons name="people-outline" size={14} color="#666" style={{ marginLeft: 12 }} />
+                  <Text style={styles.companyMeta}>{getCompanySizeLabel(job.companySize)}</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            </TouchableOpacity>
+
+            {/* {job.aboutCompany && (
+              <RenderHTML
+                contentWidth={width - 40}
+                source={{ html: job.aboutCompany }}
+                tagsStyles={htmlStyles}
+              />
+            )} */}
+          </Section>
+
+          {/* Từ khóa */}
+          <Section title="Từ khóa gợi ý">
+            <View style={styles.keywordContainer}>
+              {keywords.map((kw, i) => (
+                <TouchableOpacity key={i} style={styles.keywordTag}>
+                  <Text style={styles.keywordText}>{kw}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Section>
+        </Animated.ScrollView>
+
+        {/* Bottom Bar */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity style={styles.iconBtn}>
+            <Ionicons name="notifications-outline" size={24} color={colors.primary.start} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn}>
+            <Ionicons name="heart-outline" size={24} color="#f5576c" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.applyBtn}
+            onPress={() => navigation.navigate("JobSubmit", {jobId: job.id, jobName: job.jobTitle})}
+          >
+            <LinearGradient
+              colors={["#667eea", "#764ba2"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.applyGradient}
+            >
+              <Text style={styles.applyText}>Nộp đơn ngay</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-      </Animated.ScrollView>
-
-      {/* Thanh nút dưới cùng */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="notifications-outline" size={30} color="#555" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="heart-outline" size={30} color="red" />
-          <Text style={{ fontSize: 12, color: "#333", marginTop: 2 }}>Lưu</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.applyButton} onPress={() => navigation.navigate("JobSubmit")}>
-          <Text style={styles.applyText}>Nộp đơn ngay</Text>
-        </TouchableOpacity>
-
       </View>
-    </View>
+    </SafeAreaView>
   );
-}
+};
+
+// ==== COMPONENT CON =====
+const InfoBox = ({ icon, gradient, label, value }: any) => (
+  <View style={styles.infoItem}>
+    <LinearGradient colors={gradient} style={styles.iconCircle}>
+      <Ionicons name={icon} size={18} color="#fff" />
+    </LinearGradient>
+    <View>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  </View>
+);
+
+const Section = ({ title, children }: any) => (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    {children}
+  </View>
+);
+
+const DetailBox = ({ label, value }: any) => (
+  <View style={styles.detailBox}>
+    <Text style={styles.detailLabel}>{label}</Text>
+    <Text style={styles.detailValue}>{value}</Text>
+  </View>
+);
+
 export default JobDetailScreen;
+
+// ==== STYLES ====
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e1eff5ff" },
-  banner: {
-    width: "100%",
-    height: 200, // tuỳ chỉnh chiều cao banner
-    resizeMode: "cover",
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-  },
+  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingText: { marginTop: 12, color: "#666" },
+  errorText: { fontSize: 18, color: colors.error.start, fontWeight: "600" },
+  backErrorBtn: { marginTop: 16, backgroundColor: colors.primary.start, paddingHorizontal: 24, paddingVertical: 10, borderRadius: 8 },
+  backErrorText: { color: "#fff", fontWeight: "600" },
 
-  backBtn: {
-    position: "absolute",   // đẩy xuống 1 chút cho thoát khỏi status bar
-    left: 16,
-    backgroundColor: "rgba(0,0,0,0.5)", // nền mờ để dễ nhìn
-    padding: 8,
-    borderRadius: 24,
-    borderWidth: 2,
-    marginTop: 22,
-    zIndex: 100,         // 👈 thêm dòng này
-    elevation: 10,
-  },
-  backBtnHide: {
-    position: "absolute",   // đẩy xuống 1 chút cho thoát khỏi status bar
-    left: 16, // nền mờ để dễ nhìn
-    padding: 8,
-    borderRadius: 24,
-    marginTop: 10,
-    zIndex: 100,         // 👈 thêm dòng này
-
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-  },
-  logo: { width: 50, height: 50, marginRight: 10 },
-  company: { fontSize: 14, color: "#666" },
-  title: { fontSize: 18, fontWeight: "bold", color: "#000" },
-  infoBox: {
-    backgroundColor: "#c3d8f5ff",
-    margin: 15,
-    padding: 12,
-    borderRadius: 10,
-  },
-  info: { fontSize: 14, marginBottom: 4 },
-  infoContainerHeader: {
-    backgroundColor: "#f1f7ff",
-
-  },
-  infoContainer: {
-    backgroundColor: "#f1f7ff",
-    marginTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 10,
-    marginLeft: 15,
-    marginBottom: 5,
-    color: "#004aad",
-  },
-  section: {
-    paddingHorizontal: 15,
-    marginBottom: 10,
-  },
-
-  detailGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",        // Cho phép xuống dòng
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-  },
-
-  detailItem: {
-    backgroundColor: "#e6f0ff",
-    borderRadius: 8,
-    padding: 10,
-    margin: 5,
-    width: "47%",            // 2 cột (gần bằng 50%)
-  },
-
-  detailLabel: {
-    fontSize: 12,
-    color: "#004aad",
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-
-  detailValue: {
-    fontSize: 14,
-    color: "#333",
-  },
-  companyBox: { flexDirection: "row", alignItems: "center", marginBottom: 15, paddingLeft: 15 },
-  companyLogo: { width: 50, height: 50, marginRight: 10 },
-  companyName: { fontSize: 16, fontWeight: "bold", marginBottom: 4 },
-  row: { flexDirection: "row", alignItems: "center" },
-  companyInfo: { fontSize: 13, color: "#555" },
-
-  mapBox: { marginBottom: 15 },
-
-  addressBox: {
-    flexDirection: "row",
-    backgroundColor: "#f1f7ff",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-    marginHorizontal: 15,
-    borderWidth: 1,
-    borderColor: "#004aad",
-  },
-  addressTitle: { fontWeight: "bold", color: "#004aad", fontSize: 14 },
-  addressDetail: { fontSize: 13, color: "#333", marginTop: 2 },
-  keywordContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: 15,
-  },
-  keywordTag: {
-    backgroundColor: "#c9c4c4ff",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  keywordText: {
-    fontSize: 13,
-    color: "#333",
-  },
-  bottomBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    backgroundColor: "#fff",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  iconButton: {
-    alignItems: "center",
-    marginRight: 15,
-    borderWidth: 1,
-    borderColor: "#d4cdcdff",
-    flexDirection: "row",
-    padding: 6,
-  },
-  applyButton: {
-    flex: 1,
-    backgroundColor: "#0066ff",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  applyText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "bold",
-  },
-  headerHide: {
+  scrollHeader: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: 60,
     backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
+    zIndex: 1000,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
     borderBottomWidth: 1,
-    borderColor: "#eee",
-    zIndex: 10,
+    borderBottomColor: "#eee",
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#000",
-    paddingLeft: 60,
-    paddingRight: 40
-  },
-  loadingContainer: {
+  scrollHeaderContent: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+  },
+  backBtnScroll: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#f0f0f0", justifyContent: "center", alignItems: "center" },
+  scrollHeaderTitle: { flex: 1, textAlign: "center", fontWeight: "700", fontSize: 16, color: "#1a1a1a" },
+
+  bannerContainer: { position: "relative" },
+  banner: { width: "100%", height: 220 },
+  bannerOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, height: 120 },
+  backBtn: { position: "absolute", top: 40, left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerCard: { backgroundColor: "#fff", marginTop: -24, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 24, paddingHorizontal: 20 },
+  companyHeader: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
+  logoWrapper: { width: 72, height: 72, borderRadius: 20, backgroundColor: "#fff", padding: 6, elevation: 6 },
+  logo: { width: "100%", height: "100%", borderRadius: 14 },
+  companyInfo: { flex: 1, marginLeft: 16 },
+  companyName: { fontSize: 15, color: "#666", fontWeight: "600" },
+  jobTitle: { fontSize: 22, fontWeight: "800", color: "#1a1a1a", marginTop: 4 },
+
+  infoGrid: {
+    flexDirection: "column",
+    marginTop: 8,
+    gap: 10,
+  },
+
+  infoItem: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+
+  iconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    marginRight: 10,
   },
-  benefitText: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 4,
-  },
-  emptyText: {
-    fontSize: 14,
+
+  infoLabel: {
+    fontSize: 12,
     color: "#888",
-    fontStyle: "italic",
+    fontWeight: "500",
+    marginBottom: 2,
   },
+
+  infoValue: {
+    fontSize: 14,
+    color: "#1a1a1a",
+    fontWeight: "700",
+  },
+
+  section: { backgroundColor: "#fff", marginTop: 16, paddingHorizontal: 20, paddingVertical: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", marginBottom: 14, color: "#1a1a1a" },
+
+  detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  detailBox: { backgroundColor: "#f8f9fa", padding: 14, borderRadius: 14, width: "47%", borderWidth: 1, borderColor: "#eee" },
+  detailBoxFull: { backgroundColor: "#f8f9fa", padding: 14, borderRadius: 14, marginTop: 12, borderWidth: 1, borderColor: "#eee" },
+  detailLabel: { fontSize: 12, color: "#777" },
+  detailValue: { fontSize: 14, fontWeight: "700", color: "#1a1a1a", marginTop: 4 },
+
+  benefitItem: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  benefitDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary.start, marginRight: 8 },
+  benefitText: { fontSize: 14, color: "#333" },
+  emptyText: { color: "#999", fontStyle: "italic" },
+
+  companyCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#f8f9fa", borderRadius: 16, padding: 14 },
+  companyLogo: { width: 50, height: 50, borderRadius: 12 },
+  companyCardInfo: { flex: 1, marginLeft: 12 },
+  companyCardName: { fontWeight: "700", fontSize: 15 },
+  companyMeta: { fontSize: 12, color: "#666", marginLeft: 4 },
+
+  keywordContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  keywordTag: { backgroundColor: "#eef1ff", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  keywordText: { color: colors.primary.start, fontWeight: "600" },
+
+  bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 14, borderTopWidth: 1, borderTopColor: "#eee" },
+  iconBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" },
+  applyBtn: { flex: 1, marginLeft: 14, borderRadius: 30, overflow: "hidden" },
+  applyGradient: { paddingVertical: 14, alignItems: "center", borderRadius: 30 },
+  applyText: { color: "#fff", fontWeight: "700", fontSize: 16 },
 });
+
+const htmlStyles: Record<string, MixedStyleDeclaration> = {
+  p: { color: "#333", lineHeight: 22, fontSize: 14, marginBottom: 10 },
+  strong: { fontWeight: "bold" },
+  ul: { marginLeft: 16, marginBottom: 8 },
+  li: { marginBottom: 6 },
+};

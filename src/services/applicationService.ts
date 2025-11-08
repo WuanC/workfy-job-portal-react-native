@@ -129,10 +129,10 @@ export const uploadFile = async () => {
       name: file.name,
       type: file.mimeType || "application/octet-stream",
     } as any);
-
+    formData.append('application', "");
     // 3️⃣ Gửi lên server
     const response = await apiInstance.post(
-      "/test",
+      "/applications",
       formData,
       {
         headers: {
@@ -147,6 +147,65 @@ export const uploadFile = async () => {
   }
 };
 
+export const applyWithFileCV2 = async (
+  application: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    coverLetter: string;
+    jobId: number;
+  },
+  file1: any
+) => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: [
+        "image/*",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ],
+    });
+
+    if (result.canceled) return;
+
+    const file = result.assets[0];
+    const formData = new FormData();
+    formData.append('application', "");
+    // JSON.stringify(application)
+    formData.append("cv", {
+      uri: file.uri,
+      name: file.name,
+      type: file.mimeType || "application/octet-stream",
+    } as any);
+
+    const res = await apiInstance.post("/applications", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data.data;
+  } catch (error: any) {
+    console.error("❌ Lỗi khi ứng tuyển bằng file CV:", error.response?.data || error.message);
+    console.error("❌ Lỗi khi ứng tuyển bằng file CV:", error);
+    // Xử lý lỗi cụ thể
+    switch (error.response?.status) {
+      case 400:
+        throw new Error("Dữ liệu hoặc file không hợp lệ.");
+      case 401:
+        throw new Error("Bạn cần đăng nhập để ứng tuyển.");
+      case 403:
+        throw new Error("Bạn không có quyền ứng tuyển công việc này.");
+      case 404:
+        throw new Error("Công việc không tồn tại hoặc chưa được duyệt.");
+      case 409:
+        throw new Error("Bạn đã đạt giới hạn số lần ứng tuyển cho công việc này.");
+      default:
+        throw new Error("Không thể gửi ứng tuyển.");
+    }
+  }
+};
 export const applyWithFileCV1 = async (
   application: {
     fullName: string;
@@ -174,7 +233,7 @@ export const applyWithFileCV1 = async (
       type: file.mimeType || "application/octet-stream",
     } as any);
 
-    const res = await apiInstance.post("/applications", formData, {
+    const res = await apiInstance.post("/applications/mobile", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

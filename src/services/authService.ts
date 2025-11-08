@@ -202,6 +202,7 @@ export const getProfile = async () => {
     } catch (error: any) {
         // Kiểm tra lỗi 401 (token không hợp lệ)
         if (error.response?.status === 401) {
+            
             throw new Error("Token không hợp lệ hoặc đã hết hạn.");
         }
         throw new Error(error.response?.data?.message || "Lỗi không xác định.");
@@ -243,4 +244,138 @@ export const logoutService = async () => {
     } catch (err) {
         console.error("Logout request failed:", err);
     }
+};
+
+export const forgotPasswordEmployee = async (email: string) => {
+    try {
+        const res = await apiInstance.post(
+            "/auth/users/forgot-password",
+            { email },
+        );
+
+        return res.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi gửi yêu cầu quên mật khẩu:", error.response?.data || error.message);
+
+        const status = error.response?.status;
+        const backendStatus = error.response?.data?.status; // lấy status thật của backend (vì lỗi 411 có thể bị wrapped thành 500)
+
+        if (status === 400) {
+            throw new Error("Email không hợp lệ. Vui lòng kiểm tra lại.");
+        }
+
+        if (backendStatus === 411 || status === 411) {
+            throw new Error("Tài khoản của bạn đã bị khóa, không thể đặt lại mật khẩu.");
+        }
+
+        if (status === 401) {
+            throw new Error("Phiên đăng nhập không hợp lệ.");
+        }
+
+        if (status === 500) {
+            throw new Error("Lỗi hệ thống. Vui lòng thử lại sau.");
+        }
+
+        throw new Error("Không thể gửi yêu cầu quên mật khẩu.");
+    }
+};
+export const forgotPasswordEmployer = async (email: string) => {
+    try {
+        const res = await apiInstance.post(
+            "/auth/employers/forgot-password",
+            { email },
+        );
+        return res.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi gửi yêu cầu quên mật khẩu:", error.response?.data || error.message);
+
+        const status = error.response?.status;
+        const backendStatus = error.response?.data?.status; // lấy status thật của backend (vì lỗi 411 có thể bị wrapped thành 500)
+
+        if (status === 400) {
+            throw new Error("Email không hợp lệ. Vui lòng kiểm tra lại.");
+        }
+
+        if (backendStatus === 411 || status === 411) {
+            throw new Error("Tài khoản của bạn đã bị khóa, không thể đặt lại mật khẩu.");
+        }
+
+        if (status === 401) {
+            throw new Error("Phiên đăng nhập không hợp lệ.");
+        }
+
+        if (status === 500) {
+            throw new Error("Lỗi hệ thống. Vui lòng thử lại sau.");
+        }
+
+        throw new Error("Không thể gửi yêu cầu quên mật khẩu.");
+    }
+};
+
+export const resetEmployeePassword = async (
+  email: string,
+  code: string,
+  newPassword: string
+) => {
+  try {
+    const res = await apiInstance.post(
+      "/auth/users/mobile/reset-password",
+      { email, code, newPassword },
+    );
+    return res.data; 
+  } catch (error: any) {
+    if (error.response) {
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 400:
+          throw new Error(
+            data?.message || "Dữ liệu không hợp lệ, vui lòng kiểm tra lại."
+          );
+        case 401:
+          throw new Error(
+            data?.message || "Mã OTP không hợp lệ hoặc đã hết hạn."
+          );
+        default:
+          throw new Error(
+            data?.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau."
+          );
+      }
+    }
+    throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.");
+  }
+};
+
+export const resetEmployerPassword = async (
+  email: string,
+  code: string,
+  newPassword: string
+) => {
+  try {
+    const res = await apiInstance.post(
+      "/auth/employers/mobile/reset-password",
+      { email, code, newPassword },
+    );
+    return res.data; 
+  } catch (error: any) {
+    if (error.response) {
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 400:
+          throw new Error(
+            data?.message || "Dữ liệu không hợp lệ, vui lòng kiểm tra lại."
+          );
+        case 401:
+          throw new Error(
+            data?.message || "Mã OTP không hợp lệ hoặc đã hết hạn."
+          );
+        default:
+          throw new Error(
+            data?.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau."
+          );
+      }
+    }
+    throw new Error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.");
+  }
 };

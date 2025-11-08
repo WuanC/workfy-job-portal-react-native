@@ -107,6 +107,18 @@ export const BenefitType = {
   CHILD_CARE: "Chăm sóc trẻ",
   OTHER: "Khác",
 };
+export const ApplicationStatus = {
+  UNREAD: "Hồ sơ mới gửi, chưa được nhà tuyển dụng đọc.",
+  VIEWED: "Nhà tuyển dụng đã mở và xem hồ sơ.",
+  EMAILED: "Đã liên hệ ứng viên qua email.",
+  SCREENING: "Đang sàng lọc hồ sơ.",
+  SCREENING_PENDING: "Đã sàng lọc, đang chờ quyết định tiếp theo.",
+  INTERVIEW_SCHEDULING: "Đang lên lịch phỏng vấn.",
+  INTERVIEWED_PENDING: "Đã phỏng vấn, chờ quyết định.",
+  OFFERED: "Đã gửi offer cho ứng viên.",
+  REJECTED: "Từ chối hồ sơ.",
+};
+
 // ===== UTILS =====
 
 /**
@@ -131,3 +143,4 @@ export const getAgeTypeLabel = (ageType?: string) => AgeType[ageType as keyof ty
 export const getJobStatusLabel = (status?: string) => JobStatus[status as keyof typeof JobStatus] || "Chưa cập nhật";
 export const getBenefitTypeLabel = (status?: string) => BenefitType[status as keyof typeof BenefitType] || "Chưa cập nhật";
 export const getSortTypeLabel = (status?: string) => Sort[status as keyof typeof Sort] || "createdAt";
+export const getApplicationStatusLabel = (status?: string) => ApplicationStatus[status as keyof typeof ApplicationStatus] || "Chưa cập nhật";

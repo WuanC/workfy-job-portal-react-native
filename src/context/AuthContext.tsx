@@ -30,6 +30,8 @@ const AuthContext = createContext<AuthContextType>({
     logout: async () => { },
 });
 
+let setUserOutContext: (user: User | null) => void;
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -44,7 +46,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (token && role) {
             try {
                 if (role === "employee") {
+                    console.log("employee")
                     const user = await getProfile();
+                                        console.log("employee2")
                     setUser({ ...user, role });
                 }
                 else if (role === "employer") {
@@ -52,6 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     setUser({ ...employer, role });
                 }
             } catch {
+                console.log("k co")
                 await AsyncStorage.multiRemove(["accessToken", "refreshToken", "role"]);
             }
         }

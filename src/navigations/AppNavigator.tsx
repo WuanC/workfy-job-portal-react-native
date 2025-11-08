@@ -7,6 +7,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { TouchableOpacity, TouchableOpacityProps, Alert, View, ActivityIndicator, Text } from "react-native";
 import * as Linking from "expo-linking";
+import { colors } from "../theme/colors";
+import { spacing } from "../theme/spacing";
 
 // 🔗 Navigation Ref để điều hướng bên ngoài
 import { navigationRef } from "./NavigationRef";
@@ -48,6 +50,8 @@ import UpdateCompanyMedia from "../screens/Employer/UpdateCompanyMedia";
 import UpdateJobScreen from "../screens/Employer/UpdateJobScreen";
 import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
 import { useAuth } from "../context/AuthContext";
+import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
+import ResetPasswordScreen from "../screens/Auth/ResetPasswordScreen";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -130,15 +134,15 @@ const MainAppEmployee = () => (
     screenOptions={({ route }) => ({
       headerShown: false,
       tabBarShowLabel: true,
-      tabBarActiveTintColor: "#007AFF",
-      tabBarInactiveTintColor: "#555",
+      tabBarActiveTintColor: colors.primary.start,
+      tabBarInactiveTintColor: colors.text.tertiary,
       tabBarStyle: {
         height: 60,
-        paddingBottom: 5,
-        paddingTop: 5,
+        paddingBottom: spacing.sm,
+        paddingTop: spacing.sm,
         borderTopWidth: 1,
-        borderTopColor: "#ddd",
-        backgroundColor: "#fff",
+        borderTopColor: colors.border.light,
+        backgroundColor: colors.surface,
       },
       tabBarButton: (props) => (
         <TouchableOpacity {...(props as TouchableOpacityProps)} activeOpacity={1} />
@@ -173,15 +177,15 @@ const MainAppEmployer = () => (
     screenOptions={({ route }) => ({
       headerShown: false,
       tabBarShowLabel: true,
-      tabBarActiveTintColor: "#007AFF",
-      tabBarInactiveTintColor: "#555",
+      tabBarActiveTintColor: colors.primary.start,
+      tabBarInactiveTintColor: colors.text.tertiary,
       tabBarStyle: {
         height: 60,
-        paddingBottom: 5,
-        paddingTop: 5,
+        paddingBottom: spacing.sm,
+        paddingTop: spacing.sm,
         borderTopWidth: 1,
-        borderTopColor: "#ddd",
-        backgroundColor: "#fff",
+        borderTopColor: colors.border.light,
+        backgroundColor: colors.surface,
       },
       tabBarButton: (props) => (
         <TouchableOpacity {...(props as TouchableOpacityProps)} activeOpacity={1} />
@@ -213,13 +217,13 @@ const AppNavigator = () => {
       <View
         style={{
           flex: 1,
-          backgroundColor: "#000",
+          backgroundColor: "#000000",
           justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <ActivityIndicator size="large" color="#00bcd4" />
-        <Text style={{ color: "#fff", marginTop: 12, fontSize: 16 }}>
+        <ActivityIndicator size="large" color={colors.primary.start} />
+        <Text style={{ color: colors.text.secondary, marginTop: 12, fontSize: 16 }}>
           Đang tải dữ liệu người dùng...
         </Text>
       </View>
@@ -229,10 +233,10 @@ const AppNavigator = () => {
 
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#000000ff" }} edges={["top", "left", "right", "bottom"]}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#000000" }} edges={["top", "left", "right", "bottom"]}>
           <NavigationContainer>
             <RootStack.Navigator
-              screenOptions={{ headerShown: false }}
+              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000000" } }}
             >
               {/* Auth */}
               {/* Nếu chưa đăng nhập */}
@@ -245,6 +249,8 @@ const AppNavigator = () => {
                   <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
                   <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
                   <RootStack.Screen name="MainApp" component={MainAppEmployee} />
+                  <RootStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                  <RootStack.Screen name="ResetPassword" component={ResetPasswordScreen} />
                 </>
               ) : user?.role === "employer" ? (
                 // Nếu là nhà tuyển dụng

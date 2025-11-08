@@ -19,8 +19,8 @@ import { loginEmployer } from "../../services/authService";
 
 type MainNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "Login",
-  "Register"
+  "Login" |
+  "Register" | "ForgotPassword"
 >;
 
 const JobSeekerLoginScreen = () => {
@@ -94,7 +94,9 @@ const JobSeekerLoginScreen = () => {
           />
           <Text style={styles.remember}>Remember me</Text>
         </View>
-        <Text style={styles.forgot}>Forgot password?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: true })}>
+          <Text style={styles.forgot}>Forgot password?</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Sign in button */}

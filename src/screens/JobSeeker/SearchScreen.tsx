@@ -1,348 +1,274 @@
 import React, { useEffect, useState } from "react";
 import {
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    StyleSheet,
-    ScrollView,
-    ActivityIndicator,
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../../types/navigation";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import SearchBar from "../../components/SearchBar";
 import JobCard from "../../components/JobCard";
-import { CategoryJob, getAllIndustries, getIndustriesJobCount, Industry } from "../../services/industryService"; // 👈 import đúng API của bạn
-import { AdvancedJobQuery, getAdvancedJobs } from "../../services/jobService";
-import { getEnumOptions, getSortTypeLabel, Sort } from "../../utilities/constant";
+import { RootStackParamList } from "../../types/navigation";
+import { colors, gradients } from "../../theme/colors";
+import { spacing } from "../../theme/spacing";
+import {
+  getIndustriesJobCount,
+  CategoryJob,
+} from "../../services/industryService";
+import {
+  AdvancedJobQuery,
+  getAdvancedJobs,
+} from "../../services/jobService";
 
 type FilterNavigationProp = NativeStackNavigationProp<
-    RootStackParamList,
-    "SearchFilter"
+  RootStackParamList,
+  "SearchFilter"
 >;
 
 const SearchScreen = ({ route }: any) => {
-    const initialTab = (route.params as any)?.initialTab || "jobs";
+  const initialTab = route?.params?.initialTab || "jobs";
+  const navigation = useNavigation<FilterNavigationProp>();
 
+  const [activeTab, setActiveTab] = useState<"jobs" | "industries">(initialTab);
+  const [searchText, setSearchText] = useState("");
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [categoryJobs, setCategoryJobs] = useState<CategoryJob[]>([]);
+  const [advanceFilter, setAdvanceFilter] = useState<AdvancedJobQuery>({
+    sort: "createdAt",
+  });
+  const [loading, setLoading] = useState(false);
 
-    const [advanceFilter, setAdvanceFilter] = useState<AdvancedJobQuery | null>(null);
-    const navigation = useNavigation<FilterNavigationProp>();
-    const [activeTab, setActiveTab] = useState<"jobs" | "industries">(initialTab);
+  // 🟢 Gọi API job khi filter thay đổi
+  useEffect(() => {
+    if (activeTab === "jobs") {
+      fetchFilteredJobs(advanceFilter);
+    }
+  }, [advanceFilter, activeTab]);
 
-    // --- Jobs demo ---
-    const [searchText, setSearchText] = useState<string>("")
-    const [jobs, setJobs] = useState<any[]>([]);
+  // 🟢 Gọi API ngành nghề khi chuyển tab
+  useEffect(() => {
+    if (activeTab === "industries") {
+      fetchCategoryJobs();
+    }
+  }, [activeTab]);
 
-    // --- Industries ---
-    const [categoryJobs, setCategoryJobs] = useState<CategoryJob[]>([]);
-    const [loading, setLoading] = useState(false);
-    useEffect(() => {
-        if (activeTab === "industries") {
-            fetchCategoryJobs();
-        }
-    }, [activeTab]);
-    useEffect(() => {
-        if (advanceFilter) {
-            fetchFilteredJobs(advanceFilter);
-        }
-    }, [advanceFilter]);
-    useEffect(() => {
-        // Nếu chưa có bộ lọc nào, tạo mặc định
-        if (!advanceFilter) {
-            setAdvanceFilter({ sort: "createdAt" });
-        }
-    }, []);
-    const fetchFilteredJobs = async (filter: any) => {
-        if (!filter.keyword) filter.keyword = "";
-        console.log(filter.keyword)
-        try {
-            setLoading(true);
-            const data = await getAdvancedJobs(filter);
-            setJobs(data.items);
-        } catch (error) {
-            console.error("❌ Lỗi khi lấy danh sách công việc đã lọc:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-    const fetchCategoryJobs = async () => {
-        try {
-            setLoading(true);
-            const data = await getIndustriesJobCount(); // ⬅️ gọi API bạn viết sẵn
-            setCategoryJobs(data);
-        } catch (error) {
-            console.error("❌ Lỗi khi load ngành nghề:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchFilteredJobs = async (filter: AdvancedJobQuery) => {
+    try {
+      setLoading(true);
+      const data = await getAdvancedJobs(filter);
+      setJobs(data.items || []);
+    } catch (e) {
+      console.error("fetchFilteredJobs error:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <View style={styles.container}>
-            {/* 🔍 Thanh tìm kiếm */}
-            <SearchBar
-                placeholder="Tìm kiếm công việc, công ty..."
-                value={searchText}
-                onChangeText={(text) => {
-                    setSearchText(text)
-                    setAdvanceFilter((prev) => ({
-                        ...prev,
-                        keyword: text,
-                    }));
-                }}
-                onSubmit={() => {
-                    if (advanceFilter) fetchFilteredJobs(advanceFilter);
-                }}
+  const fetchCategoryJobs = async () => {
+    try {
+      setLoading(true);
+      const data = await getIndustriesJobCount();
+      setCategoryJobs(data || []);
+    } catch (e) {
+      console.error("fetchCategoryJobs error:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* 🔍 Thanh tìm kiếm */}
+      <View style={styles.searchContainer}>
+        <SearchBar
+          placeholder="Tìm kiếm công việc, công ty..."
+          value={searchText}
+          onChangeText={(text) => setSearchText(text)}
+          onSubmit={() =>
+            setAdvanceFilter((prev) => ({ ...prev, keyword: searchText }))
+          }
+        />
+      </View>
+
+      {/* 🧭 Tabs */}
+      <View style={styles.tabContainer}>
+        {["jobs", "industries"].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.activeTab]}
+            onPress={() => setActiveTab(tab as any)}
+          >
+            <Ionicons
+              name={tab === "jobs" ? "briefcase" : "grid"}
+              size={18}
+              color={activeTab === tab ? "#fff" : "#666"}
             />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.activeTabText,
+              ]}
+            >
+              {tab === "jobs" ? "Công việc" : "Ngành nghề"}
+            </Text>
+          </TouchableOpacity>
+        ))}
 
-            {/* Tabs */}
-            <View style={styles.tabContainer}>
-                <View style={styles.tabRow}>
-                    <TouchableOpacity
-                        style={activeTab === "jobs" ? styles.activeTab : styles.inactiveTab}
-                        onPress={() => setActiveTab("jobs")}
-                    >
-                        <Text
-                            style={
-                                activeTab === "jobs"
-                                    ? styles.activeTabText
-                                    : styles.inactiveTabText
-                            }
-                        >
-                            Công việc
-                        </Text>
-                    </TouchableOpacity>
+        {/* ⚙️ Nút bộ lọc */}
+        <TouchableOpacity
+          style={styles.filterBtn}
+          onPress={() =>
+            navigation.navigate("SearchFilter", {
+              currentFilter: advanceFilter,
+              onApply: (f: any) => setAdvanceFilter(f),
+            })
+          }
+        >
+          <LinearGradient
+            colors={gradients.sunnyYellow as any}
+            style={styles.filterGradient}
+          >
+            <Ionicons name="options" size={20} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
-                    <TouchableOpacity
-                        style={
-                            activeTab === "industries"
-                                ? styles.activeTab
-                                : styles.inactiveTab
-                        }
-                        onPress={() => setActiveTab("industries")}
-                    >
-                        <Text
-                            style={
-                                activeTab === "industries"
-                                    ? styles.activeTabText
-                                    : styles.inactiveTabText
-                            }
-                        >
-                            Ngành nghề
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
+      {/* 🧩 Nội dung */}
+      {loading ? (
+        <Loader />
+      ) : activeTab === "jobs" ? (
+        <FlatList
+          data={jobs}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <JobCard
+              id={item.id}
+              logo_path={item.avatarUrl}
+              job_title={item.jobTitle}
+              company_name={item.companyName}
+              job_location={item.jobLocations[0]?.province?.name}
+              salary_range={
+                item.salaryType === "RANGE"
+                  ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
+                  : item.salaryType === "NEGOTIABLE"
+                  ? "Thỏa thuận"
+                  : "Không rõ"
+              }
+              time_passed={item.expirationDate}
+            />
+          )}
+          contentContainerStyle={{ padding: spacing.md }}
+        />
+      ) : (
+        <ScrollView contentContainerStyle={{ padding: spacing.md }}>
+          {categoryJobs.map((cat) => (
+            <View key={cat.id} style={styles.category}>
+              <Text style={styles.categoryTitle}>
+                {cat.name} ({cat.industries.length})
+              </Text>
+              {cat.industries.map((ind) => (
                 <TouchableOpacity
-                    style={styles.inactiveTab}
-                    onPress={() =>
-                        navigation.navigate("SearchFilter", {
-                            currentFilter: advanceFilter,
-                            onApply: (newFilter: any) => {
-                                setAdvanceFilter(newFilter);
-                            },
-                        })
-                    }
+                  key={ind.id}
+                  style={styles.industryCard}
+                  onPress={() => {
+                    const f = { ...advanceFilter, industryIds: [ind.id] };
+                    setAdvanceFilter(f);
+                    setActiveTab("jobs");
+                  }}
                 >
-                    <Ionicons name="filter" size={25} color="black" style={styles.icon} />
+                  <Ionicons
+                    name="briefcase-outline"
+                    size={18}
+                    color={colors.primary.start}
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={styles.industryName}>{ind.name}</Text>
+                  <Text style={styles.jobCount}>{ind.jobCount}</Text>
                 </TouchableOpacity>
+              ))}
             </View>
-
-            {/* 🔄 Nội dung thay đổi theo tab */}
-            {activeTab === "jobs" ? (
-                <View style={styles.listContainer}>
-                    <View style={styles.headerRow}>
-                        <Text style={styles.countText}>{jobs.length} việc làm</Text>
-                        <Text style={styles.notifyText}>Tạo thông báo</Text>
-                    </View>
-
-                    <FlatList
-                        data={jobs}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <JobCard
-                                id={item.id}
-                                logo_path={item.avatarUrl}
-                                job_title={item.jobTitle}
-                                company_name={item.companyName}
-                                job_location={item.jobLocations[0].province.name}
-                                salary_range={
-                                    item.salaryType === "RANGE"
-                                        ? `${item.minSalary?.toLocaleString()} ${item.salaryUnit}  - ${item.maxSalary?.toLocaleString()} ${item.salaryUnit} `
-                                        : item.salaryType === "GREATER_THAN"
-                                            ? `Trên ${item.minSalary?.toLocaleString()}`
-                                            : item.salaryType === "NEGOTIABLE"
-                                                ? "Thỏa thuận"
-                                                : item.salaryType === "COMPETITIVE"
-                                                    ? "Cạnh tranh"
-                                                    : "Không rõ"
-                                }
-                                time_passed={item.expirationDate}
-                            />
-                        )}
-                        contentContainerStyle={{ paddingBottom: 80 }}
-                        showsVerticalScrollIndicator={false}
-                    />
-                </View>
-            ) : (
-                <ScrollView
-                    style={styles.industryContainer}
-                    contentContainerStyle={{ paddingBottom: 30 }}
-                >
-                    {loading ? (
-                        <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />
-                    ) : (
-                        categoryJobs.map((category) => (
-                            <View key={category.id} style={styles.categoryBlock}>
-                                <Text style={styles.categoryTitle}>
-                                    {category.name} ({category.industries.length})
-                                </Text>
-
-                                {category.industries.map((industry) => (
-                                    <TouchableOpacity
-                                        key={`${category.id}-${industry.id}`}
-                                        style={styles.industryCard}
-                                        onPress={() => {
-                                            const newFilter = {
-                                                ...advanceFilter,
-                                                industryIds: [industry.id],
-                                            };
-                                            setAdvanceFilter(newFilter);
-                                            setActiveTab("jobs");
-                                            fetchFilteredJobs(newFilter);
-                                        }}
-                                    >
-                                        <View style={styles.iconBox}>
-                                            <Ionicons name="briefcase-outline" size={22} color="#007bff" />
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <Text style={styles.industryName}>
-                                                {industry.name}{" "}
-                                                <Text style={{ color: "#007bff" }}>
-                                                    ({industry.jobCount})
-                                                </Text>
-                                            </Text>
-                                            {industry.engName && (
-                                                <Text style={styles.industryEng}>{industry.engName}</Text>
-                                            )}
-                                        </View>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        ))
-                    )}
-                </ScrollView>
-            )}
-        </View>
-    );
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  );
 };
+
+const Loader = () => (
+  <View style={styles.loader}>
+    <ActivityIndicator size="large" color={colors.primary.start} />
+    <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+  </View>
+);
 
 export default SearchScreen;
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#fff",
-    },
-    tabContainer: {
-        justifyContent: "space-between",
-        flexDirection: "row",
-        marginHorizontal: 10,
-    },
-    tabRow: {
-        flexDirection: "row",
-        marginTop: 8,
-        marginBottom: 12,
-    },
-    activeTab: {
-        backgroundColor: "#e0f0ff",
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 6,
-        marginRight: 8,
-    },
-    inactiveTab: {
-        paddingHorizontal: 12,
-        borderRadius: 6,
-        paddingVertical: 6,
-        marginRight: 8,
-    },
-    activeTabText: {
-        color: "#007bff",
-        fontWeight: "600",
-    },
-    inactiveTabText: {
-        color: "#333",
-    },
-    icon: {
-        justifyContent: "center",
-    },
-    listContainer: {
-        flex: 1,
-        backgroundColor: "#f8fafc",
-        paddingTop: 15,
-        marginTop: 10,
-        paddingHorizontal: 10,
-    },
-    headerRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 8,
-    },
-    countText: {
-        fontSize: 14,
-        fontWeight: "500",
-        color: "#333",
-    },
-    notifyText: {
-        fontSize: 14,
-        color: "#007bff",
-    },
-    industryContainer: {
-        flex: 1,
-        marginTop: 10,
-    },
-    categoryBlock: {
-        marginBottom: 16,
-    },
-    categoryTitle: {
-        fontSize: 16,
-        fontWeight: "700",
-        color: "#222",
-        marginBottom: 6,
-        marginLeft: 4,
-    },
-    industryCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#F8FAFD",
-        borderWidth: 1,
-        borderColor: "#E0E7F0",
-        borderRadius: 10,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        marginBottom: 8,
-    },
-    iconBox: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
-        backgroundColor: "#E6F0FF",
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: 10,
-    },
-    industryName: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#333",
-    },
-    industryEng: {
-        fontSize: 13,
-        color: "#666",
-        marginTop: 2,
-    },
+  container: { flex: 1, backgroundColor: colors.background },
+  searchContainer: {
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+  },
+  tabContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.md,
+    marginVertical: spacing.sm,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "#f3f3f3",
+    marginRight: 6,
+    gap: 6,
+  },
+  activeTab: {
+    backgroundColor: colors.primary.start,
+  },
+  tabText: { fontSize: 14, fontWeight: "600", color: "#666" },
+  activeTabText: { color: "#fff" },
+  filterBtn: { marginLeft: 8 },
+  filterGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loader: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  loadingText: { marginTop: 8, color: "#777" },
+  category: { marginBottom: spacing.md },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.text.primary,
+    marginBottom: 8,
+  },
+  industryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  industryName: { flex: 1, fontWeight: "600", color: "#333" },
+  jobCount: { color: colors.primary.start, fontWeight: "700" },
 });

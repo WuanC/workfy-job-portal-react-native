@@ -5,6 +5,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+//import { setUserOutsideContext } from "../context/AuthContext";
 
 /**
  * ===============================
@@ -12,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * ===============================
  */
 const apiInstance: AxiosInstance = axios.create({
-  baseURL: "http://192.168.0.103:8080/workify/api/v1",
+  baseURL: "http://192.168.0.102:8080/workify/api/v1",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -63,23 +64,24 @@ apiInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    if (originalRequest.url?.endsWith("/sign-in")) {
+    if (originalRequest.url?.endsWith("/sign-in") || originalRequest.url?.endsWith("/forgot-password") || originalRequest.url?.endsWith("/reset-password") || originalRequest.url?.endsWith("/refresh-token")) {
       return Promise.reject(error);
     }
+    console.log("a")
     // Nếu token hết hạn
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
+      console.log("b")
       if (!isRefreshing) {
         isRefreshing = true;
         const refreshToken = await AsyncStorage.getItem("refreshToken");
-
+        console.log(refreshToken)
         if (refreshToken) {
           try {
             const res = await apiInstance.post("/auth/users/refresh-token", {}, {
               headers: { "Y-Token": refreshToken },
             });
-
+            console.log("d")
             const newAccessToken: string = res.data.data.accessToken;
             const newRefreshToken: string = res.data.data.refreshToken;
 
@@ -95,10 +97,13 @@ apiInstance.interceptors.response.use(
             return apiInstance(originalRequest);
           } catch (refreshError) {
             isRefreshing = false;
+            console.log("e")
             await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
+            //setUserOutsideContext(null);
             console.warn("⚠️ Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
           }
         } else {
+          console.log("f")
           console.warn("⚠️ Không có refresh token, cần đăng nhập lại.");
         }
       }

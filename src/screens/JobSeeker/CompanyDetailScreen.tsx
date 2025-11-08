@@ -164,75 +164,77 @@ const CompanyDetailScreen = ({ route }: any) => {
         {/* Content */}
         {activeTab === "about" ? (
           <View style={styles.contentContainer}>
-            <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
-            <Text style={styles.description}>
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
               {company?.aboutCompany ? (
                 <RenderHTML
                   contentWidth={width}
                   source={{ html: company.aboutCompany }}
                   tagsStyles={{
-                    p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
+                    p: {
+                      color: "#374151",
+                      fontSize: 14,
+                      lineHeight: 22,
+                      textAlign: "justify",
+                      marginBottom: 8,
+                    },
                     b: { fontWeight: "bold" },
                     strong: { fontWeight: "bold" },
                     i: { fontStyle: "italic" },
                   }}
                 />
               ) : (
-                <Text style={{ color: "#555" }}>Chưa có mô tả về công ty.</Text>
+                <Text style={styles.emptyText}>Chưa có mô tả về công ty.</Text>
               )}
-            </Text>
+            </View>
+            <View style={styles.sectionCard}>
+              {/* Card: Phương tiện & Liên hệ */}
+              <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
 
-            <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
-            {company?.websiteUrls && company.websiteUrls.length > 0 ? (
-              company.websiteUrls.map((url: string, index: number) => (
-                <View style={styles.infoRow} key={index}>
-                  <Ionicons name="globe-outline" size={18} color="#007bff" />
-                  <Text style={styles.infoText}>{url}</Text>
-                </View>
-              ))
-            ) : (
-              <Text style={{ color: "#555", marginVertical: 4 }}>Không có website</Text>
-            )}
+              <View style={styles.contactList}>
+                {company?.websiteUrls?.length > 0 ? (
+                  company.websiteUrls.map((url: string, index: number) => (
+                    <View style={styles.contactRow} key={`website-${index}`}>
+                      <Text style={styles.contactLabel}>🌐 Website</Text>
+                      <Text style={styles.contactValue}>{url}</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.emptyText}>Không có website</Text>
+                )}
 
-            {/* 🌍 Facebook */}
-            {company?.facebookUrl && (
-              <View style={styles.infoRow}>
-                <Ionicons name="logo-facebook" size={18} color="#007bff" />
-                <Text style={styles.infoText}>{company.facebookUrl}</Text>
+                {company?.facebookUrl && (
+                  <View style={styles.contactRow}>
+                    <Text style={styles.contactLabel}>📘 Facebook</Text>
+                    <Text style={styles.contactValue}>{company.facebookUrl}</Text>
+                  </View>
+                )}
+                {company?.linkedinUrl && (
+                  <View style={styles.contactRow}>
+                    <Text style={styles.contactLabel}>💼 LinkedIn</Text>
+                    <Text style={styles.contactValue}>{company.linkedinUrl}</Text>
+                  </View>
+                )}
+                {company?.youtubeUrl && (
+                  <View style={styles.contactRow}>
+                    <Text style={styles.contactLabel}>▶️ YouTube</Text>
+                    <Text style={styles.contactValue}>{company.youtubeUrl}</Text>
+                  </View>
+                )}
+                {company?.googleUrl && (
+                  <View style={styles.contactRow}>
+                    <Text style={styles.contactLabel}>🟢 Google</Text>
+                    <Text style={styles.contactValue}>{company.googleUrl}</Text>
+                  </View>
+                )}
+                {company?.twitterUrl && (
+                  <View style={styles.contactRow}>
+                    <Text style={styles.contactLabel}>🐦 Twitter</Text>
+                    <Text style={styles.contactValue}>{company.twitterUrl}</Text>
+                  </View>
+                )}
               </View>
-            )}
-
-            {/* 💼 LinkedIn */}
-            {company?.linkedinUrl && (
-              <View style={styles.infoRow}>
-                <Ionicons name="logo-linkedin" size={18} color="#007bff" />
-                <Text style={styles.infoText}>{company.linkedinUrl}</Text>
-              </View>
-            )}
-
-            {/* 📺 YouTube */}
-            {company?.youtubeUrl && (
-              <View style={styles.infoRow}>
-                <Ionicons name="logo-youtube" size={18} color="#007bff" />
-                <Text style={styles.infoText}>{company.youtubeUrl}</Text>
-              </View>
-            )}
-
-            {/* 🟢 Google */}
-            {company?.googleUrl && (
-              <View style={styles.infoRow}>
-                <Ionicons name="logo-google" size={18} color="#007bff" />
-                <Text style={styles.infoText}>{company.googleUrl}</Text>
-              </View>
-            )}
-
-            {/* 🐦 Twitter */}
-            {company?.twitterUrl && (
-              <View style={styles.infoRow}>
-                <Ionicons name="logo-twitter" size={18} color="#007bff" />
-                <Text style={styles.infoText}>{company.twitterUrl}</Text>
-              </View>
-            )}
+            </View>
 
           </View>
         ) : (
@@ -283,14 +285,15 @@ const CompanyDetailScreen = ({ route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f8f9fb",
   },
+
   bannerContainer: {
     position: "relative",
   },
   banner: {
     width: "100%",
-    height: 180,
+    height: 200,
     resizeMode: "cover",
   },
   safeArea: {
@@ -303,106 +306,165 @@ const styles = StyleSheet.create({
   backButton: {
     marginTop: Platform.OS === "ios" ? 10 : 30,
     marginLeft: 15,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 22,
     padding: 6,
     alignSelf: "flex-start",
-    zIndex: 10,
-    elevation: 10,
   },
+
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
-    marginTop: 25,
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: -40,
+    borderRadius: 20,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   logo: {
-    width: 70,
-    height: 70,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#fff",
+    width: 68,
+    height: 68,
+    borderRadius: 16,
     backgroundColor: "#fff",
+    marginRight: 12,
   },
   companyName: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "700",
+    color: "#1f2937",
   },
   companyLocation: {
     fontSize: 14,
-    color: "#555",
+    color: "#6b7280",
     marginTop: 2,
   },
   companySize: {
     fontSize: 13,
-    color: "#777",
+    color: "#9ca3af",
     marginTop: 2,
   },
+
   tabContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginVertical: 15,
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginTop: 18,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
   },
   tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 25,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 16,
   },
   activeTab: {
-    backgroundColor: "#007bff20",
+    backgroundColor: "#e6f0ff",
   },
   tabText: {
-    color: "#333",
+    fontSize: 14,
+    color: "#374151",
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#007bff",
+    color: "#1d4ed8",
     fontWeight: "700",
   },
+
   contentContainer: {
-    paddingHorizontal: 15,
-    paddingBottom: 30,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+  },
+
+  sectionCard: {
+    // backgroundColor: "#fff",
+    // borderRadius: 20,
+    // padding: 16,
+     marginBottom: 16,
+    // shadowColor: "#000",
+    // shadowOpacity: 0.05,
+    // shadowRadius: 6,
+    // shadowOffset: { width: 0, height: 2 },
+    // elevation: 2,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#333",
-    marginTop: 10,
-    marginBottom: 5,
+    color: "#1f2937",
+    marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: "#444",
-    lineHeight: 20,
+    color: "#374151",
+    lineHeight: 22,
     textAlign: "justify",
   },
+
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 4,
+    backgroundColor: "#f9fafb",
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginVertical: 5,
   },
   infoText: {
     marginLeft: 8,
-    color: "#007bff",
+    color: "#2563eb",
+    fontSize: 13,
   },
-  photoRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 8,
-  },
-  photo: {
-    width: 100,
-    height: 70,
-    borderRadius: 8,
-  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f8f9fb",
   },
+  emptyText: {
+    color: "#6b7280",
+    fontSize: 14,
+    marginTop: 1,
+  },
+
+  contactList: {
+    marginTop: 8,
+  },
+
+  contactRow: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginVertical: 4,
+    flexDirection: "column",
+  },
+
+  contactLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#1f2937",
+    marginBottom: 2,
+  },
+
+  contactValue: {
+    fontSize: 13,
+    color: "#2563eb",
+    lineHeight: 18,
+    flexShrink: 1,
+  },
+
 });
+
 
 export default CompanyDetailScreen;

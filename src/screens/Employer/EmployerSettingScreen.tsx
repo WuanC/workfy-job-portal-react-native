@@ -10,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { updateEmployerPassword } from "../../services/employerService"; // 👈 thêm import
 import { useAuth } from "../../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
@@ -82,27 +83,55 @@ const EmployerSettingScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Cài đặt</Text>
-      <Text style={styles.subHeader}>Quản lý cài đặt cá nhân và tổ chức của bạn.</Text>
+      {/* Modern Header */}
+      <LinearGradient
+        colors={["#667eea", "#764ba2"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <Text style={styles.header}>Cài đặt</Text>
+        <Text style={styles.subHeader}>Quản lý cài đặt cá nhân và tổ chức của bạn.</Text>
+      </LinearGradient>
 
-      {/* TAB */}
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          onPress={() => setActiveTab("profile")}
-          style={[styles.tabButton, activeTab === "profile" && styles.activeTab]}
-        >
-          <Text style={[styles.tabText, activeTab === "profile" && styles.activeText]}>
-            Đăng nhập và hồ sơ
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab("notification")}
-          style={[styles.tabButton, activeTab === "notification" && styles.activeTab]}
-        >
-          <Text style={[styles.tabText, activeTab === "notification" && styles.activeText]}>
-            Thông báo
-          </Text>
-        </TouchableOpacity>
+      {/* Modern Segmented Control */}
+      <View style={styles.tabContainer}>
+        <View style={styles.tabRow}>
+          <TouchableOpacity
+            onPress={() => setActiveTab("profile")}
+            style={[styles.tabButton, activeTab === "profile" && styles.activeTab]}
+          >
+            {activeTab === "profile" ? (
+              <LinearGradient
+                colors={["#667eea", "#764ba2"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.activeTabGradient}
+              >
+                <Text style={styles.activeText}>Đăng nhập và hồ sơ</Text>
+              </LinearGradient>
+            ) : (
+              <Text style={styles.tabText}>Đăng nhập và hồ sơ</Text>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab("notification")}
+            style={[styles.tabButton, activeTab === "notification" && styles.activeTab]}
+          >
+            {activeTab === "notification" ? (
+              <LinearGradient
+                colors={["#667eea", "#764ba2"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.activeTabGradient}
+              >
+                <Text style={styles.activeText}>Thông báo</Text>
+              </LinearGradient>
+            ) : (
+              <Text style={styles.tabText}>Thông báo</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.scroll}>
@@ -134,8 +163,15 @@ const EmployerSettingScreen = () => {
                 onChangeText={setFullName}
               />
 
-              <TouchableOpacity style={styles.primaryBtn}>
-                <Text style={styles.primaryText}>Cập nhật hồ sơ</Text>
+              <TouchableOpacity activeOpacity={0.8}>
+                <LinearGradient
+                  colors={["#667eea", "#764ba2"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.primaryBtn}
+                >
+                  <Text style={styles.primaryText}>Cập nhật hồ sơ</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
 
@@ -167,13 +203,20 @@ const EmployerSettingScreen = () => {
               />
 
               <TouchableOpacity
-                style={[styles.primaryBtn, loading && { opacity: 0.6 }]}
                 onPress={handleChangePassword}
                 disabled={loading}
+                activeOpacity={0.8}
               >
-                <Text style={styles.primaryText}>
-                  {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
-                </Text>
+                <LinearGradient
+                  colors={loading ? ["#999", "#999"] : ["#667eea", "#764ba2"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.primaryBtn}
+                >
+                  <Text style={styles.primaryText}>
+                    {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                  </Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
 
@@ -182,13 +225,18 @@ const EmployerSettingScreen = () => {
 
 
               <TouchableOpacity
-                style={[styles.primaryBtn, loading && { opacity: 0.6 }]}
                 onPress={handleLogout}
                 disabled={loading}
+                activeOpacity={0.8}
               >
-                <Text style={styles.primaryText}>
-                  Đăng xuất
-                </Text>
+                <LinearGradient
+                  colors={["#f093fb", "#f5576c"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.primaryBtn}
+                >
+                  <Text style={styles.primaryText}>Đăng xuất</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </>
@@ -207,28 +255,85 @@ export default EmployerSettingScreen;
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  header: { fontSize: 22, fontWeight: "700", color: "#202124", marginTop: 16, marginHorizontal: 16 },
-  subHeader: { color: "#5f6368", marginHorizontal: 16, marginBottom: 16 },
-  tabRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e0e0e0" },
-  tabButton: { flex: 1, alignItems: "center", paddingVertical: 12 },
-  tabText: { fontSize: 15, color: "#5f6368" },
-  activeTab: { borderBottomWidth: 2, borderBottomColor: "#1a73e8" },
-  activeText: { color: "#1a73e8", fontWeight: "600" },
+  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 32,
+    paddingTop: 50,
+  },
+  header: { 
+    fontSize: 28, 
+    fontWeight: "800", 
+    color: "#ffffff",
+    marginBottom: 8,
+  },
+  subHeader: { 
+    color: "rgba(255, 255, 255, 0.9)", 
+    fontSize: 15,
+  },
+  tabContainer: {
+    paddingHorizontal: 20,
+    marginTop: -20,
+    marginBottom: 20,
+  },
+  tabRow: { 
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  tabButton: { 
+    flex: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  activeTabGradient: {
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 12,
+  },
+  tabText: { 
+    fontSize: 14, 
+    color: "#999",
+    fontWeight: "600",
+    paddingVertical: 12,
+    textAlign: "center",
+  },
+  activeTab: {},
+  activeText: { 
+    color: "#ffffff", 
+    fontWeight: "700",
+    fontSize: 14,
+  },
   scroll: { flex: 1 },
   section: {
     backgroundColor: "#fff",
-    marginVertical: 10,
-    padding: 16,
-    borderRadius: 8,
+    marginVertical: 8,
+    padding: 20,
+    borderRadius: 20,
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-    marginHorizontal: 10,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    marginHorizontal: 20,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 4, color: "#202124" },
-  sectionDesc: { color: "#5f6368", fontSize: 14, marginBottom: 12 },
+  sectionTitle: { 
+    fontSize: 20, 
+    fontWeight: "800", 
+    marginBottom: 6, 
+    color: "#1a1a1a",
+  },
+  sectionDesc: { 
+    color: "#999", 
+    fontSize: 14, 
+    marginBottom: 16,
+  },
   avatarContainer: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
   avatarPlaceholder: {
     width: 60,
@@ -252,19 +357,24 @@ const styles = StyleSheet.create({
   label: { color: "#202124", fontWeight: "500", marginBottom: 4 },
   input: {
     borderWidth: 1,
-    borderColor: "#dadce0",
-    borderRadius: 8,
-    padding: 10,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    padding: 14,
     marginBottom: 12,
+    fontSize: 15,
+    color: "#1a1a1a",
   },
   primaryBtn: {
-    backgroundColor: "#1a73e8",
-    borderRadius: 8,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 8,
   },
-  primaryText: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  primaryText: { 
+    color: "#fff", 
+    fontWeight: "800", 
+    fontSize: 16,
+  },
   outlineBtn: {
     borderWidth: 1.5,
     borderColor: "#1a73e8",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,16 +7,24 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  Button,
+  Linking,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import Checkbox from "expo-checkbox";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as DocumentPicker from "expo-document-picker";
+import { LinearGradient } from "expo-linear-gradient";
+
 import { getUserProfile } from "../../services/employeeService";
+import {
+  applyWithFileCV,
+  applyWithLinkCV,
+  getLatestApplicationByJob,
+} from "../../services/applicationService";
 import { RootStackParamList } from "../../types/navigation";
-import { applyWithFileCV, applyWithFileCV1, applyWithLinkCV, uploadFile } from "../../services/applicationService";
+import { colors, gradients } from "../../theme/colors";
+import { spacing } from "../../theme/spacing";
+import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor";
 
 type JobSubmitSuccessNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -26,19 +34,22 @@ type JobSubmitSuccessNavigationProp = NativeStackNavigationProp<
 const JobSubmitScreen = ({ route }: any) => {
   const { jobId, jobName } = route.params as { jobId: number; jobName: string };
   const navigation = useNavigation<JobSubmitSuccessNavigationProp>();
-
+  const richCoverLetter = useRef<RichEditor>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const isInitialLoad = useRef(true);
   const [profile, setProfile] = useState<any>(null);
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [latestJob, setLatestJob] = useState<any>(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
-  const [cvUri, setCvUri] = useState<string>("");
-  const [cvFile, setFile] = useState<any>(null)
-  const [cvLink, setCvLink] = useState<string>("");
-  const [useLink, setUseLink] = useState<boolean>(false);
+  const [cvFileUri, setCvFileUri] = useState("");
+  const [cvFile, setFile] = useState<any>(null);
+
+  const [cvLink, setCvLink] = useState("");
+
+  const [useLink, setUseLink] = useState(false);
 
   const [coverContent, setCoverContent] = useState("");
-  const [saveChecked, setSaveChecked] = useState(false);
 
-  // 🔹 Lấy thông tin hồ sơ
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -49,10 +60,26 @@ const JobSubmitScreen = ({ route }: any) => {
         Alert.alert("Lỗi", "Không thể tải thông tin bản thân.");
       }
     };
+
+    const fetchLatestApplication = async () => {
+      try {
+        const latestApplication = await getLatestApplicationByJob(jobId);
+        setLatestJob(latestApplication);
+        if (latestApplication) {
+          setPhoneNumber(latestApplication.phoneNumber);
+          setCoverContent(latestApplication.coverLetter);
+          setCvLink(latestApplication.cvUrl)
+          setUseLink(true)
+        }
+      } catch {
+        Alert.alert("Lỗi", "Không thể tải đơn gần đây.");
+      }
+    };
+
     fetchProfile();
+    fetchLatestApplication();
   }, []);
 
-  // 🔹 Chọn file từ máy
   const handleUploadCV = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -60,32 +87,26 @@ const JobSubmitScreen = ({ route }: any) => {
           "application/pdf",
           "application/msword",
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "image/jpeg",
-          "image/png",
-          "image/webp",
-          "image/heic",
         ],
       });
       if (result.canceled) return;
       const file = result.assets[0];
-      setCvUri(file.uri);
+      setCvFileUri(file.uri);
       setUseLink(false);
-      setFile(file)
+      setFile(file);
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message || "Không thể tải CV lên.");
+      Alert.alert("Lỗi", err.message || "Không thể tải CV.");
     }
   };
 
-  // 🔹 Nộp đơn
   const handleSubmit = async () => {
     if (!coverContent.trim()) {
-      Alert.alert("Thiếu thông tin", "Vui lòng nhập đầy đủ thư xin việc!");
+      Alert.alert("Thiếu thông tin", "Vui lòng nhập thư xin việc!");
       return;
     }
 
-    // ✅ Sửa điều kiện kiểm tra - check cả undefined, null và empty string
-    if (!useLink && !cvUri) {
-      Alert.alert("Thiếu CV", "Vui lòng tải lên CV hoặc nhập link CV!");
+    if (!useLink && (cvFileUri == "" || cvFile == null)) {
+      Alert.alert("Thiếu CV", "Vui lòng tải lên CV hoặc nhập link!");
       return;
     }
 
@@ -95,11 +116,8 @@ const JobSubmitScreen = ({ route }: any) => {
     }
 
     try {
-      let res;
-
       if (useLink) {
-        // 🟢 Gọi API nộp bằng link
-        res = await applyWithLinkCV({
+        await applyWithLinkCV({
           fullName: profile.fullName,
           email: profile.email,
           phoneNumber,
@@ -108,10 +126,7 @@ const JobSubmitScreen = ({ route }: any) => {
           cvUrl: cvLink,
         });
       } else {
-        // 🟢 Gọi API nộp bằng file
-        console.log("📄 Đang gửi CV với URI:", cvUri); // Debug log
-
-        res = await applyWithFileCV1(
+        await applyWithFileCV(
           {
             fullName: profile.fullName,
             email: profile.email,
@@ -119,40 +134,58 @@ const JobSubmitScreen = ({ route }: any) => {
             coverLetter: coverContent,
             jobId,
           },
-          cvFile // Truyền cvUri vào đây
+          cvFile
         );
       }
-
-      console.log("✅ Ứng tuyển thành công:", res);
       navigation.replace("JobSubmitSuccess");
     } catch (error: any) {
-      console.error("❌ Lỗi khi ứng tuyển:", error);
-      Alert.alert("Lỗi", error.message || "Không thể gửi ứng tuyển, vui lòng thử lại sau.");
+      setCvFileUri("")
+      setFile(null)
+      console.error("Lỗi ứng tuyển:", error);
+      Alert.alert("Lỗi", "Không thể gửi ứng tuyển, thử lại sau.");
     }
   };
+  useEffect(() => {
+    if (isEditorReady && coverContent && isInitialLoad.current) {
+      richCoverLetter.current?.setContentHTML(coverContent);
+      isInitialLoad.current = false;
+    }
+  }, [isEditorReady, coverContent]);
 
+
+  const handleEditorReady = () => {
+    setIsEditorReady(true);
+  };
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* 🔹 Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={[styles.backBtn, { paddingVertical: 20, paddingHorizontal: 5 }]}
+          style={styles.backBtn}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <View style={{ flex: 1 }}>
+        <View>
           <Text style={styles.headerTitle}>Nộp đơn cho</Text>
           <Text style={styles.jobTitle}>{jobName}</Text>
         </View>
-          <Button title="Chọn và gửi file" onPress={uploadFile} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.form}>
-        {/* Thông tin cá nhân */}
-        <View style={styles.infoContainer}>
+      {/* 📋 Nội dung */}
+      <ScrollView
+        contentContainerStyle={{ padding: spacing.md, paddingBottom: 100 }}
+      >
+        {/* 👤 Thông tin cá nhân */}
+        <View style={styles.card}>
+          {latestJob && (
+            <Text style={styles.notice}>
+              Bạn còn {3 - latestJob.applyCount} lượt nộp cho công việc này
+            </Text>
+          )}
+
           <View style={styles.userRow}>
-            <Ionicons name="person-circle-outline" size={48} color="#555" />
+            <Ionicons name="person-circle-outline" size={50} color="#555" />
             <View>
               <Text style={styles.name}>{profile?.fullName}</Text>
               <Text style={styles.email}>{profile?.email}</Text>
@@ -160,10 +193,10 @@ const JobSubmitScreen = ({ route }: any) => {
           </View>
 
           <Text style={styles.label}>
-            Số điện thoại <Text style={{ color: "red" }}>*</Text>
+            Số điện thoại <Text style={styles.required}>*</Text>
           </Text>
           <TextInput
-            placeholder="Nhập số điện thoại của bạn"
+            placeholder="Nhập số điện thoại"
             style={styles.input}
             keyboardType="phone-pad"
             value={phoneNumber}
@@ -171,96 +204,136 @@ const JobSubmitScreen = ({ route }: any) => {
           />
         </View>
 
-        {/* Hồ sơ xin việc */}
-        <View style={styles.infoContainer}>
+        {/* 📄 Hồ sơ xin việc */}
+        <View style={styles.card}>
           <Text style={styles.sectionTitle}>Hồ sơ xin việc</Text>
-          <Text style={styles.subLabel}>
-            Nhà tuyển dụng yêu cầu hồ sơ:{" "}
-            <Text style={styles.highlight}>Tiếng Việt</Text>
-          </Text>
 
-          {/* Nhập link */}
-          <TouchableOpacity
-            style={[styles.option, useLink && styles.cellActive]}
-            onPress={() => {
-              setUseLink(true);
-              setCvUri(""); // Reset cvUri khi chuyển sang link
-            }}
-          >
-            <MaterialIcons name="link" size={24} color="#007bff" />
-            <Text style={styles.optionTitle}>Nhập link CV của bạn</Text>
-          </TouchableOpacity>
+          {latestJob?.cvUrl && (
+            <View>
+              <TouchableOpacity
+                style={[styles.option, useLink && styles.optionActive]}
+                onPress={() => {
+                  setUseLink(true);
+                }}
+              >
+                <MaterialIcons name="link" size={22} color={colors.primary.start} />
+                <Text style={styles.optionText}>Link CV của bạn</Text>
+              </TouchableOpacity>
+              {useLink == true && (
+                <TouchableOpacity
+                  style={styles.cvContainer}
+                  onPress={() => Linking.openURL(latestJob.cvUrl)}
+                >
+                  <Ionicons
+                    name="document-text-outline"
+                    size={20}
+                    color={colors.primary.start}
+                  />
+                  <Text style={styles.cvName}>
+                    {latestJob.cvUrl.split("/").pop()}
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-          {useLink && (
-            <TextInput
-              placeholder="Dán link Google Drive hoặc URL CV..."
-              value={cvLink}
-              onChangeText={setCvLink}
-              style={[styles.input, { marginTop: 8 }]}
-            />
+            </View>
           )}
 
-          {/* Tải file */}
+          {/* 🔗 Chọn cách nộp CV */}
+
+
+
           <TouchableOpacity
-            style={[styles.option, !useLink && styles.cellActive]}
+            style={[styles.option, !useLink && styles.optionActive]}
             onPress={() => {
               setUseLink(false);
-              setCvLink(""); // Reset cvLink khi chuyển sang file
             }}
           >
-            <MaterialIcons name="upload-file" size={24} color="#007bff" />
-            <Text style={styles.optionTitle}>
-              Tải lên từ điện thoại của bạn
-            </Text>
+            <MaterialIcons
+              name="upload-file"
+              size={22}
+              color={colors.primary.start}
+            />
+            <Text style={styles.optionText}>Tải lên từ thiết bị</Text>
           </TouchableOpacity>
 
           {!useLink && (
-            <View style={{ marginTop: 10 }}>
-              <TouchableOpacity style={styles.selectBtn} onPress={handleUploadCV}>
-                <Text style={{ color: "#007bff", fontWeight: "600" }}>
-                  Chọn tệp để tải lên
-                </Text>
-              </TouchableOpacity>
-              {cvUri ? (
-                <Text style={{ color: "green", marginTop: 6 }}>
-                  ✅ Đã chọn: {cvUri.split("/").pop()}
-                </Text>
-              ) : null}
-            </View>
+            <TouchableOpacity
+              style={styles.uploadBtn}
+              onPress={handleUploadCV}
+            >
+              <Text style={styles.uploadText}>Chọn tệp để tải lên</Text>
+            </TouchableOpacity>
           )}
+
+          {(cvFileUri != "" && useLink == false) ? (
+            <TouchableOpacity
+              style={styles.cvContainer}
+              onPress={() => Linking.openURL(latestJob.cvUrl)}
+            >
+              <Ionicons
+                name="document-text-outline"
+                size={20}
+                color={colors.primary.start}
+              />
+              <Text style={styles.cvName}>
+                {cvFileUri.split("/").pop()}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
-        {/* Thư xin việc - bắt buộc */}
-        <View style={styles.infoContainer}>
-          <View style={styles.letterTitleRow}>
-            <Text style={styles.sectionTitle}>
-              Thư xin việc <Text style={{ color: "red" }}>*</Text>
-            </Text>
-          </View>
-
-          <TextInput
-            placeholder="Nội dung thư"
-            value={coverContent}
-            onChangeText={setCoverContent}
-            style={[styles.input, { height: 120, textAlignVertical: "top" }]}
-            multiline
-          />
-
-          <View style={styles.checkboxRow}>
-            <Checkbox
-              value={saveChecked}
-              onValueChange={setSaveChecked}
-              color={saveChecked ? "#007bff" : undefined}
+        {/* 💌 Thư xin việc */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>
+            Thư xin việc <Text style={styles.required}>*</Text>
+          </Text>
+          <View style={styles.editorWrapper}>
+            <RichToolbar
+              editor={richCoverLetter}
+              actions={[
+                actions.setBold,
+                actions.setItalic,
+                actions.setUnderline,
+                actions.alignLeft,
+                actions.alignCenter,
+                actions.alignRight,
+                actions.alignFull,
+                actions.insertBulletsList,
+                actions.insertOrderedList,
+                actions.undo,
+                actions.redo,
+              ]}
+              iconTint="#555"
+              selectedIconTint="#007AFF"
+              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+              style={styles.toolbar}
+              iconSize={18}
             />
-            <Text style={{ marginLeft: 8 }}>Lưu thư xin việc này</Text>
+
+            <RichEditor
+              ref={richCoverLetter}
+              style={styles.editor}
+              placeholder="Nhập yêu cầu công việc..."
+              initialHeight={180}
+              editorInitializedCallback={() => handleEditorReady()}
+              onChange={(html) => setCoverContent(html)}
+            />
           </View>
         </View>
+
       </ScrollView>
 
-      {/* Nộp đơn */}
+      {/* 🟩 Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitText}>Nộp đơn ngay</Text>
+        <TouchableOpacity onPress={handleSubmit}>
+          <LinearGradient
+            colors={gradients.sunnyYellow as any}
+            style={styles.submitButton}
+          >
+
+            <Text style={styles.submitText}>Nộp đơn ngay</Text>
+
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -270,75 +343,132 @@ const JobSubmitScreen = ({ route }: any) => {
 export default JobSubmitScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#e1eff5ff" },
-  backBtn: { marginRight: 12 },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    backgroundColor: "#fff",
+    borderBottomColor: "#eee",
   },
-  headerTitle: { fontSize: 14, fontWeight: "500", color: "#333" },
-  jobTitle: { fontSize: 16, fontWeight: "700", marginTop: 4, color: "#000" },
-  form: { marginTop: 1 },
-  userRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  name: { fontSize: 16, fontWeight: "600", color: "#000" },
-  email: { fontSize: 14, color: "#666" },
-  label: { fontSize: 14, fontWeight: "500", marginTop: 12, marginBottom: 6 },
+  backBtn: { marginRight: 12 },
+  headerTitle: { fontSize: 14, color: "#555" },
+  jobTitle: { fontSize: 16, fontWeight: "700", color: "#000" },
+
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  label: { fontSize: 14, fontWeight: "600", marginTop: 8 },
+  required: { color: "red" },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
+    borderColor: "#ddd",
+    borderRadius: 8,
     padding: 10,
-    fontSize: 14,
     backgroundColor: "#fff",
+    fontSize: 14,
+    marginTop: 4,
   },
-  sectionTitle: { fontSize: 15, fontWeight: "600", marginBottom: 6 },
-  subLabel: { fontSize: 14, marginBottom: 12, color: "#555" },
-  highlight: { color: "red", fontWeight: "600" },
+  userRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+  name: { fontSize: 16, fontWeight: "600" },
+  email: { fontSize: 14, color: "#666" },
+  notice: { color: colors.primary.start, fontWeight: "600", marginBottom: 8 },
+
+  sectionTitle: { fontSize: 15, fontWeight: "700", marginBottom: 6 },
   option: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 6,
+    borderColor: "#eee",
+    borderRadius: 10,
+    padding: 12,
     marginBottom: 8,
-    backgroundColor: "#fff",
   },
-  optionTitle: { marginLeft: 8, fontSize: 14, fontWeight: "600", color: "#000" },
-  cellActive: {
-    backgroundColor: "#eaf2ff",
-    borderColor: "#007bff",
+  optionActive: {
+    backgroundColor: "#f0f6ff",
+    borderColor: colors.primary.start,
   },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#ddd" },
-  submitButton: {
-    backgroundColor: "#007bff",
-    padding: 14,
-    borderRadius: 6,
+  optionText: { marginLeft: 8, fontSize: 14, fontWeight: "600", color: "#000" },
+
+  uploadBtn: {
+    borderWidth: 1,
+    borderColor: colors.primary.start,
+    borderRadius: 8,
+    padding: 12,
     alignItems: "center",
+    marginTop: 8,
+    marginBottom: 8,
   },
-  submitText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  infoContainer: {
-    backgroundColor: "#fff",
-    marginTop: 10,
-    padding: 16,
-  },
-  letterTitleRow: {
+  uploadText: { color: colors.primary.start, fontWeight: "600" },
+  selectedFile: { color: "green", marginTop: 6 },
+
+  cvContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  checkboxRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
-  selectBtn: {
-    borderWidth: 1,
-    borderColor: "#007bff",
-    borderRadius: 6,
+    backgroundColor: "#f9f9f9",
     padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#eee",
+    marginBottom: 10,
+  },
+  cvName: {
+    flex: 1,
+    fontWeight: "600",
+    color: "#333",
+    marginLeft: 8,
+  },
+
+  checkboxRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
+
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  submitButton: {
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: "center",
-    backgroundColor: "#fff",
+  },
+  submitText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  editorWrapper: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+    marginVertical: 6,
+  },
+  toolbar: {
+    backgroundColor: "#F7F9FC",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E4E6EB",
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    minHeight: 44,
+  },
+  editor: {
+    minHeight: 180,
+    padding: 12,
+    fontSize: 15,
+    color: "#333",
+    backgroundColor: "#FFFFFF",
   },
 });

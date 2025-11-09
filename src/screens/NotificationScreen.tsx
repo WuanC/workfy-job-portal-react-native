@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../types/navigation";
@@ -36,20 +36,34 @@ const NotificationScreen = () => {
   const navigation = useNavigation<NotificationNavigationProp>();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
-  const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
 
-  // 🔹 Query để lấy danh sách thông báo
+  // 🔹 Query để lấy danh sách thông báo với infinite scroll
   const {
-    data: notificationsData,
+    data,
     isLoading,
     isRefetching,
     refetch,
-  } = useQuery({
-    queryKey: ["notifications", pageNumber],
-    queryFn: () => getNotifications(pageNumber, pageSize),
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["notifications"],
+    queryFn: ({ pageParam = 1 }) => getNotifications(pageParam, pageSize),
     enabled: isAuthenticated,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pageNumber < lastPage.totalPages) {
+        return lastPage.pageNumber + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
   });
+
+  // 🔹 Flatten tất cả notifications từ các pages
+  const notifications = useMemo(() => {
+    return data?.pages.flatMap((page) => page.items) || [];
+  }, [data]);
 
   // 🔹 Query để lấy số lượng thông báo chưa đọc
   const { data: unreadCount = 0 } = useQuery({
@@ -76,6 +90,9 @@ const NotificationScreen = () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
     },
+    onError: (error) => {
+      console.error("❌ Lỗi khi đánh dấu tất cả thông báo đã đọc:", error);
+    },
   });
 
   // 🔹 Callback khi nhận được thông báo mới từ WebSocket
@@ -89,7 +106,7 @@ const NotificationScreen = () => {
   );
 
   // 🔹 Kết nối WebSocket
-  const { connected } = useWebSocketNotifications(handleNewNotification);
+  const { connected, connectionError } = useWebSocketNotifications(handleNewNotification);
 
   // 🔹 Xử lý khi click vào một thông báo
   const handleNotificationPress = async (notification: Notification) => {
@@ -104,40 +121,87 @@ const NotificationScreen = () => {
   };
 
   // 🔹 Xử lý load more
-  const handleLoadMore = () => {
-    if (
-      notificationsData &&
-      pageNumber < notificationsData.totalPages &&
-      !isLoading
-    ) {
-      setPageNumber((prev) => prev + 1);
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // 🔹 Lấy màu sắc dựa trên type của thông báo
+  const getNotificationColor = (type: Notification['type']) => {
+    switch (type) {
+      case 'NEW_APPLICATION':
+        return {
+          border: colors.success.start,
+          background: colors.success.light + '20',
+          icon: 'person-add-outline' as const,
+        };
+      case 'APPLICATION_STATUS_UPDATE':
+        return {
+          border: colors.primary.start,
+          background: colors.primary.light + '20',
+          icon: 'checkmark-circle-outline' as const,
+        };
+      default:
+        return {
+          border: colors.primary.start,
+          background: colors.primary.light + '20',
+          icon: 'notifications-outline' as const,
+        };
     }
   };
 
   // 🔹 Render một item thông báo
   const renderNotificationItem = ({ item }: { item: Notification }) => {
     const isUnread = !item.readFlag;
+    const notificationColor = getNotificationColor(item.type);
 
     return (
       <TouchableOpacity
         style={[
           styles.notificationItem,
           isUnread && styles.notificationItemUnread,
+          { borderLeftColor: notificationColor.border },
+          isUnread && { backgroundColor: notificationColor.background },
         ]}
         onPress={() => handleNotificationPress(item)}
         activeOpacity={0.7}
       >
+        {/* Icon bên trái */}
+        <View style={[
+          styles.notificationIconContainer,
+          { backgroundColor: notificationColor.background }
+        ]}>
+          <Ionicons
+            name={notificationColor.icon}
+            size={24}
+            color={notificationColor.border}
+          />
+        </View>
+
         <View style={styles.notificationContent}>
           <View style={styles.notificationHeader}>
-            <Text style={styles.notificationTitle}>{item.title}</Text>
+            <Text style={[
+              styles.notificationTitle,
+              isUnread && styles.notificationTitleUnread
+            ]}>
+              {item.title}
+            </Text>
             {isUnread && <View style={styles.unreadDot} />}
           </View>
           <Text style={styles.notificationText} numberOfLines={2}>
             {item.content}
           </Text>
-          <Text style={styles.notificationTime}>
-            {formatNotificationTime(item.createdAt)}
-          </Text>
+          <View style={styles.notificationFooter}>
+            <Text style={styles.notificationTime}>
+              {formatNotificationTime(item.createdAt)}
+            </Text>
+            {isUnread && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>Mới</Text>
+              </View>
+            )}
+          </View>
         </View>
         <Ionicons
           name="chevron-forward"
@@ -168,10 +232,6 @@ const NotificationScreen = () => {
     });
   };
 
-  const notifications = notificationsData?.items || [];
-  const hasMore = notificationsData
-    ? pageNumber < notificationsData.totalPages
-    : false;
 
   return (
     <View style={styles.container}>
@@ -185,15 +245,38 @@ const NotificationScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thông báo</Text>
         <View style={styles.headerRight}>
-          {unreadCount > 0 && (
-            <TouchableOpacity
-              style={styles.markAllReadButton}
-              onPress={() => markAllAsReadMutation.mutate()}
-              disabled={markAllAsReadMutation.isPending}
-            >
-              <Text style={styles.markAllReadText}>Đọc tất cả</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[
+              styles.markAllReadButton,
+              markAllAsReadMutation.isPending && styles.markAllReadButtonDisabled,
+              unreadCount === 0 && styles.markAllReadButtonInactive
+            ]}
+            onPress={() => {
+              if (!markAllAsReadMutation.isPending && unreadCount > 0) {
+                markAllAsReadMutation.mutate();
+              }
+            }}
+            disabled={markAllAsReadMutation.isPending || unreadCount === 0}
+            activeOpacity={unreadCount > 0 ? 0.7 : 1}
+          >
+            {markAllAsReadMutation.isPending ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <>
+                <Ionicons 
+                  name="checkmark-done-outline" 
+                  size={18} 
+                  color={unreadCount > 0 ? "#ffffff" : colors.text.tertiary} 
+                />
+                <Text style={[
+                  styles.markAllReadText,
+                  unreadCount === 0 && styles.markAllReadTextInactive
+                ]}>
+                  Đọc tất cả
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -202,7 +285,7 @@ const NotificationScreen = () => {
         <View style={styles.connectionStatus}>
           <Ionicons name="warning-outline" size={16} color={colors.warning.start} />
           <Text style={styles.connectionStatusText}>
-            Đang kết nối WebSocket...
+            {connectionError ? `Lỗi: ${connectionError}` : "Đang kết nối WebSocket..."}
           </Text>
         </View>
       )}
@@ -238,10 +321,10 @@ const NotificationScreen = () => {
               tintColor={colors.primary.start}
             />
           }
-          onEndReached={hasMore ? handleLoadMore : undefined}
+          onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
-            hasMore && isLoading ? (
+            isFetchingNextPage ? (
               <View style={styles.footerLoader}>
                 <ActivityIndicator size="small" color={colors.primary.start} />
               </View>
@@ -284,12 +367,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   markAllReadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+    backgroundColor: colors.primary.start,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary.start,
+    shadowColor: colors.primary.start,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 100,
+  },
+  markAllReadButtonDisabled: {
+    opacity: 0.6,
+  },
+  markAllReadButtonInactive: {
+    backgroundColor: colors.border.light + "40",
+    borderColor: colors.border.light,
+    opacity: 0.5,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   markAllReadText: {
     fontSize: 14,
-    color: colors.primary.start,
+    color: "#ffffff",
+    fontWeight: "700",
+  },
+  markAllReadTextInactive: {
+    color: colors.text.tertiary,
     fontWeight: "600",
   },
   connectionStatus: {
@@ -306,20 +419,40 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.md,
+    paddingBottom: spacing.xl,
   },
   notificationItem: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: spacing.md,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.border.light,
     ...shadows.soft,
+    shadowColor: colors.shadow.medium,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   notificationItemUnread: {
-    backgroundColor: colors.primary.light + "15",
     borderLeftWidth: 4,
-    borderLeftColor: colors.primary.start,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  notificationIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: spacing.md,
   },
   notificationContent: {
     flex: 1,
@@ -336,12 +469,40 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     flex: 1,
   },
+  notificationTitleUnread: {
+    fontWeight: "700",
+  },
   unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary.start,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.error.start,
     marginLeft: spacing.xs,
+    shadowColor: colors.error.start,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  notificationFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: spacing.xs,
+  },
+  unreadBadge: {
+    backgroundColor: colors.error.start,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  unreadBadgeText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   notificationText: {
     fontSize: 14,

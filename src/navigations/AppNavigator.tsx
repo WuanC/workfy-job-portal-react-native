@@ -5,10 +5,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { TouchableOpacity, TouchableOpacityProps, Alert, View, ActivityIndicator, Text } from "react-native";
+import { TouchableOpacity, TouchableOpacityProps, Alert, View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import * as Linking from "expo-linking";
 import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
+import { useQuery } from "@tanstack/react-query";
+import { getUnreadCount } from "../services/notificationService";
+import { useAuth } from "../context/AuthContext";
 
 // 🔗 Navigation Ref để điều hướng bên ngoài
 import { navigationRef } from "./NavigationRef";
@@ -49,7 +52,6 @@ import UpdateCompanyInfo from "../screens/Employer/UpdateCompanyInfo";
 import UpdateCompanyMedia from "../screens/Employer/UpdateCompanyMedia";
 import UpdateJobScreen from "../screens/Employer/UpdateJobScreen";
 import JobDetailScreen from "../screens/JobSeeker/JobDetailScreen";
-import { useAuth } from "../context/AuthContext";
 import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "../screens/Auth/ResetPasswordScreen";
 import EmployeeDetailApplication from "../screens/JobSeeker/EmployeeDetailApplication";
@@ -61,6 +63,7 @@ const Tab = createBottomTabNavigator();
 const ExploreStack = createNativeStackNavigator();
 const SearchStack = createNativeStackNavigator();
 const MessageStack = createNativeStackNavigator();
+const NotificationStack = createNativeStackNavigator();
 const MenuStack = createNativeStackNavigator();
 
 // ========== Job Seeker Tabs ==========
@@ -117,6 +120,12 @@ const MenuStackScreen = () => (
   </MenuStack.Navigator>
 );
 
+const NotificationStackScreen = () => (
+  <NotificationStack.Navigator screenOptions={{ headerShown: false }}>
+    <NotificationStack.Screen name="NotificationMain" component={NotificationScreen} />
+  </NotificationStack.Navigator>
+);
+
 // ========== Employer Tabs ==========
 const EmployerJobStackScreen = () => (
   <MenuStack.Navigator screenOptions={{ headerShown: false }}>
@@ -142,86 +151,139 @@ const EmployerMyCompanyStackScreen = () => (
 );
 
 
-// ========== Bottom Tabs ==========
-const MainAppEmployee = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      headerShown: false,
-      tabBarShowLabel: true,
-      tabBarActiveTintColor: colors.primary.start,
-      tabBarInactiveTintColor: colors.text.tertiary,
-      tabBarStyle: {
-        height: 60,
-        paddingBottom: spacing.sm,
-        paddingTop: spacing.sm,
-        borderTopWidth: 1,
-        borderTopColor: colors.border.light,
-        backgroundColor: colors.surface,
-      },
-      tabBarButton: (props) => (
-        <TouchableOpacity {...(props as TouchableOpacityProps)} activeOpacity={1} />
-      ),
-      tabBarIcon: ({ color }) => {
-        if (route.name === "ExploreStack")
-          return <Ionicons name="compass-outline" size={24} color={color} />;
-        if (route.name === "SearchStack")
-          return <Ionicons name="search-outline" size={24} color={color} />;
-        if (route.name === "MessageStack")
-          return <Ionicons name="chatbubble-outline" size={24} color={color} />;
-        if (route.name === "MyJobStack")
-          return <MaterialIcons name="work-outline" size={24} color={color} />;
-        if (route.name === "CVStack")
-          return <Ionicons name="document-text-outline" size={24} color={color} />;
-        if (route.name === "MenuStack")
-          return <Ionicons name="menu-outline" size={24} color={color} />;
-      },
-    })}
-  >
-    <Tab.Screen name="ExploreStack" component={ExploreStackScreen} options={{ title: "Khám phá" }} />
-    <Tab.Screen name="SearchStack" component={SearchStackScreen} options={{ title: "Tìm kiếm" }} />
-    <Tab.Screen name="MyJobStack" component={EmployeeApplicationStackScreen} options={{ title: "Việc của tôi" }} />
-    <Tab.Screen name="MessageStack" component={MessageStackScreen} options={{ title: "Tin nhắn" }} />
-    <Tab.Screen name="CVStack" component={CVScreen} options={{ title: "Viết CV" }} />
-    <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: "Menu" }} />
-  </Tab.Navigator>
-);
+// ========== Component để hiển thị icon với badge ==========
+const TabBarIconWithBadge = ({ 
+  iconName, 
+  color, 
+  badgeCount 
+}: { 
+  iconName: keyof typeof Ionicons.glyphMap; 
+  color: string; 
+  badgeCount?: number;
+}) => {
+  const showBadge = badgeCount !== undefined && badgeCount > 0;
+  
+  return (
+    <View style={{ position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
+      <Ionicons name={iconName} size={24} color={color} />
+      {showBadge && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>
+            {badgeCount! > 99 ? '99+' : badgeCount!.toString()}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
 
-const MainAppEmployer = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      headerShown: false,
-      tabBarShowLabel: true,
-      tabBarActiveTintColor: colors.primary.start,
-      tabBarInactiveTintColor: colors.text.tertiary,
-      tabBarStyle: {
-        height: 60,
-        paddingBottom: spacing.sm,
-        paddingTop: spacing.sm,
-        borderTopWidth: 1,
-        borderTopColor: colors.border.light,
-        backgroundColor: colors.surface,
-      },
-      tabBarButton: (props) => (
-        <TouchableOpacity {...(props as TouchableOpacityProps)} activeOpacity={1} />
-      ),
-      tabBarIcon: ({ color }) => {
-        if (route.name === "EmployerMyJobStack")
-          return <MaterialIcons name="work-outline" size={24} color={color} />;
-        if (route.name === "MyCandidateStack")
-          return <Ionicons name="document-text-outline" size={24} color={color} />;
-        if (route.name === "EmployerSetting")
-          return <Ionicons name="menu-outline" size={24} color={color} />;
-        if (route.name === "MyCompanStack")
-          return <Ionicons name="menu-outline" size={24} color={color} />;
-      },
-    })}
-  >
-    <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
-    <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} />
-    <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
-    <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: "Công ty" }} />
-  </Tab.Navigator>
-);
+// ========== Bottom Tabs ==========
+const MainAppEmployee = () => {
+  const { isAuthenticated } = useAuth();
+  
+  // Lấy số thông báo chưa đọc
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["notifications", "unread-count"],
+    queryFn: getUnreadCount,
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch mỗi 30 giây
+  });
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.primary.start,
+        tabBarInactiveTintColor: colors.text.tertiary,
+        tabBarStyle: {
+          height: 60,
+          paddingBottom: spacing.sm,
+          paddingTop: spacing.sm,
+          borderTopWidth: 1,
+          borderTopColor: colors.border.light,
+          backgroundColor: colors.surface,
+        },
+        tabBarButton: (props) => (
+          <TouchableOpacity {...(props as TouchableOpacityProps)} activeOpacity={1} />
+        ),
+        tabBarIcon: ({ color }) => {
+          if (route.name === "ExploreStack")
+            return <Ionicons name="compass-outline" size={24} color={color} />;
+          if (route.name === "SearchStack")
+            return <Ionicons name="search-outline" size={24} color={color} />;
+          if (route.name === "NotificationStack")
+            return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
+          if (route.name === "MyJobStack")
+            return <MaterialIcons name="work-outline" size={24} color={color} />;
+          if (route.name === "CVStack")
+            return <Ionicons name="document-text-outline" size={24} color={color} />;
+          if (route.name === "MenuStack")
+            return <Ionicons name="menu-outline" size={24} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="ExploreStack" component={ExploreStackScreen} options={{ title: "Khám phá" }} />
+      <Tab.Screen name="SearchStack" component={SearchStackScreen} options={{ title: "Tìm kiếm" }} />
+      <Tab.Screen name="MyJobStack" component={EmployeeApplicationStackScreen} options={{ title: "Việc của tôi" }} />
+      <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: "Thông báo" }} />
+      <Tab.Screen name="CVStack" component={CVScreen} options={{ title: "Viết CV" }} />
+      <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: "Menu" }} />
+    </Tab.Navigator>
+  );
+};
+
+const MainAppEmployer = () => {
+  const { isAuthenticated } = useAuth();
+  
+  // Lấy số thông báo chưa đọc
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ["notifications", "unread-count"],
+    queryFn: getUnreadCount,
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch mỗi 30 giây
+  });
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.primary.start,
+        tabBarInactiveTintColor: colors.text.tertiary,
+        tabBarStyle: {
+          height: 60,
+          paddingBottom: spacing.sm,
+          paddingTop: spacing.sm,
+          borderTopWidth: 1,
+          borderTopColor: colors.border.light,
+          backgroundColor: colors.surface,
+        },
+        tabBarButton: (props) => (
+          <TouchableOpacity {...(props as TouchableOpacityProps)} activeOpacity={1} />
+        ),
+        tabBarIcon: ({ color }) => {
+          if (route.name === "EmployerMyJobStack")
+            return <MaterialIcons name="work-outline" size={24} color={color} />;
+          if (route.name === "MyCandidateStack")
+            return <Ionicons name="document-text-outline" size={24} color={color} />;
+          if (route.name === "NotificationStack")
+            return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
+          if (route.name === "EmployerSetting")
+            return <Ionicons name="menu-outline" size={24} color={color} />;
+          if (route.name === "MyCompanStack")
+            return <Ionicons name="menu-outline" size={24} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
+      <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} />
+      <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: "Thông báo" }} />
+      <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
+      <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: "Công ty" }} />
+    </Tab.Navigator>
+  );
+};
 
 // ========== Root Stack ==========
 const AppNavigator = () => {
@@ -299,5 +361,39 @@ const AppNavigator = () => {
     </GestureHandlerRootView >
   );
 };
+
+// ========== Styles ==========
+const styles = StyleSheet.create({
+  badge: {
+    position: 'absolute',
+    right: -12,
+    top: -8,
+    backgroundColor: '#ff3b30', // Màu đỏ rõ ràng
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2.5,
+    borderColor: colors.surface || '#ffffff',
+    shadowColor: '#ff3b30',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 10,
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '800',
+    lineHeight: 13,
+    textAlign: 'center',
+  },
+});
 
 export default AppNavigator;

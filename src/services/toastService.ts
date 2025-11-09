@@ -6,6 +6,8 @@ export const ToastService = {
       type: "success",
       text1: title,
       text2: message,
+      visibilityTime: 3000,
+      topOffset: 60,
     });
   },
   error: (title: string, message?: string) => {
@@ -13,6 +15,17 @@ export const ToastService = {
       type: "error",
       text1: title,
       text2: message,
+      visibilityTime: 4000,
+      topOffset: 60,
+    });
+  },
+  warning: (title: string, message?: string) => {
+    Toast.show({
+      type: "warning",
+      text1: title,
+      text2: message,
+      visibilityTime: 3500,
+      topOffset: 60,
     });
   },
   info: (title: string, message?: string) => {
@@ -20,6 +33,8 @@ export const ToastService = {
       type: "info",
       text1: title,
       text2: message,
+      visibilityTime: 3000,
+      topOffset: 60,
     });
   },
 };

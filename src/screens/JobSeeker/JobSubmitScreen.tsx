@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  Alert,
   Linking,
 } from "react-native";
+import { ToastService } from "../../services/toastService";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -57,7 +57,7 @@ const JobSubmitScreen = ({ route }: any) => {
         setProfile(data);
         setPhoneNumber(data.phoneNumber || "");
       } catch {
-        Alert.alert("Lỗi", "Không thể tải thông tin bản thân.");
+        ToastService.error("Lỗi", "Không thể tải thông tin bản thân.");
       }
     };
 
@@ -98,24 +98,25 @@ const JobSubmitScreen = ({ route }: any) => {
       setCvFileUri(file.uri);
       setUseLink(false);
       setFile(file);
+      ToastService.success("Tải CV thành công", "CV đã được tải lên");
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message || "Không thể tải CV.");
+      ToastService.error("Lỗi tải CV", err.message || "Không thể tải CV.");
     }
   };
 
   const handleSubmit = async () => {
     if (!coverContent.trim()) {
-      Alert.alert("Thiếu thông tin", "Vui lòng nhập thư xin việc!");
+      ToastService.warning("Thiếu thông tin", "Vui lòng nhập thư xin việc!");
       return;
     }
 
     if (!useLink && (cvFileUri == "" || cvFile == null)) {
-      Alert.alert("Thiếu CV", "Vui lòng tải lên CV hoặc nhập link!");
+      ToastService.warning("Thiếu CV", "Vui lòng tải lên CV hoặc nhập link!");
       return;
     }
 
     if (useLink && !cvLink.trim()) {
-      Alert.alert("Thiếu link CV", "Vui lòng nhập link CV!");
+      ToastService.warning("Thiếu link CV", "Vui lòng nhập link CV!");
       return;
     }
 
@@ -141,12 +142,13 @@ const JobSubmitScreen = ({ route }: any) => {
           cvFile
         );
       }
+      ToastService.success("Ứng tuyển thành công", "Đơn ứng tuyển đã được gửi!");
       navigation.replace("JobSubmitSuccess");
     } catch (error: any) {
       setCvFileUri("")
       setFile(null)
       console.error("Lỗi ứng tuyển:", error);
-      Alert.alert("Lỗi", "Không thể gửi ứng tuyển, thử lại sau.");
+      ToastService.error("Lỗi ứng tuyển", "Không thể gửi ứng tuyển, thử lại sau.");
     }
   };
   useEffect(() => {

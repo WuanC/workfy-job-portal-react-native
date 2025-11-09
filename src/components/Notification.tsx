@@ -31,10 +31,11 @@ const Notification = () => {
 
   const notifications = notificationsData?.items || [];
 
-    ws.onopen = () => {
-      console.log("✅ WebSocket connected");
-      setConnected(true);
-    };
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 10 }}>
+        {connected ? '🟢 Đã kết nối' : '🔴 Chưa kết nối'}
+      </Text>
 
       <Button title="Reload" onPress={() => refetch()} />
 

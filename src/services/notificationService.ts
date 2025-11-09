@@ -26,9 +26,9 @@ export interface ApiResponse<T> {
   data: T;
 }
 
-export interface UnreadCountResponse {
-  unreadCount: number;
-}
+// export interface UnreadCountResponse {
+//   unreadCount: number;
+// }
 
 /**
  * Lấy danh sách thông báo (phân trang)
@@ -77,8 +77,8 @@ export const markAllNotificationsAsRead = async (): Promise<void> => {
  */
 export const getUnreadCount = async (): Promise<number> => {
   try {
-    const res = await apiInstance.get<ApiResponse<UnreadCountResponse>>("/notifications/unread-count");
-    return res.data.data?.unreadCount ?? 0;
+    const res = await apiInstance.get<ApiResponse<number>>("/notifications/unread-count");
+    return res.data.data ?? 0;
   } catch (error: any) {
     console.error("❌ Lỗi khi lấy số lượng thông báo chưa đọc:", error.response?.data || error.message);
     // Trả về 0 thay vì throw error để tránh lỗi React Query

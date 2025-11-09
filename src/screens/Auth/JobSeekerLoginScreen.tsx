@@ -5,8 +5,8 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert
 } from "react-native";
+import { ToastService } from "../../services/toastService";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LOGO_IMG } from "../../utilities/constant";
 import Checkbox from "expo-checkbox";
@@ -33,7 +33,7 @@ const JobSeekerLoginScreen = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
+      ToastService.warning('Thiếu thông tin', 'Vui lòng nhập email và mật khẩu');
       return;
     }
 
@@ -42,9 +42,10 @@ const JobSeekerLoginScreen = () => {
       await loginEmployeeAuth(email, password);
       // await loginEmployee(email, password);
       console.log("Login successful");
+      ToastService.success('Đăng nhập thành công', 'Chào mừng bạn quay lại!');
       navigation.replace("MainApp");
     } catch (error: any) {
-      Alert.alert('Lỗi', error.message || 'Đăng nhập thất bại');
+      ToastService.error('Đăng nhập thất bại', error.message || 'Email hoặc mật khẩu không đúng');
       console.error(error);
     } finally {
       setLoading(false);

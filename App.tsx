@@ -7,6 +7,7 @@ import AppNavigator from './src/navigations/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import { NavigationContainer } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import { toastConfig } from './src/components/CustomToast';
 import CVScreen from './src/screens/JobSeeker/CVScreen';
 import * as Linking from 'expo-linking';
 import { authorize } from 'react-native-app-auth';
@@ -50,7 +51,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppNavigator />
-        <Toast />
+        <Toast config={toastConfig} />
       </AuthProvider>
     </QueryClientProvider>
   );

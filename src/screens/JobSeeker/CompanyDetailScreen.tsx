@@ -249,7 +249,7 @@ const CompanyDetailScreen = ({ route }: any) => {
                 renderItem={({ item }) => (
                   <JobCard
                     id={item.id}
-                    logo_path={item.avatarUrl}
+                    logo_path={company.avatarUrl}
                     job_title={item.jobTitle}
                     company_name={item.companyName}
                     job_location={item.jobLocations[0].province.name}

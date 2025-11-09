@@ -96,7 +96,7 @@ export const getLatestApplicationByJob = async (jobId: number) => {
     const res = await apiInstance.get(`/applications/latest/${jobId}`);
     return res.data.data; // ✅ ApplicationResponse.data
   } catch (error: any) {
-    console.error("❌ Lỗi khi lấy application gần nhất:", error.response?.data || error.message);
+    console.log("❌ Lỗi khi lấy application gần nhất:", error.response?.data || error.message);
 
     // ✅ Xử lý lỗi cụ thể
     switch (error.response?.status) {
@@ -107,7 +107,7 @@ export const getLatestApplicationByJob = async (jobId: number) => {
       case 403:
         throw new Error("Bạn không có quyền truy cập thông tin ứng tuyển này.");
       case 404:
-        throw new Error("Không tìm thấy hồ sơ ứng tuyển gần nhất cho công việc này.");
+        return { message: "Không tìm thấy hồ sơ ứng tuyển gần nhất cho công việc này.", data: null };
       default:
         throw new Error("Không thể tải dữ liệu ứng tuyển gần nhất.");
     }

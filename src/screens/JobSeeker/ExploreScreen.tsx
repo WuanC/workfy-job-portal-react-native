@@ -27,7 +27,7 @@ import { getTopHiringEmployers } from "../../services/employerService"
 
 type ExploreNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
-    "Blog"
+    "Blog" | "Notification"
 >
 
 const ExploreScreen = () => {
@@ -83,48 +83,6 @@ const ExploreScreen = () => {
         fetchTopAttractiveJobs()
     }, [])
 
-    // const featuredJobs = [
-    //     {
-    //         id: 1,
-    //         logo_path: require("../../../assets/App/logoJob.png"),
-    //         job_title: "Tenant Management Staff",
-    //         company_name: "Công Ty TNHH Becamex Tokyu",
-    //         job_location: "Bình Dương",
-    //         salary_range: "Thương lượng",
-    //         time_passed: "2 ngày trước",
-    //         applied: false,
-    //     },
-    //     {
-    //         id: 2,
-    //         logo_path: require("../../../assets/App/logoJob.png"),
-    //         job_title:
-    //             "[HCM - CẦN THƠ- ĐÀ NẴNG] NHÂN VIÊN TELESALE - ĐI LÀM NGAY",
-    //         company_name: "Công Ty Cổ Phần Dược Tâm Dược",
-    //         job_location: "Cần Thơ, Đà Nẵng, Hồ Chí Minh",
-    //         salary_range: "15 triệu - 20 triệu",
-    //         time_passed: "3 giờ trước",
-    //         applied: false,
-    //     },
-    // ]
-
-    // const topCompanies = [
-    //     {
-    //         id: 1,
-    //         name: "Công Ty TNHH Vietnam Concentrix Service",
-    //         jobCount: "Đang tuyển 226 công việc",
-    //         location: "Hồ Chí Minh",
-    //         logo: require("../../../assets/App/logoJob.png"),
-    //         bgImage: require("../../../assets/App/banner.jpg"),
-    //     },
-    //     {
-    //         id: 2,
-    //         name: "Công Ty TNHH Aeon Việt Nam",
-    //         jobCount: "Đang tuyển 19 công việc",
-    //         location: "Hà Nội",
-    //         logo: require("../../../assets/App/logoJob.png"),
-    //         bgImage: require("../../../assets/App/banner.jpg"),
-    //     },
-    // ]
 
     const renderJobCategory = (category: any) => (
         <TouchableOpacity key={category.id}>
@@ -204,6 +162,12 @@ const ExploreScreen = () => {
                             Ứng Dụng Tuyển Dụng dành cho{" "}
                             <Text style={styles.highlightText}>Mọi Người</Text>
                         </Text>
+                        <TouchableOpacity onPress={() => navigation.navigate("Notification")}>
+                            <Text>
+                            abc
+                            </Text>
+
+                        </TouchableOpacity>
                     </View>
 
                     {/* Decorative circles */}

@@ -51,10 +51,9 @@ const FeaturedJobsSection = ({ featuredJobs }: { featuredJobs: any[] }) => {
             <View style={{ width: containerWidth, paddingHorizontal: 10 }}>
               {item.map((job: any, idx: number) => (
                 <View key={job.id} style={{ marginBottom: 12 }}>
-                  {/* <JobCard {...job} /> */}
                   <JobCard
                     id={job.id}
-                    logo_path={job.avatarUrl}
+                    logo_path={job.author.avatarUrl}
                     job_title={job.jobTitle}
                     company_name={job.companyName}
                     job_location={job.jobLocations[0]?.province?.name}

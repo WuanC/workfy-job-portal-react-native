@@ -64,15 +64,19 @@ const JobSubmitScreen = ({ route }: any) => {
     const fetchLatestApplication = async () => {
       try {
         const latestApplication = await getLatestApplicationByJob(jobId);
-        setLatestJob(latestApplication);
-        if (latestApplication) {
+        if (latestApplication?.data === null) {
+          setLatestJob(null)
+        }
+
+        else if (latestApplication) {
+          setLatestJob(latestApplication);
           setPhoneNumber(latestApplication.phoneNumber);
           setCoverContent(latestApplication.coverLetter);
           setCvLink(latestApplication.cvUrl)
           setUseLink(true)
         }
-      } catch {
-        Alert.alert("Lỗi", "Không thể tải đơn gần đây.");
+      } catch (err: any) {
+        setLatestJob(null)
       }
     };
 

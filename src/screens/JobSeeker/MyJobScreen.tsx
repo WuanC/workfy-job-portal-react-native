@@ -212,16 +212,22 @@ const MyJobScreen = () => {
                         data={applications}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => (
-                            <AppliedJobCard
-                                id={item.id}
-                                title={item.job?.jobTitle}
-                                company_name={item.job?.companyName}
-                                logo_path={item.logo_path}
-                                applied_time={formatDate(item.createdAt)}
-                                cvUrl={item.cvUrl}
-                                coverLetter={item.coverLetter}
-                                status={item.status}
-                            />
+                            <View>
+                                {/* <TouchableOpacity onPress={() => console.log(item)}>
+                                    <Text>abc</Text>
+                                </TouchableOpacity> */}
+                                <AppliedJobCard
+                                    id={item.id}
+                                    title={item.job?.jobTitle}
+                                    company_name={item.job?.companyName}
+                                    logo_path={item.job.employer?.avatarUrl}
+                                    applied_time={formatDate(item.createdAt)}
+                                    cvUrl={item.cvUrl}
+                                    coverLetter={item.coverLetter}
+                                    status={item.status}
+                                />
+                            </View>
+
                         )}
                         ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
                         onEndReached={handleApplicationLoadMore}
@@ -249,7 +255,7 @@ const MyJobScreen = () => {
                         renderItem={({ item }) => (
                             <JobCard
                                 id={item.id}
-                                logo_path={item.avatarUrl}
+                                logo_path={item.author.avatarUrl}
                                 job_title={item.jobTitle}
                                 company_name={item.companyName}
                                 job_location={item.jobLocations[0]?.province?.name}

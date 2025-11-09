@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -73,6 +73,7 @@ const JobCard: React.FC<IJobCardProps> = ({
   };
   const handleToggleSave = async (jobId: number) => {
     try {
+      console.log(logo_path)
       await toggleSaveJob(jobId)
     }
     catch (e) {
@@ -80,12 +81,18 @@ const JobCard: React.FC<IJobCardProps> = ({
     }
 
   };
+    const handleToggleSavea =  () => {
+      console.log(logo_path)
+
+  };
 
   return (
     <Pressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      onPress={() => navigation.navigate("JobDetail", { id })}
+      onPress={() => {
+        handleToggleSavea()
+        navigation.navigate("JobDetail", { id })}}
       style={({ pressed }) => [
         styles.card,
         pressed && { opacity: 0.95 },
@@ -108,9 +115,7 @@ const JobCard: React.FC<IJobCardProps> = ({
                 <Image
                   source={
                     logo_path
-                      ? typeof logo_path === "string"
-                        ? { uri: logo_path }
-                        : logo_path
+                      ? { uri: logo_path }
                       : require("../../assets/App/companyLogoDefault.png")
                   }
                   style={styles.logo}

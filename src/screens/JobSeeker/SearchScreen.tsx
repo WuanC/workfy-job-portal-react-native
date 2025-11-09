@@ -146,23 +146,25 @@ const SearchScreen = ({ route }: any) => {
         <FlatList
           data={jobs}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <JobCard
-              id={item.id}
-              logo_path={item.avatarUrl}
-              job_title={item.jobTitle}
-              company_name={item.companyName}
-              job_location={item.jobLocations[0]?.province?.name}
-              salary_range={
-                item.salaryType === "RANGE"
-                  ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
-                  : item.salaryType === "NEGOTIABLE"
-                  ? "Thỏa thuận"
-                  : "Không rõ"
-              }
-              time_passed={item.expirationDate}
-            />
-          )}
+          renderItem={({ item }) => {
+            return (
+              <JobCard
+                id={item.id}
+                logo_path={item.author.avatarUrl}
+                job_title={item.jobTitle}
+                company_name={item.companyName}
+                job_location={item.jobLocations[0]?.province?.name}
+                salary_range={
+                  item.salaryType === "RANGE"
+                    ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
+                    : item.salaryType === "NEGOTIABLE"
+                      ? "Thỏa thuận"
+                      : "Không rõ"
+                }
+                time_passed={item.expirationDate}
+              />
+            );
+          }}
           contentContainerStyle={{ padding: spacing.md }}
         />
       ) : (

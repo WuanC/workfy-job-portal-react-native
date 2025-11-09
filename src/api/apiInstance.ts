@@ -99,8 +99,9 @@ apiInstance.interceptors.response.use(
             isRefreshing = false;
             console.log("e")
             await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
-            //setUserOutsideContext(null);
+
             console.warn("⚠️ Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+            throw new Error("Phieen banr đăng nhập hết hạn.");
           }
         } else {
           console.log("f")

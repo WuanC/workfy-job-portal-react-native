@@ -55,8 +55,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     const employer = await getEmployerProfile()
                     setUser({ ...employer, role });
                 }
-            } catch {
-                console.log("k co")
+            } catch (err: any) {
+                setUser(null)
                 await AsyncStorage.multiRemove(["accessToken", "refreshToken", "role"]);
             }
         }

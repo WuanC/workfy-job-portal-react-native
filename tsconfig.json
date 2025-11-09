@@ -4,9 +4,17 @@
     "jsx": "react-native",
     "strict": true,
     "skipLibCheck": true,
-    "types": ["react", "react-native"]
+    "types": [
+      "react",
+      "react-native"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ]
   },
-  "include": ["src", "src/types"]
-
-
+  "include": [
+    "src",
+    "src/types"
+  ]
 }

@@ -37,6 +37,9 @@ export type RootStackParamList = {
   Blog: undefined
   ArticleDetail: { id: number }
 
+  //Notification
+  Notification: undefined
+
 
   //Application
   EmployeeDetailApplication: {applicationId: number; status: string; coverLetter: string; jobTitle: string; cvUrl: string}

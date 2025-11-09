@@ -25,7 +25,7 @@ export const useWebSocketNotifications = (jwtToken: string | null) => {
   useEffect(() => {
     if (!jwtToken) return; // Chưa có token thì không connect
 
-    const socketUrl = 'http://localhost:8080/ws'; // đổi sang domain thật khi deploy
+    const socketUrl = 'http://192.168.0.102:8080/ws'; // đổi sang domain thật khi deploy
     const socket = new SockJS(socketUrl);
 
     const stompClient = new Client({

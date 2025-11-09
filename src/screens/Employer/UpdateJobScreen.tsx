@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   TextInput,
   Platform,
@@ -142,51 +141,63 @@ const UpdateJobScreen = ({ route }: any) => {
     try {
       // ======== 1️⃣ VALIDATE CÁC TRƯỜNG BẮT BUỘC ========
       if (!companyName.trim()) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập tên công ty");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập tên công ty");
         return;
       }
       if (!companySize) {
-        Alert.alert("Thiếu thông tin", "Vui lòng chọn quy mô công ty");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng chọn quy mô công ty");
         return;
       }
       if (!aboutCompany.trim()) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập mô tả công ty");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập mô tả công ty");
         return;
       }
       if (!jobDistrictdId) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập tên district");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập tên district");
         return;
       }
       if (!jobTitle.trim()) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập tên công việc");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập tên công việc");
         return;
       }
       if (!salaryType) {
-        Alert.alert("Thiếu thông tin", "Vui lòng chọn loại lương");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng chọn loại lương");
         return;
       }
       if (salaryType === "RANGE" && (!minSalary || !maxSalary || minSalary >= maxSalary)) {
-        Alert.alert("Sai định dạng", "Vui lòng nhập mức lương hợp lệ (Min < Max)");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Sai định dạng", "Vui lòng nhập mức lương hợp lệ (Min < Max)");
         return;
       }
       if (benefits.length <= 0) {
-        Alert.alert("Sai định dạng", "Phúc lợi không được để trống");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Sai định dạng", "Phúc lợi không được để trống");
         return;
       }
       if (salaryType === "GREATER_THAN" && !minSalary) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập mức lương tối thiểu");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập mức lương tối thiểu");
         return;
       }
       if (!jobDescription.trim()) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập mô tả công việc");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập mô tả công việc");
         return;
       }
       if (!requirement.trim()) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập yêu cầu công việc");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập yêu cầu công việc");
         return;
       }
       if (!contactName.trim() || !contactPhone.trim()) {
-        Alert.alert("Thiếu thông tin", "Vui lòng nhập người liên hệ và số điện thoại");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Thiếu thông tin", "Vui lòng nhập người liên hệ và số điện thoại");
         return;
       }
       // ======== 2️⃣ TẠO DỮ LIỆU JOBREQUEST ========
@@ -234,10 +245,12 @@ const UpdateJobScreen = ({ route }: any) => {
       //console.log("📦 jobData gửi lên:", JSON.stringify(jobData, null, 2));
       const res = await updateJob(id, jobData);
       if (res.status === 200) {
-        Alert.alert("Thành công", "Cập nhật thành công!");
-        navigation.goBack()
+        const { ToastService } = require("../../services/toastService");
+        ToastService.success("Thành công", "Cập nhật thành công!");
+        setTimeout(() => navigation.goBack(), 900);
       } else {
-        Alert.alert("Lỗi", res.message || "Không thể đăng công việc.");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.error("Lỗi", res.message || "Không thể đăng công việc.");
       }
     } catch (error: any) {
       if (error.response) {
@@ -1174,7 +1187,13 @@ const UpdateJobScreen = ({ route }: any) => {
 
       </ScrollView>
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.saveBtn} onPress={() => Alert.alert("Đã lưu nháp!")}>
+        <TouchableOpacity
+          style={styles.saveBtn}
+          onPress={() => {
+            const { ToastService } = require("../../services/toastService");
+            ToastService.info("Đã lưu nháp!");
+          }}
+        >
           <Text style={styles.saveText}>Lưu việc làm</Text>
         </TouchableOpacity>
 

@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,12 +33,14 @@ const ChangePasswordScreen = () => {
   }
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      Alert.alert("Thiếu thông tin", "Vui lòng nhập đầy đủ các trường");
+      const { ToastService } = require("../../../services/toastService");
+      ToastService.warning("Thiếu thông tin", "Vui lòng nhập đầy đủ các trường");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
+      const { ToastService } = require("../../../services/toastService");
+      ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp");
       return;
     }
 
@@ -51,22 +52,24 @@ const ChangePasswordScreen = () => {
       );
 
       if (res.status === 200) {
-        Alert.alert("Thành công", "Cập nhật mật khẩu thành công", [
-          { text: "OK", onPress: () => handleLogout() },
-        ]);
+        const { ToastService } = require("../../../services/toastService");
+        ToastService.success("Thành công", "Cập nhật mật khẩu thành công");
+        // emulate user clicking OK — wait a moment then logout
+        setTimeout(() => handleLogout(), 1200);
       }
     } catch (err: any) {
       const status = err?.response?.status;
       const message = err?.response?.data?.message || "Đã xảy ra lỗi";
 
+      const { ToastService } = require("../../../services/toastService");
       if (status === 400) {
-        Alert.alert("Lỗi", "Dữ liệu không hợp lệ hoặc mật khẩu mới sai định dạng");
+        ToastService.error("Lỗi", "Dữ liệu không hợp lệ hoặc mật khẩu mới sai định dạng");
       } else if (status === 401) {
-        Alert.alert("Lỗi", "Token không hợp lệ, vui lòng đăng nhập lại");
+        ToastService.error("Lỗi", "Token không hợp lệ, vui lòng đăng nhập lại");
       } else if (status === 411) {
-        Alert.alert("Lỗi", "Mật khẩu hiện tại không khớp");
+        ToastService.error("Lỗi", "Mật khẩu hiện tại không khớp");
       } else {
-        Alert.alert("Lỗi", message);
+        ToastService.error("Lỗi", message);
       }
     } finally {
       setLoading(false);

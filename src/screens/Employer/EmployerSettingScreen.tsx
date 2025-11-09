@@ -37,7 +37,8 @@ const EmployerSettingScreen = () => {
   const pickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Quyền bị từ chối", "Vui lòng cấp quyền truy cập thư viện ảnh.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.warning("Quyền bị từ chối", "Vui lòng cấp quyền truy cập thư viện ảnh.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -58,24 +59,28 @@ const EmployerSettingScreen = () => {
   // 🔐 Đổi mật khẩu
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
       return;
     }
 
     setLoading(true);
     try {
       const res = await updateEmployerPassword(currentPassword, newPassword);
-      Alert.alert("✅ Thành công", res.message || "Cập nhật mật khẩu thành công.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.success("✅ Thành công", res.message || "Cập nhật mật khẩu thành công.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      Alert.alert("❌ Lỗi", err.message || "Cập nhật mật khẩu thất bại.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("❌ Lỗi", err.message || "Cập nhật mật khẩu thất bại.");
     } finally {
       setLoading(false);
     }

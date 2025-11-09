@@ -128,7 +128,8 @@ const UpdateCompanyInfo = ({ route }: any) => {
       await updateEmployerProfile(payload);
       navigation.goBack();
     } catch (error) {
-      Alert.alert("Lỗi", "Cập nhật thông tin công ty thất bại.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("Lỗi", "Cập nhật thông tin công ty thất bại.");
     }
     finally {
 

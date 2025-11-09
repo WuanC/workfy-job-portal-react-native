@@ -22,6 +22,15 @@ const Notification = () => {
     (notification: NotificationType) => {
       // Invalidate queries để refetch danh sách
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      try {
+        const { ToastService } = require('../services/toastService');
+        if (notification?.title || notification?.content) {
+          ToastService.info(notification.title || 'Thông báo mới', notification.content || undefined);
+        }
+      } catch (e) {
+        // ignore if toast service not available
+        console.warn('ToastService unavailable', e);
+      }
     },
     [queryClient]
   );

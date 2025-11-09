@@ -162,12 +162,6 @@ const ExploreScreen = () => {
                             Ứng Dụng Tuyển Dụng dành cho{" "}
                             <Text style={styles.highlightText}>Mọi Người</Text>
                         </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate("Notification")}>
-                            <Text>
-                            abc
-                            </Text>
-
-                        </TouchableOpacity>
                     </View>
 
                     {/* Decorative circles */}

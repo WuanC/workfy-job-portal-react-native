@@ -27,9 +27,10 @@ const ResetPasswordScreen = ({ route }: any) => {
 
     const handleSubmit = async () => {
         if (!code || !newPassword) {
-            Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
-            return;
-        }
+                const { ToastService } = require("../../services/toastService");
+                ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin");
+                return;
+            }
 
         setLoading(true);
         try {
@@ -42,7 +43,8 @@ const ResetPasswordScreen = ({ route }: any) => {
                 navigation.navigate("EmployerLogin");
             }
         } catch (error: any) {
-            Alert.alert("Lỗi", error.message);
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error("Lỗi", error.message || "Đã xảy ra lỗi");
         } finally {
             setLoading(false);
         }

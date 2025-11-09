@@ -129,60 +129,34 @@ export default function EmployerJobScreen() {
     );
   };
   const handleDeleteJob = async (id: number) => {
-    Alert.alert(
-      "Xác nhận",
-      "Bạn có chắc chắn muốn xóa công việc này?",
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const res = await deleteJob(id);
-              if (res.status === 200) {
-                Alert.alert("✅ Thành công", res.message);
-                fetchJobs()
-                // Gọi lại API load danh sách công việc
-              }
-            } catch (error: any) {
-              const msg =
-                error.response?.data?.message ||
-                "Không thể xóa công việc. Vui lòng thử lại.";
-              Alert.alert("❌ Lỗi", msg);
-            }
-          },
-        },
-      ]
-    );
+    // Non-blocking delete with toast feedback
+    try {
+      const res = await deleteJob(id);
+      if (res.status === 200) {
+        const { ToastService } = require("../../services/toastService");
+        ToastService.success("✅ Thành công", res.message);
+        fetchJobs();
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Không thể xóa công việc. Vui lòng thử lại.";
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("❌ Lỗi", msg);
+    }
   };
 
   const handleCloseJob = async (id: number) => {
-    Alert.alert(
-      "Xác nhận",
-      "Bạn có chắc muốn đóng tin tuyển dụng này?",
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Đóng tin",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const res = await closeJob(id);
-              if (res.status === 200) {
-                Alert.alert("✅ Thành công", res.message);
-                await fetchJobs(); // 🔁 Cập nhật lại danh sách công việc
-              }
-            } catch (error: any) {
-              const msg =
-                error.response?.data?.message ||
-                "Không thể đóng tin tuyển dụng. Vui lòng thử lại.";
-              Alert.alert("❌ Lỗi", msg);
-            }
-          },
-        },
-      ]
-    );
+    try {
+      const res = await closeJob(id);
+      if (res.status === 200) {
+        const { ToastService } = require("../../services/toastService");
+        ToastService.success("✅ Thành công", res.message);
+        await fetchJobs(); // 🔁 Cập nhật lại danh sách công việc
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Không thể đóng tin tuyển dụng. Vui lòng thử lại.";
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("❌ Lỗi", msg);
+    }
   };
     if (loading) {
       return (

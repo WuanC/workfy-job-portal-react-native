@@ -7,7 +7,6 @@ import {
   ScrollView,
   Image,
   StyleSheet,
-  Alert,
 } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -75,11 +74,13 @@ const UpdateCompanyMedia = () => {
       };
 
       await updateEmployerWebsiteUrls(payload);
-      Alert.alert("Thành công", "Cập nhật liên kết và hình ảnh công ty thành công!");
-      navigation.goBack();
+      const { ToastService } = require("../../services/toastService");
+      ToastService.success("Thành công", "Cập nhật liên kết và hình ảnh công ty thành công!");
+      setTimeout(() => navigation.goBack(), 900);
     } catch (error) {
       console.log("Lỗi khi cập nhật:", error);
-      Alert.alert("Lỗi", "Không thể cập nhật thông tin.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("Lỗi", "Không thể cập nhật thông tin.");
     } finally {
       setLoading(false);
     }

@@ -20,7 +20,8 @@ const ForgotPasswordScreen = ({ route }: any) => {
         console.log(isEmployee)
         console.log(email)
         if (!email.trim()) {
-            Alert.alert("Lỗi", "Vui lòng nhập email");
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error("Lỗi", "Vui lòng nhập email");
             return;
         }
 
@@ -37,9 +38,10 @@ const ForgotPasswordScreen = ({ route }: any) => {
 
         } catch (error: any) {
             const status = error?.response?.status;
-            if (status === 400) Alert.alert("Lỗi", "Email không hợp lệ");
-            else if (status === 411) Alert.alert("Tài khoản bị khóa", "Tài khoản này đã bị khóa.");
-            else Alert.alert("Lỗi", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
+            const { ToastService } = require("../../services/toastService");
+            if (status === 400) ToastService.error("Lỗi", "Email không hợp lệ");
+            else if (status === 411) ToastService.error("Tài khoản bị khóa", "Tài khoản này đã bị khóa.");
+            else ToastService.error("Lỗi", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
         } finally {
             setLoading(false);
         }

@@ -49,7 +49,8 @@ const MyCompany = () => {
           setCompany(data);
           setCompanyId(data.id);
         } catch (err) {
-          Alert.alert("Lỗi", "Không thể tải thông tin công ty.");
+          const { ToastService } = require("../../services/toastService");
+          ToastService.error("Lỗi", "Không thể tải thông tin công ty.");
         }
       };
       fetchCompany();
@@ -66,7 +67,8 @@ const MyCompany = () => {
           const data = await getEmployerJobOpenings(companyId);
           setOpenJobs(data.items);
         } catch (err) {
-          Alert.alert("Lỗi", "Không thể tải danh sách công việc.");
+          const { ToastService } = require("../../services/toastService");
+          ToastService.error("Lỗi", "Không thể tải danh sách công việc.");
         }
       };
       fetchOpenJobs();
@@ -77,7 +79,8 @@ const MyCompany = () => {
   const pickImage = async (onPicked: (uri: string) => void) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Quyền truy cập bị từ chối", "Vui lòng cấp quyền truy cập ảnh.");
+      const { ToastService } = require("../../services/toastService");
+      ToastService.warning("Quyền truy cập bị từ chối", "Vui lòng cấp quyền truy cập ảnh.");
       return;
     }
 
@@ -101,10 +104,12 @@ const MyCompany = () => {
           ...prev,
           backgroundUrl: updatedData.backgroundUrl,
         }));
-        Alert.alert("Thành công", "Cập nhật background thành công!");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.success("Thành công", "Cập nhật background thành công!");
       } catch (error) {
         console.error(error);
-        Alert.alert("Lỗi", "Cập nhật background thất bại.");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.error("Lỗi", "Cập nhật background thất bại.");
       }
     });
   };
@@ -119,10 +124,12 @@ const MyCompany = () => {
           ...prev,
           avatarUrl: updatedData.avatarUrl,
         }));
-        Alert.alert("Thành công", "Cập nhật avatar thành công!");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.success("Thành công", "Cập nhật avatar thành công!");
       } catch (error) {
         console.error(error);
-        Alert.alert("Lỗi", "Cập nhật avatar thất bại.");
+        const { ToastService } = require("../../services/toastService");
+        ToastService.error("Lỗi", "Cập nhật avatar thất bại.");
       }
     });
   };

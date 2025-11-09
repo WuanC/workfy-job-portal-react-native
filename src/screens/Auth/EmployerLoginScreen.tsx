@@ -33,7 +33,8 @@ const EmployerLoginScreen = () => {
 
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error('Lỗi', 'Vui lòng nhập email và mật khẩu');
             return;
         }
         try {
@@ -44,7 +45,8 @@ const EmployerLoginScreen = () => {
 
         }
         catch (error: any) {
-            Alert.alert('Lỗi', error.message || 'Đăng nhập thất bại');
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error('Lỗi', error.message || 'Đăng nhập thất bại');
             console.error(error);
         } finally {
             //setLoading(false);

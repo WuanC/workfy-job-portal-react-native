@@ -90,13 +90,15 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
 
     const handleRegister = async () => {
         if (!email || !password || !confirmPassword || !companyName) {
-            Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin cần thiết.");
-            return;
-        }
-        if (password !== confirmPassword) {
-            Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp.");
-            return;
-        }
+                const { ToastService } = require("../../services/toastService");
+                ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin cần thiết.");
+                return;
+            }
+            if (password !== confirmPassword) {
+                const { ToastService } = require("../../services/toastService");
+                ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
+                return;
+            }
 
         try {
             setLoading(true);
@@ -113,10 +115,12 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 detailAddress: address || undefined,
             });
             console.log(email);
-            Alert.alert("Thành công", "Đăng ký nhà tuyển dụng thành công!");
+            const { ToastService } = require("../../services/toastService");
+            ToastService.success("Thành công", "Đăng ký nhà tuyển dụng thành công!");
             navigation.replace("ConfirmEmail", { email: email, role: "employer" });
         } catch (err: any) {
-            Alert.alert("Đăng ký thất bại", err.message || "Vui lòng thử lại.");
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error("Đăng ký thất bại", err.message || "Vui lòng thử lại.");
         } finally {
             setLoading(false);
         }

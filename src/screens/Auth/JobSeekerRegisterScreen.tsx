@@ -28,27 +28,32 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
 
     const handleRegister = async () => {
         if (!fullName || !email || !password || !confirmPassword) {
-            Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
             return;
         }
 
         if (password !== confirmPassword) {
-            Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp.");
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
             return;
         }
 
         if (!isChecked) {
-            Alert.alert("Thông báo", "Bạn cần đồng ý với điều khoản trước khi đăng ký.");
+            const { ToastService } = require("../../services/toastService");
+            ToastService.info("Thông báo", "Bạn cần đồng ý với điều khoản trước khi đăng ký.");
             return;
         }
 
         try {
             setLoading(true);
             const res = await registerEmployee({ fullName, email, password, confirmPassword });
-            Alert.alert("Thành công", res.message || "Đăng ký thành công!");
+            const { ToastService } = require("../../services/toastService");
+            ToastService.success("Thành công", res.message || "Đăng ký thành công!");
             navigation.replace("ConfirmEmail", { email: email, role: "employee" });
         } catch (err: any) {
-            Alert.alert("Đăng ký thất bại", err.message);
+            const { ToastService } = require("../../services/toastService");
+            ToastService.error("Đăng ký thất bại", err.message || "Đã xảy ra lỗi");
         } finally {
             setLoading(false);
         }

@@ -134,6 +134,16 @@ export const useWebSocketNotifications = (
                 if (onNotificationReceived) {
                   onNotificationReceived(notification);
                 }
+
+                // Hiển thị toast cho thông báo mới (non-blocking)
+                try {
+                  const { ToastService } = require('../services/toastService');
+                  // Nếu backend trả loại thông báo, có thể map sang success/error/warning
+                  // Mặc định dùng info
+                  ToastService.info(notification.title || 'Thông báo mới', notification.content || undefined);
+                } catch (e) {
+                  console.warn('[WebSocket] ToastService unavailable', e);
+                }
               } catch (e) {
                 console.error('[WebSocket] ❌ Lỗi parse notification:', e);
                 console.error('[WebSocket] ❌ Raw message body:', message.body);

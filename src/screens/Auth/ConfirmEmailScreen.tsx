@@ -22,27 +22,28 @@ const ConfirmEmailScreen = ({ navigation, route }: any) => {
 
   const handleConfirm = async () => {
     const code = otp.join("");
-    Alert.alert(email + " " + code);
+    // debug
+    // Alert replaced by toast
+    const { ToastService } = require("../../services/toastService");
     if (code.length < 8) {
-      alert("Vui lòng nhập đủ 8 chữ số OTP.");
+      ToastService.error("Lỗi", "Vui lòng nhập đủ 8 chữ số OTP.");
       return;
     }
 
     try {
-
       if (role === "employer") {
         const res = await verifyEmployerEmail({ email, code: otp.join("") });
-        Alert.alert("Thành công", res.message);
+        ToastService.success("Thành công", res.message);
         navigation.replace("EmployerLogin");
       }
       else if (role === "employee") {
         const res = await verifyEmployeeEmail({ email, code: otp.join("") });
-        Alert.alert("Thành công", res.message);
+        ToastService.success("Thành công", res.message);
         navigation.replace("Login");
       }
 
     } catch (err: any) {
-      Alert.alert("Lỗi", err.message);
+      ToastService.error("Lỗi", err.message || "Đã xảy ra lỗi");
     }
   };
 

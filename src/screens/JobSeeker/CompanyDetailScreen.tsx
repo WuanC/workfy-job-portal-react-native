@@ -66,7 +66,8 @@ const CompanyDetailScreen = ({ route }: any) => {
           const data = await getEmployerJobOpenings(id);
           setOpenJobs(data.items);
         } catch (err) {
-          Alert.alert("Lỗi", "Không thể tải danh sách công việc.");
+          const { ToastService } = require("../../services/toastService");
+          ToastService.error("Lỗi", "Không thể tải danh sách công việc.");
         }
       };
       fetchOpenJobs();

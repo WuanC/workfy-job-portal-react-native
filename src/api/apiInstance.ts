@@ -5,6 +5,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 //import { setUserOutsideContext } from "../context/AuthContext";
 
 /**
@@ -13,11 +14,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * ===============================
  */
 const apiInstance: AxiosInstance = axios.create({
-  baseURL: "http://192.168.0.102:8080/workify/api/v1",
+  baseURL: "http://localhost:8080/workify/api/v1",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
-    "User-Agent": "ReactNativeApp/1.0 (Android; Mobile)",
+    // Chỉ set User-Agent trên React Native, không set trên web (browser sẽ từ chối)
+    ...(Platform.OS !== "web" && {
+      "User-Agent": "ReactNativeApp/1.0 (Android; Mobile)",
+    }),
   },
 });
 

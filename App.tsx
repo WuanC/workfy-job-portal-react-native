@@ -11,13 +11,22 @@ import CVScreen from './src/screens/JobSeeker/CVScreen';
 import * as Linking from 'expo-linking';
 import { authorize } from 'react-native-app-auth';
 import * as WebBrowser from "expo-web-browser";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 //import * as AuthSession from "expo-auth-session";
 //import * as Google from "expo-auth-session/providers/google";
 WebBrowser.maybeCompleteAuthSession();
 const CLIENT_ID = "950816482683-ahfnuqa0h3o8b5nps7s5eg558pt5639e.apps.googleusercontent.com";
 const REDIRECT_URI = Linking.createURL("/oauth2redirect/google");
 
-
+// 🔹 Tạo QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export default function App() {
   const showSuccess = () => {
@@ -38,44 +47,46 @@ export default function App() {
 
 
   return (
-    <AuthProvider>
-      <AppNavigator />
-      <Toast />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <AppNavigator />
+        <Toast />
+      </AuthProvider>
+    </QueryClientProvider>
   );
-//    const [userInfo, setUserInfo] = useState<any>(null);
-// console.log(REDIRECT_URI)
-//   const signInWithGoogle = async () => {
-//     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-//       `client_id=${CLIENT_ID}` +
-//       `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-//       `&response_type=token` +
-//       `&scope=openid%20profile%20email`;
-//     console.log(REDIRECT_URI)
-//     try {
-//       const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
+  //    const [userInfo, setUserInfo] = useState<any>(null);
+  // console.log(REDIRECT_URI)
+  //   const signInWithGoogle = async () => {
+  //     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+  //       `client_id=${CLIENT_ID}` +
+  //       `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+  //       `&response_type=token` +
+  //       `&scope=openid%20profile%20email`;
+  //     console.log(REDIRECT_URI)
+  //     try {
+  //       const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
 
-//       if (result.type === "success" && result.url) {
-//         const url = new URL(result.url);
-//         const accessToken = url.hash
-//           .substring(1)
-//           .split("&")
-//           .find(param => param.startsWith("access_token="))
-//           ?.split("=")[1];
+  //       if (result.type === "success" && result.url) {
+  //         const url = new URL(result.url);
+  //         const accessToken = url.hash
+  //           .substring(1)
+  //           .split("&")
+  //           .find(param => param.startsWith("access_token="))
+  //           ?.split("=")[1];
 
-//         setUserInfo({ accessToken });
-//         console.log("✅ Access Token:", accessToken);
-//       }
-//     } catch (error) {
-//       console.error("❌ Login error:", error);
-//     }
-//   };
+  //         setUserInfo({ accessToken });
+  //         console.log("✅ Access Token:", accessToken);
+  //       }
+  //     } catch (error) {
+  //       console.error("❌ Login error:", error);
+  //     }
+  //   };
 
-//   return (
-//     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-//       <Button title="Sign in with Google" onPress={signInWithGoogle} />
-//       {userInfo && <Text>Access Token: {userInfo.accessToken}</Text>}
-//     </View>
-//   );
+  //   return (
+  //     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+  //       <Button title="Sign in with Google" onPress={signInWithGoogle} />
+  //       {userInfo && <Text>Access Token: {userInfo.accessToken}</Text>}
+  //     </View>
+  //   );
 }
 

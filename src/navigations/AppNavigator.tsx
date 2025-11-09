@@ -53,7 +53,7 @@ import { useAuth } from "../context/AuthContext";
 import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "../screens/Auth/ResetPasswordScreen";
 import EmployeeDetailApplication from "../screens/JobSeeker/EmployeeDetailApplication";
-import Notification from "../components/Notification";
+import NotificationScreen from "../screens/NotificationScreen";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -75,7 +75,7 @@ const ExploreStackScreen = () => (
     <SearchStack.Screen name="SearchFilter" component={FilterScreen} />
     <RootStack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
     <RootStack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
-    <RootStack.Screen name="Notification" component={Notification} />
+    <RootStack.Screen name="Notification" component={NotificationScreen} />
   </ExploreStack.Navigator>
 );
 

@@ -1,12 +1,15 @@
-import { TouchableOpacity, View, Text, StyleSheet, Image } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet, Image, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+import React, { useRef } from "react";
+
 type JobDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "EmployeeDetailApplication"
 >;
+
 interface IAppliedJobCardProps {
   id: number;
   logo_path: any;
@@ -15,7 +18,7 @@ interface IAppliedJobCardProps {
   applied_time: string;
   status: string;
   cvUrl: string;
-  coverLetter: string
+  coverLetter: string;
 }
 
 const AppliedJobCard = ({
@@ -26,106 +29,134 @@ const AppliedJobCard = ({
   applied_time,
   status,
   cvUrl,
-  coverLetter
+  coverLetter,
 }: IAppliedJobCardProps) => {
+  const navigation = useNavigation<JobDetailNavigationProp>();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const navigation = useNavigation<JobDetailNavigationProp>()
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+  };
+
   return (
-    <TouchableOpacity style={styles.jobCard} onPress={() =>
-      navigation.navigate("EmployeeDetailApplication", { applicationId: id, status: status, cvUrl: cvUrl, coverLetter: coverLetter, jobTitle: title })}>
-      <View style={styles.row}>
-        {/* Logo công ty */}
-        <Image source={
-          logo_path
-            ? typeof logo_path === "string"
-              ? { uri: logo_path }
-              : logo_path
-            : require("../../assets/App/companyLogoDefault.png")
-        } style={styles.logo} />
-
-        {/* Nội dung job */}
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.company}>{company_name}</Text>
-          <View style={styles.bottomRow}>
-            <Text style={styles.applied}>Ứng tuyển vào: {applied_time}</Text>
-            {/* Icon tin nhắn */}
-            <TouchableOpacity>
-              <Ionicons name="chatbox-outline" size={20} color="#555" />
-            </TouchableOpacity>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        style={styles.card}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={() =>
+          navigation.navigate("EmployeeDetailApplication", {
+            applicationId: id,
+            status,
+            cvUrl,
+            coverLetter,
+            jobTitle: title,
+          })
+        }
+      >
+        <View style={styles.row}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={
+                logo_path
+                  ? typeof logo_path === "string"
+                    ? { uri: logo_path }
+                    : logo_path
+                  : require("../../assets/App/companyLogoDefault.png")
+              }
+              style={styles.logo}
+            />
           </View>
 
+          {/* Job details */}
+          <View style={styles.info}>
+            <Text style={styles.jobTitle} numberOfLines={2}>{title}</Text>
+            <Text style={styles.company} numberOfLines={1}>{company_name}</Text>
+
+            {/* STATUS đặt lên TRÊN */}
+            <View style={[
+              styles.statusBadge,
+              status === "APPROVED"
+                ? styles.approved
+                : status === "REJECTED"
+                ? styles.rejected
+                : styles.pending
+            ]}>
+              <Text style={styles.statusText}>
+                {status === "APPROVED" ? "Đã duyệt" :
+                 status === "REJECTED" ? "Từ chối" : "Đang chờ"}
+              </Text>
+            </View>
+
+            {/* TIME nằm phía dưới */}
+            <View style={styles.timeBadge}>
+              <Ionicons name="time-outline" size={13} color="#999" />
+              <Text style={styles.time}>Ứng tuyển: {applied_time}</Text>
+            </View>
+
+          </View>
         </View>
-
-        {/* Icon menu */}
-        <TouchableOpacity>
-          <Ionicons name="ellipsis-horizontal" size={20} color="black" />
-        </TouchableOpacity>
-      </View>
-
-
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 export default AppliedJobCard;
 
 const styles = StyleSheet.create({
-  jobCard: {
+  card: {
+    borderRadius: 20,
+    padding: 16,
     backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
+    marginVertical: 8,
+    marginHorizontal: 4,
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  row: { flexDirection: "row", alignItems: "center" },
+
+  logoContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 16,
+    backgroundColor: "#f8f9fa",
+    padding: 8,
+    marginRight: 14,
     elevation: 2,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    resizeMode: "contain",
-    marginRight: 10,
-    marginTop: 10
-  },
-  textContainer: {
-    flex: 1,
-    marginRight: 10,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 2,
-  },
-  company: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 2,
-  },
-  applied: {
-    fontSize: 13,
-    color: "#777",
-  },
-  bottomRow: {
-    marginTop: 6,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  tag: {
-    backgroundColor: "#f2f2f2",
+  logo: { width: "100%", height: "100%", resizeMode: "contain" },
+
+  info: { flex: 1 },
+  jobTitle: { fontSize: 17, fontWeight: "700", color: "#1a1a1a" },
+  company: { fontSize: 14, color: "#666", marginTop: 2, fontWeight: "500" },
+
+  statusBadge: {
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
     borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 4,
-    marginLeft: 40
+    marginTop: 10,
   },
-  tagText: {
-    fontSize: 12,
-    color: "#333",
+  statusText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+  approved: { backgroundColor: "#4CAF50" },
+  rejected: { backgroundColor: "#FF5252" },
+  pending: { backgroundColor: "#FFB84C" },
+
+  timeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    marginTop: 8,
   },
+  time: { marginLeft: 4, fontSize: 12, color: "#999" },
 });

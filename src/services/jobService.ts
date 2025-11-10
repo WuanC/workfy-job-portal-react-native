@@ -287,7 +287,6 @@ export const getEmployerJobOpenings = async (
 
     const params = { pageNumber, pageSize, sorts };
     const res = await apiInstance.get(`/jobs/openings/${employerId}`, { params });
-    console.log(res.data.data)
     return res.data.data;
   } catch (error: any) {
     if (error.response) {

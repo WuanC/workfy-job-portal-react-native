@@ -24,9 +24,10 @@ const getWebSocketUrl = (): string => {
   
   const wsUrl = `${baseUrl}/ws`;
   
-  console.log('[WebSocket] 🔗 API Base URL:', apiBaseUrl);
-  console.log('[WebSocket] 🔗 Extracted Base URL:', baseUrl);
-  console.log('[WebSocket] 🔗 WebSocket URL:', wsUrl);
+  // URLs prepared for WebSocket connection
+  // API Base URL: apiBaseUrl
+  // Extracted Base URL: baseUrl
+  // WebSocket URL: wsUrl
   
   return wsUrl;
 };

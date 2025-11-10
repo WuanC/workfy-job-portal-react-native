@@ -1,34 +1,30 @@
 import {
     View,
     Text,
+    Image,
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    Alert,
     ScrollView,
-    ActivityIndicator,
+    TouchableWithoutFeedback,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
     Keyboard,
+    ActivityIndicator,
 } from "react-native";
-import Checkbox from "expo-checkbox";
-import RNPickerSelect from "react-native-picker-select";
-import { useEffect, useState } from "react";
-import { registerEmployer } from "../../services/authService"; // ✅ đổi import
-import apiInstance from "../../api/apiInstance";
 import { Ionicons } from "@expo/vector-icons";
+import Checkbox from "expo-checkbox";
+import { useEffect, useState } from "react";
+import { registerEmployer } from "../../services/authService";
 import { getAllProvince, Province } from "../../services/provinceService";
 import { District, getDistrictsByProvince } from "../../services/districtService";
 import { Dropdown } from "react-native-element-dropdown";
-import { getEnumOptions, LevelCompanySize } from "../../utilities/constant";
-
+import { getEnumOptions, LevelCompanySize, LOGO_IMG } from "../../utilities/constant";
+import { validateField } from "../../utilities/validation";
 
 const EmployerRegisterScreen = ({ navigation }: any) => {
-
-    const [listProvinces, setListProvinces] = useState<Province[]>([])
-    const [listDistricts, setListDistricts] = useState<District[]>([])
-
+    const [listProvinces, setListProvinces] = useState<Province[]>([]);
+    const [listDistricts, setListDistricts] = useState<District[]>([]);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -36,90 +32,83 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
     const [companySize, setCompanySize] = useState("");
     const [contactPerson, setContactPerson] = useState("");
     const [phone, setPhone] = useState("");
-    const [country] = useState("Việt Nam");
     const [provinceId, setProvinceId] = useState<number | null>(null);
     const [districtId, setDistrictId] = useState<number | null>(null);
     const [address, setAddress] = useState("");
-    const [receiveJobNews, setReceiveJobNews] = useState(true);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        let cancelled = false; // flag để tránh setState sau unmount
-
+        let cancelled = false;
         const load = async () => {
             try {
-                const listProvinces = await getAllProvince(); // gọi service bạn đã viết
-                if (cancelled) return;
-
-                setListProvinces(listProvinces)
-            } catch (err: any) {
-                if (cancelled) return;
-                console.error("Lỗi load", err);
-            } finally {
-                if (!cancelled) { }
+                const list = await getAllProvince();
+                if (!cancelled) setListProvinces(list);
+            } catch (err) {
+                console.error("Lỗi load tỉnh/thành:", err);
             }
         };
-
         load();
-
         return () => {
             cancelled = true;
         };
     }, []);
+
     useEffect(() => {
         if (provinceId) {
             (async () => {
                 try {
                     const data = await getDistrictsByProvince(provinceId);
-                    setListDistricts(data)
+                    setListDistricts(data);
                 } catch (error) {
                     console.error("Lỗi khi lấy quận/huyện:", error);
-                    setListDistricts([])
-                } finally {
-
+                    setListDistricts([]);
                 }
             })();
         } else {
-            setListDistricts([])
+            setListDistricts([]);
         }
     }, [provinceId]);
 
-
-
-
-
     const handleRegister = async () => {
+        const { ToastService } = require("../../services/toastService");
+
         if (!email || !password || !confirmPassword || !companyName) {
-                const { ToastService } = require("../../services/toastService");
-                ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin cần thiết.");
-                return;
-            }
-            if (password !== confirmPassword) {
-                const { ToastService } = require("../../services/toastService");
-                ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
-                return;
-            }
+            ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin cần thiết.");
+            return;
+        }
+
+        const emailError = validateField(email, "email");
+        if (emailError) return ToastService.error("Lỗi", emailError);
+
+        const passwordError = validateField(password, "password");
+        if (passwordError) return ToastService.error("Lỗi", passwordError);
+
+        if (password !== confirmPassword) {
+            ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
+            return;
+        }
+
+        if (phone) {
+            const phoneError = validateField(phone, "phone");
+            if (phoneError) return ToastService.error("Lỗi", phoneError);
+        }
 
         try {
             setLoading(true);
-
             await registerEmployer({
                 email,
                 password,
                 companyName,
-                companySize: companySize,
+                companySize,
                 contactPerson,
                 phoneNumber: phone,
-                provinceId: provinceId ? Number(provinceId) : 0,
-                districtId: districtId ? Number(districtId) : 0,
+                provinceId: provinceId ?? 0,
+                districtId: districtId ?? 0,
                 detailAddress: address || undefined,
             });
-            console.log(email);
-            const { ToastService } = require("../../services/toastService");
             ToastService.success("Thành công", "Đăng ký nhà tuyển dụng thành công!");
-            navigation.replace("ConfirmEmail", { email: email, role: "employer" });
+            navigation.replace("ConfirmEmail", { email, role: "employer" });
         } catch (err: any) {
-            const { ToastService } = require("../../services/toastService");
             ToastService.error("Đăng ký thất bại", err.message || "Vui lòng thử lại.");
         } finally {
             setLoading(false);
@@ -133,136 +122,146 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={styles.container}>
-                    <View style={styles.header}>
-                        <TouchableOpacity
-                            style={styles.iconButton}
-                            onPress={() => navigation.goBack()}
-                        >
-                            <Ionicons name="arrow-back" size={22} color="#333" />
-                        </TouchableOpacity>
+                    <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
+                    <Text style={styles.title}>Đăng ký doanh nghiệp</Text>
 
-                        <Text
-                            style={styles.headerTitle}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
-                        >
-                            Nhà tuyển dụng đăng ký
-                        </Text>
-                        <View style={{ width: 38 }} />
-                    </View>
-
-                    <View style={styles.card}>
-                        <Text style={styles.sectionTitle}>Thông tài khoản</Text>
-                        {/* Email */}
+                    {/* Email */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="mail-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            style={styles.input}
-                            placeholder="Email"
+                            placeholder="Email công ty"
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
-                        />
-
-                        {/* Password */}
-                        <TextInput
                             style={styles.input}
-                            placeholder="Mật khẩu"
+                            autoCapitalize="none"
+                        />
+                    </View>
+
+                    {/* Password */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
+                        <TextInput
+                            placeholder="Nhập mật khẩu"
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
-                        />
-
-                        {/* Confirm Password */}
-                        <TextInput
                             style={styles.input}
-                            placeholder="Nhập lại mật khẩu"
+                            autoCapitalize="none"
+                        />
+                    </View>
+
+                    {/* Confirm Password */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
+                        <TextInput
+                            placeholder="Xác nhận mật khẩu"
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
-                        />
-
-                        <Text style={styles.sectionTitle}>Thông tin công ty</Text>
-
-                        <TextInput
                             style={styles.input}
+                            autoCapitalize="none"
+                        />
+                    </View>
+
+                    {/* Company Name */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="business-outline" size={22} color="#94A3B8" style={styles.icon} />
+                        <TextInput
                             placeholder="Tên công ty"
                             value={companyName}
                             onChangeText={setCompanyName}
+                            style={styles.input}
                         />
+                    </View>
 
+                    {/* Company Size */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="people-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <Dropdown
                             data={getEnumOptions(LevelCompanySize)}
                             labelField="label"
                             valueField="value"
-                            placeholder="Chọn số nhân viên"
+                            placeholder="Quy mô công ty"
                             value={companySize}
                             onChange={(item) => setCompanySize(item.value)}
                             style={styles.dropdown}
                             placeholderStyle={styles.placeholder}
                             selectedTextStyle={styles.selectedText}
                         />
+                    </View>
+
+                    {/* Contact Person */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="person-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            style={[styles.input]}
                             placeholder="Người liên hệ"
                             value={contactPerson}
                             onChangeText={setContactPerson}
+                            style={styles.input}
                         />
+                    </View>
+
+                    {/* Phone */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="call-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            style={[styles.input]}
-                            placeholder="Điện thoại"
+                            placeholder="Số điện thoại"
                             keyboardType="phone-pad"
                             value={phone}
                             onChangeText={setPhone}
+                            style={styles.input}
                         />
-                        <Text style={styles.sectionTitle}>Địa chỉ</Text>
+                    </View>
 
-                        <TextInput style={styles.input} value={country} editable={false} />
-
+                    {/* Province */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="location-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <Dropdown
                             data={listProvinces}
                             labelField="name"
                             valueField="id"
-                            placeholder="Chọn Tỉnh / Thành phố"
+                            placeholder="Chọn Tỉnh/Thành phố"
                             value={provinceId}
-                            onChange={(item) => {
-                                setProvinceId(item.id)
-                            }}
+                            onChange={(item) => setProvinceId(item.id)}
                             style={styles.dropdown}
                             placeholderStyle={styles.placeholder}
                             selectedTextStyle={styles.selectedText}
                         />
+                    </View>
+
+                    {/* District */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="map-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <Dropdown
                             data={listDistricts}
                             labelField="name"
                             valueField="id"
-                            placeholder="Chọn Quận / Huyện"
+                            placeholder="Chọn Quận/Huyện"
                             value={districtId}
-                            onChange={(item) => {
-                                setDistrictId(item.id)
-                            }}
+                            onChange={(item) => setDistrictId(item.id)}
                             style={styles.dropdown}
                             placeholderStyle={styles.placeholder}
                             selectedTextStyle={styles.selectedText}
                         />
+                    </View>
 
-
+                    {/* Address */}
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="home-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            style={styles.input}
-                            placeholder="Số nhà, phường, xã"
+                            placeholder="Số nhà, Phường/Xã"
                             value={address}
                             onChangeText={setAddress}
+                            style={styles.input}
                         />
-
-                        {/* <View style={styles.checkboxRow}>
-                    <Checkbox
-                        value={receiveJobNews}
-                        onValueChange={setReceiveJobNews}
-                        color={receiveJobNews ? "#1976d2" : undefined}
-                        style={styles.checkbox}
-                    />
-                    <Text style={styles.checkboxText}>Nhận bản tin việc làm</Text>
-                </View> */}
                     </View>
-                    <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={handleRegister}
+                        disabled={loading}
+                    >
                         <Text style={styles.buttonText}>
                             {loading ? "Đang đăng ký..." : "Đăng ký ngay"}
                         </Text>
@@ -276,8 +275,6 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                             </Text>
                         </TouchableOpacity>
                     </View>
-
-
                 </ScrollView>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
@@ -286,97 +283,81 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
     container: {
-        paddingBottom: 40,
-        backgroundColor: "#f8fafc",
+        flexGrow: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 24,
+        backgroundColor: "#fff",
     },
-    header: {
+    logo: { 
+        width: 80, 
+        height: 80, 
+        marginBottom: 20 
+    },
+    title: {
+        fontSize: 26,
+        fontWeight: "bold",
+        marginBottom: 24,
+        color: "#1E293B",
+    },
+    inputContainer: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderColor: "#e5e7eb",
-        position: "relative",
-    },
-    iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
-    headerTitle: {
-        position: "absolute",
-        left: 40, // 👈 đẩy sang phải để tránh icon Back
-        right: 40,
-        textAlign: "center",
-        fontSize: 17,
-        fontWeight: "700",
-        color: "#075985",
-        paddingLeft: 10, // 👈 thêm khoảng cách nhẹ bên trái // ❌ không dùng trong StyleSheet (đưa vào component)
-    },
-    card: {
-        backgroundColor: "#fff",
-        margin: 20,
-        padding: 20,
-        borderRadius: 10,
-        elevation: 2,
-    },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#333",
-        alignSelf: "flex-start",
-        marginTop: 10,
-        marginBottom: 6,
-    },
-    input: {
         borderWidth: 1,
-        borderColor: "#ccc",
+        borderColor: "#CBD5E1",
         borderRadius: 10,
-        paddingHorizontal: 12,
-        height: 50,
+        paddingHorizontal: 14,
+        marginVertical: 8,
         width: "100%",
-        marginVertical: 6,
+        height: 48,
+    },
+    icon: { marginRight: 8 },
+    input: { 
+        flex: 1, 
+        paddingVertical: 10, 
         fontSize: 15,
+        color: "#1E293B"
     },
     dropdown: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 10,
-        height: 50,
-        width: "100%",
+        flex: 1,
+        height: "100%",
         justifyContent: "center",
-        marginVertical: 6,
-        paddingHorizontal: 10,
     },
-    row: { flexDirection: "row", width: "100%" },
-    checkboxRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        alignSelf: "flex-start",
-        marginVertical: 8,
+    placeholder: { 
+        color: "#94A3B8", 
+        fontSize: 15 
     },
-    checkbox: { marginRight: 8 },
-    checkboxText: { color: "#555" },
+    selectedText: { 
+        color: "#1E293B", 
+        fontSize: 15,
+        fontWeight: "500"
+    },
     button: {
-        backgroundColor: "#1976d2",
-        paddingVertical: 16,
-        marginHorizontal: 20,
-        borderRadius: 8,
+        backgroundColor: "#2563EB",
+        paddingVertical: 14,
+        borderRadius: 10,
+        width: "100%",
         alignItems: "center",
-        marginTop: 10,
+        marginTop: 16,
     },
-    buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-    bottomLinks: { marginTop: 20, alignItems: "center" },
-    linkText: { color: "#555", fontSize: 14 },
-    linkHighlight: { color: "#1976d2", fontWeight: "bold" },
-    placeholder: {
-        color: "#999",
-        fontSize: 15,
+    buttonText: { 
+        color: "#fff", 
+        fontSize: 16, 
+        fontWeight: "600" 
     },
-    selectedText: {
-        color: "#333",
-        fontSize: 15,
-        fontWeight: "500",
+    bottomLinks: { 
+        marginTop: 20, 
+        alignItems: "center",
+        marginBottom: 24,
+    },
+    linkText: { 
+        color: "#475569", 
+        fontSize: 14 
+    },
+    linkHighlight: { 
+        color: "#2563EB", 
+        fontWeight: "600" 
     },
 });
-
 
 export default EmployerRegisterScreen;

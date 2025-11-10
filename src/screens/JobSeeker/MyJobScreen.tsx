@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, Alert, ActivityIndicator, RefreshControl } from "react-native";
 
 import { FlatList } from "react-native-gesture-handler";
@@ -9,7 +9,7 @@ import JobCard from "../../components/JobCard";
 import Modal from "react-native-modal";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { getMyApplications } from "../../services/applicationService";
 import { formatDate } from "../../utilities/constant";
 import { getSavedJobs } from "../../services/saveJobService";
@@ -20,7 +20,7 @@ type JobDetailNavigationProp = NativeStackNavigationProp<
 >;
 
 const MyJobScreen = () => {
-    const [activeTab, setActiveTab] = useState("Thông báo");
+    const [activeTab, setActiveTab] = useState("Việc đã ứng tuyển");
     const [isModalVisible, setModalVisible] = useState(false);
 
     const toggleModal = () => {
@@ -60,22 +60,33 @@ const MyJobScreen = () => {
             setApplicationHasMore(page < res.totalPages);
             setApplicationPageNumber(page);
         } catch (err) {
-            console.error("❌ Lỗi khi tải danh sách:", err);
+            setApplicationHasMore(false);
         } finally {
             setIsApplicationLoading(false);
         }
     };
+    const applicationListRef = useRef<FlatList>(null);
+    const saveJobListRef = useRef<FlatList>(null);
 
+    // Khi muốn reset progress:
+    const resetApplicationList = () => {
+        applicationListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    };
+
+    const resetSaveJobList = () => {
+        saveJobListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    };
     const fetchSaveJobs = async (page = 1) => {
         if (isSaveJobLoading || !saveJobHasMore) return;
+
         setIsSaveJobLoading(true);
         try {
             const res = await getSavedJobs({
                 pageNumber: page,
                 pageSize: 10,
             });
-
             if (page === 1) {
+
                 setSaveJobs(res.items);
             } else {
                 setSaveJobs(prev => [...prev, ...res.items]);
@@ -83,17 +94,40 @@ const MyJobScreen = () => {
             setSaveJobHasMore(page < res.totalPages);
             setSaveJobPageNumber(page);
         } catch (err) {
-            setSaveJobHasMore(false)
-            console.error("❌ Lỗi khi tải danh sách:", err);
+            setSaveJobHasMore(false);
         } finally {
             setIsSaveJobLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchSaveJobs()
-        fetchApplications()
-    }, []);
+    // useEffect(() => {
+    //     fetchSaveJobs()
+    //     fetchApplications()
+    // }, []);
+    // useFocusEffect(
+    //     useCallback(() => {
+    //         if (activeTab === "Việc đã ứng tuyển") {
+    //             setApplicationPageNumber(1);
+    //             setApplicationHasMore(true);
+    //             fetchApplications(1, false);
+    //         } else if (activeTab === "Việc đã lưu") {
+    //             setSaveJobPageNumber(1);
+    //             setSaveJobHasMore(true);
+    //             fetchSaveJobs(1, false);
+    //         }
+    //     }, [activeTab])
+    // );
+    useFocusEffect(
+        useCallback(() => {
+            resetApplicationList()
+            resetSaveJobList()
+            setIsApplicationLoading(false)
+            setIsSaveJobLoading(false)
+            fetchSaveJobs(1);
+            fetchApplications(1);
+        }, [])
+    );
+
     const [similarJobs, setSimilarJobs] = useState([
         { id: "1", title: "Frontend Developer - Thu nhập Lên đến 50 triệu / tháng", location: "Hà Nội", notificationState: true },
         { id: "2", title: "Backend Developer", location: "Hà Nội", notificationState: false },
@@ -137,7 +171,7 @@ const MyJobScreen = () => {
 
             {/* Tabs */}
             <View style={styles.tabContainer}>
-                {["Thông báo", "Việc đã ứng tuyển", "Việc đã lưu"].map((tab) => (
+                {["Việc đã ứng tuyển", "Việc đã lưu"].map((tab) => (
                     <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tab}>
                         <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
                             {tab}
@@ -211,15 +245,13 @@ const MyJobScreen = () => {
                         style={styles.content}
                         data={applications}
                         keyExtractor={(item) => item.id}
+                        ref = {applicationListRef}
                         renderItem={({ item }) => (
                             <View>
-                                {/* <TouchableOpacity onPress={() => console.log(item)}>
-                                    <Text>abc</Text>
-                                </TouchableOpacity> */}
                                 <AppliedJobCard
                                     id={item.id}
                                     title={item.job?.jobTitle}
-                                    company_name={item.job?.companyName}
+                                    company_name={item.job?.employer?.companyName}
                                     logo_path={item.job.employer?.avatarUrl}
                                     applied_time={formatDate(item.createdAt)}
                                     cvUrl={item.cvUrl}
@@ -252,6 +284,7 @@ const MyJobScreen = () => {
                         style={styles.content}
                         data={saveJobs}
                         keyExtractor={(item) => item.id}
+                        ref={saveJobListRef}
                         renderItem={({ item }) => (
                             <JobCard
                                 id={item.id}
@@ -339,7 +372,8 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: 12,
-        paddingTop: 12,
+        paddingVertical: 0,
+        marginBottom: 12,
     },
 
     emptyText: { textAlign: "center", color: "#888", marginTop: 20 },

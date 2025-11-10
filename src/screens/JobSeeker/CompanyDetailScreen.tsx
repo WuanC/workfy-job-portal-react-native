@@ -20,6 +20,8 @@ import { getEmployerById } from "../../services/employerService";
 import { getCompanySizeLabel } from "../../utilities/constant";
 import RenderHTML from "react-native-render-html";
 import { getEmployerJobOpenings } from "../../services/jobService";
+import { colors } from "../../theme/colors";
+import { spacing, borderRadius, shadows } from "../../theme/spacing";
 
 const CompanyDetailScreen = ({ route }: any) => {
   const navigation = useNavigation();
@@ -28,6 +30,10 @@ const CompanyDetailScreen = ({ route }: any) => {
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState<any>()
   const [openJobs, setOpenJobs] = useState<any[]>([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const pageSize = 10;
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   const { width } = useWindowDimensions();
   useEffect(() => {
@@ -58,19 +64,46 @@ const CompanyDetailScreen = ({ route }: any) => {
 
 
 
+  const fetchOpenJobs = async (page: number = 1, append: boolean = false) => {
+    if (!id) return;
+    try {
+      if (page === 1) setLoading(true);
+      const data = await getEmployerJobOpenings(id, page, pageSize);
+      const items = data?.items || [];
+      if (append) setOpenJobs((prev) => [...prev, ...items]);
+      else setOpenJobs(items);
+
+      if (!items || items.length < pageSize) setHasMore(false);
+      else setHasMore(true);
+
+      setPageNumber(page);
+    } catch (err) {
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("Lỗi", "Không thể tải danh sách công việc.");
+    } finally {
+      if (page === 1) setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreJobs = async () => {
+    if (loadingMore || loading || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const next = pageNumber + 1;
+      await fetchOpenJobs(next, true);
+    } catch (err) {
+      console.error("Lỗi khi tải thêm công việc:", err);
+      setLoadingMore(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       if (!id) return;
-      const fetchOpenJobs = async () => {
-        try {
-          const data = await getEmployerJobOpenings(id);
-          setOpenJobs(data.items);
-        } catch (err) {
-          const { ToastService } = require("../../services/toastService");
-          ToastService.error("Lỗi", "Không thể tải danh sách công việc.");
-        }
-      };
-      fetchOpenJobs();
+      // load first page when screen focuses or id changes
+      setHasMore(true);
+      fetchOpenJobs(1, false);
     }, [id])
   );
 
@@ -83,35 +116,24 @@ const CompanyDetailScreen = ({ route }: any) => {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Banner */}
-        <View style={styles.bannerContainer}>
-          <Image
-            source={
-              company.backgroundUrl
-                ? typeof company.backgroundUrl === "string"
-                  ? { uri: company.backgroundUrl }
-                  : company.backgroundUrl
-                : require("../../../assets/App/companyBannerDefault.jpg")
+  const Header = () => (
+    <View>
+      {/* Banner */}
+      <View style={styles.bannerContainer}>
+        <Image
+          source={
+            company.backgroundUrl
+              ? typeof company.backgroundUrl === "string"
+                ? { uri: company.backgroundUrl }
+                : company.backgroundUrl
+              : require("../../../assets/App/companyBannerDefault.jpg")
+          }
+          style={styles.banner}
+        />
+      </View>
 
-            }
-            style={styles.banner}
-          />
-
-          {/* Back button */}
-          <SafeAreaView style={styles.safeArea}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="chevron-back" size={26} color="#fff" />
-            </TouchableOpacity>
-          </SafeAreaView>
-        </View>
-
-        {/* Company info */}
+      {/* Company Info Card */}
+      <View style={{ paddingHorizontal: spacing.md }}>
         <View style={styles.headerContainer}>
           <Image
             source={
@@ -120,23 +142,33 @@ const CompanyDetailScreen = ({ route }: any) => {
                   ? { uri: company.avatarUrl }
                   : company.avatarUrl
                 : require("../../../assets/App/companyLogoDefault.png")
-
             }
             style={styles.logo}
           />
-          <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={styles.companyName}>{company.companyName}</Text>
-            <Text style={styles.companyLocation}>{company.district.name}, {company.province.name}, Việt Nam</Text>
-            <Text style={styles.companySize}>{getCompanySizeLabel(company.companySize)}</Text>
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
+            <Text style={styles.companyName}>{company?.companyName}</Text>
+            <Text style={styles.companyLocation}>
+              {company?.district?.name}, {company?.province?.name}, Việt Nam
+            </Text>
+            <Text style={styles.companySize}>
+              {getCompanySizeLabel(company?.companySize)}
+            </Text>
           </View>
         </View>
+      </View>
 
-        {/* Tabs */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === "about" && styles.activeTab]}
-            onPress={() => setActiveTab("about")}
-          >
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "about" && styles.activeTab]}
+          onPress={() => setActiveTab("about")}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons
+              name="information-circle-outline"
+              size={18}
+              color={activeTab === "about" ? colors.text.inverse : colors.text.primary}
+            />
             <Text
               style={[
                 styles.tabText,
@@ -145,12 +177,19 @@ const CompanyDetailScreen = ({ route }: any) => {
             >
               About us
             </Text>
-          </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === "jobs" && styles.activeTab]}
-            onPress={() => setActiveTab("jobs")}
-          >
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "jobs" && styles.activeTab]}
+          onPress={() => setActiveTab("jobs")}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons
+              name="briefcase-outline"
+              size={18}
+              color={activeTab === "jobs" ? colors.text.inverse : colors.text.primary}
+            />
             <Text
               style={[
                 styles.tabText,
@@ -159,143 +198,199 @@ const CompanyDetailScreen = ({ route }: any) => {
             >
               Opening jobs
             </Text>
-          </TouchableOpacity>
-        </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
-        {/* Content */}
-        {activeTab === "about" ? (
+  return (
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={26} color="#fff" />
+        </TouchableOpacity>
+      </SafeAreaView>
+      {activeTab === "about" ? (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Header />
           <View style={styles.contentContainer}>
-            <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
+            </View>
+            <Text style={styles.description}>
               {company?.aboutCompany ? (
                 <RenderHTML
                   contentWidth={width}
                   source={{ html: company.aboutCompany }}
                   tagsStyles={{
-                    p: {
-                      color: "#374151",
-                      fontSize: 14,
-                      lineHeight: 22,
-                      textAlign: "justify",
-                      marginBottom: 8,
-                    },
+                    p: { color: "#444", fontSize: 14, lineHeight: 20, textAlign: "justify" },
                     b: { fontWeight: "bold" },
                     strong: { fontWeight: "bold" },
                     i: { fontStyle: "italic" },
                   }}
                 />
               ) : (
-                <Text style={styles.emptyText}>Chưa có mô tả về công ty.</Text>
+                <Text style={{ color: "#555" }}>Chưa có mô tả về công ty.</Text>
               )}
-            </View>
-            <View style={styles.sectionCard}>
-              {/* Card: Phương tiện & Liên hệ */}
+            </Text>
+
+            {/* Liên hệ */}
+            <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
-
-              <View style={styles.contactList}>
-                {company?.websiteUrls?.length > 0 ? (
-                  company.websiteUrls.map((url: string, index: number) => (
-                    <View style={styles.contactRow} key={`website-${index}`}>
-                      <Text style={styles.contactLabel}>🌐 Website</Text>
-                      <Text style={styles.contactValue}>{url}</Text>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.emptyText}>Không có website</Text>
-                )}
-
-                {company?.facebookUrl && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>📘 Facebook</Text>
-                    <Text style={styles.contactValue}>{company.facebookUrl}</Text>
-                  </View>
-                )}
-                {company?.linkedinUrl && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>💼 LinkedIn</Text>
-                    <Text style={styles.contactValue}>{company.linkedinUrl}</Text>
-                  </View>
-                )}
-                {company?.youtubeUrl && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>▶️ YouTube</Text>
-                    <Text style={styles.contactValue}>{company.youtubeUrl}</Text>
-                  </View>
-                )}
-                {company?.googleUrl && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>🟢 Google</Text>
-                    <Text style={styles.contactValue}>{company.googleUrl}</Text>
-                  </View>
-                )}
-                {company?.twitterUrl && (
-                  <View style={styles.contactRow}>
-                    <Text style={styles.contactLabel}>🐦 Twitter</Text>
-                    <Text style={styles.contactValue}>{company.twitterUrl}</Text>
-                  </View>
-                )}
-              </View>
             </View>
 
+            {/* Website + Mạng xã hội */}
+            {(() => {
+              const links = [
+                ...(company?.websiteUrls || []).map((url: string, i: number) => ({
+                  icon: "globe-outline",
+                  color: "#007bff",
+                  url,
+                })),
+                { icon: "logo-facebook", color: "#3b5998", url: company?.facebookUrl },
+                { icon: "logo-twitter", color: "#1DA1F2", url: company?.twitterUrl },
+                { icon: "logo-linkedin", color: "#0077b5", url: company?.linkedinUrl },
+                { icon: "logo-google", color: "#DB4437", url: company?.googleUrl },
+                { icon: "logo-youtube", color: "#FF0000", url: company?.youtubeUrl },
+              ].filter((l) => l.url);
+
+              return links.length > 0 ? (
+                links.map((l, i) => (
+                  <View style={styles.infoRow} key={i}>
+                    <Ionicons name={l.icon as any} size={18} color={l.color} />
+                    <Text style={styles.infoText}>{l.url}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: "#555", marginVertical: 4 }}>
+                  Không có mạng xã hội
+                </Text>
+              );
+            })()}
           </View>
-        ) : (
-          <View style={styles.contentContainer}>
-            <Text style={styles.sectionTitle}>Việc làm đang tuyển</Text>
-            {openJobs.length > 0 ? (
-              <FlatList
-                data={openJobs}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false} // ❗ Không cho FlatList tự cuộn
-                nestedScrollEnabled={false}
-                renderItem={({ item }) => (
-                  <JobCard
-                    id={item.id}
-                    logo_path={company.avatarUrl}
-                    job_title={item.jobTitle}
-                    company_name={item.companyName}
-                    job_location={item.jobLocations[0].province.name}
-                    salary_range={
-                      item.salaryType === "RANGE"
-                        ? `${item.minSalary?.toLocaleString()} ${item.salaryUnit}  - ${item.maxSalary?.toLocaleString()} ${item.salaryUnit} `
-                        : item.salaryType === "GREATER_THAN"
-                          ? `Trên ${item.minSalary?.toLocaleString()}`
-                          : item.salaryType === "NEGOTIABLE"
-                            ? "Thỏa thuận"
-                            : item.salaryType === "COMPETITIVE"
-                              ? "Cạnh tranh"
-                              : "Không rõ"
-                    }
-                    time_passed={item.expirationDate}
-                  />
-                )}
-                contentContainerStyle={{ paddingBottom: 80 }}
-                showsVerticalScrollIndicator={false}
+        </ScrollView>
+      ) : (
+        <FlatList
+            ListHeaderComponent={<Header />}
+            data={openJobs}
+            keyExtractor={(item) => item.id?.toString()}
+            renderItem={({ item }) => (
+              <JobCard
+                id={item.id}
+                logo_path={company.avatarUrl}
+                job_title={item.jobTitle}
+                company_name={item.companyName}
+                job_location={item.jobLocations[0].province.name}
+                salary_range={
+                  item.salaryType === "RANGE"
+                    ? `${item.minSalary?.toLocaleString()} ${item.salaryUnit}  - ${item.maxSalary?.toLocaleString()} ${item.salaryUnit} `
+                    : item.salaryType === "GREATER_THAN"
+                    ? `Trên ${item.minSalary?.toLocaleString()}`
+                    : item.salaryType === "NEGOTIABLE"
+                    ? "Thỏa thuận"
+                    : item.salaryType === "COMPETITIVE"
+                    ? "Cạnh tranh"
+                    : "Không rõ"
+                }
+                time_passed={item.expirationDate}
               />
-            ) : (
-              <Text style={{ color: "#777", marginTop: 10 }}>
-                Chưa có công việc nào.
-              </Text>
             )}
-          </View>
-        )}
-      </ScrollView>
+            onEndReached={loadMoreJobs}
+            onEndReachedThreshold={0.3}
+            ListFooterComponent={() =>
+              loadingMore ? (
+                <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={colors.primary.start} />
+                </View>
+              ) : null
+            }
+            contentContainerStyle={{ paddingBottom: 80 }}
+            showsVerticalScrollIndicator={false}
+          />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1, backgroundColor: colors.background },
+  bannerContainer: { position: "relative", backgroundColor: colors.primary.start },
+  banner: { width: "100%", height: 200 },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    ...shadows.soft,
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.lg,
+    borderWidth: 3,
+    borderColor: colors.primary.start,
+    backgroundColor: colors.surface,
+    ...shadows.soft,
+  },
+  companyName: { fontSize: 20, fontWeight: "800", color: colors.text.primary },
+  companyLocation: { fontSize: 14, color: colors.text.secondary },
+  companySize: { fontSize: 13, color: colors.text.tertiary },
+  tabContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: spacing.lg,
+    gap: spacing.md,
+  },
+  tabButton: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    ...shadows.soft,
+  },
+  activeTab: { backgroundColor: colors.primary.start },
+  tabText: { color: colors.text.primary, fontWeight: "600", fontSize: 15 },
+  activeTabText: { color: colors.text.inverse, fontWeight: "700" },
+  contentContainer: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.text.primary },
+  description: {
+    fontSize: 15,
+    color: colors.text.secondary,
+    lineHeight: 24,
+    textAlign: "justify",
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 10,
+    ...shadows.soft,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 2,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 10,
+    ...shadows.soft,
+  },
+  infoText: { marginLeft: spacing.md, color: colors.primary.start, fontSize: 15 },
+  loadingContainer: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#f8f9fb",
-  },
-
-  bannerContainer: {
-    position: "relative",
-  },
-  banner: {
-    width: "100%",
-    height: 200,
-    resizeMode: "cover",
   },
   safeArea: {
     position: "absolute",
@@ -312,159 +407,6 @@ const styles = StyleSheet.create({
     padding: 6,
     alignSelf: "flex-start",
   },
-
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    marginHorizontal: 16,
-    marginTop: -40,
-    borderRadius: 20,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  logo: {
-    width: 68,
-    height: 68,
-    borderRadius: 16,
-    backgroundColor: "#fff",
-    marginRight: 12,
-  },
-  companyName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1f2937",
-  },
-  companyLocation: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginTop: 2,
-  },
-  companySize: {
-    fontSize: 13,
-    color: "#9ca3af",
-    marginTop: 2,
-  },
-
-  tabContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#fff",
-    marginHorizontal: 16,
-    marginTop: 18,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  tabButton: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 12,
-    borderRadius: 16,
-  },
-  activeTab: {
-    backgroundColor: "#e6f0ff",
-  },
-  tabText: {
-    fontSize: 14,
-    color: "#374151",
-    fontWeight: "500",
-  },
-  activeTabText: {
-    color: "#1d4ed8",
-    fontWeight: "700",
-  },
-
-  contentContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-  },
-
-  sectionCard: {
-    // backgroundColor: "#fff",
-    // borderRadius: 20,
-    // padding: 16,
-     marginBottom: 16,
-    // shadowColor: "#000",
-    // shadowOpacity: 0.05,
-    // shadowRadius: 6,
-    // shadowOffset: { width: 0, height: 2 },
-    // elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 14,
-    color: "#374151",
-    lineHeight: 22,
-    textAlign: "justify",
-  },
-
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9fafb",
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginVertical: 5,
-  },
-  infoText: {
-    marginLeft: 8,
-    color: "#2563eb",
-    fontSize: 13,
-  },
-
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8f9fb",
-  },
-  emptyText: {
-    color: "#6b7280",
-    fontSize: 14,
-    marginTop: 1,
-  },
-
-  contactList: {
-    marginTop: 8,
-  },
-
-  contactRow: {
-    backgroundColor: "#f9fafb",
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginVertical: 4,
-    flexDirection: "column",
-  },
-
-  contactLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: 2,
-  },
-
-  contactValue: {
-    fontSize: 13,
-    color: "#2563eb",
-    lineHeight: 18,
-    flexShrink: 1,
-  },
-
 });
 
 

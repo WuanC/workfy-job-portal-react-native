@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -104,50 +105,62 @@ const EmployeeDetailApplication = ({ route }: any) => {
           <Ionicons name="arrow-back" size={22} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Đơn ứng tuyển của tôi</Text>
-        <Ionicons name="chatbox-outline" size={20} color="#000" />
+        {/* <Ionicons name="chatbox-outline" size={20} color="#000" /> */}
+        <View></View>
       </View>
 
-      {/* 🔹 Nội dung */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: spacing.md }}
+        nestedScrollEnabled={true}
       >
         {/* 🧾 Job Info */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>
-            Công việc:{" "}
-            <Text style={styles.jobTitle}>{jobTitle || "Không rõ"}</Text>
-          </Text>
+        <View style={styles.section}>
+          <Text style={styles.label}>Công việc</Text>
+          <Text style={styles.jobTitle}>{jobTitle || "Không rõ"}</Text>
+        </View>
 
-          <View style={styles.statusRow}>
-            <View
+        {/* Status Section */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Trạng thái hồ sơ</Text>
+          <View
+            style={[
+              styles.statusBadge,
+              statusStyles[status] || statusStyles.DEFAULT,
+            ]}
+          >
+            <Text
               style={[
-                styles.statusBadge,
-                statusStyles[status] || statusStyles.DEFAULT,
+                styles.statusText,
+                (statusStyles[status] || statusStyles.DEFAULT).text,
               ]}
             >
-              <Text
-                style={[
-                  styles.statusText,
-                  (statusStyles[status] || statusStyles.DEFAULT).text,
-                ]}
-              >
-                {getApplicationStatusLabel(status) || "Trạng thái không xác định"}
-              </Text>
-            </View>
+              {getApplicationStatusLabel(status) || "Trạng thái không xác định"}
+            </Text>
           </View>
         </View>
 
         {/* 📝 Cover Letter */}
-        <Text style={styles.sectionTitle}>Thư xin việc</Text>
-        <Text style={styles.coverLetter}>
-          {coverLetter || "Ứng viên không gửi thư xin việc."}
-        </Text>
+        <View style={styles.section}>
+          <Text style={styles.label}>Thư xin việc</Text>
+          <TextInput
+            style={styles.textArea}
+            multiline
+            numberOfLines={6}
+            placeholder="Ứng viên không gửi thư xin việc."
+            value={coverLetter || ""}
+            editable={false}
+            scrollEnabled
+            textAlignVertical="top"
+          />
+        </View>
 
-        {/* 📎 Attachment */}
-        <Text style={styles.sectionTitle}>Tệp đính kèm (CV)</Text>
-        <View style={styles.attachmentContainer}>
-          <CVPreview url={cvUrl} />
+        {/* 📎 CV đính kèm */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Tệp đính kèm (CV)</Text>
+          <View style={styles.previewContainer}>
+            <CVPreview url={cvUrl} />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -157,78 +170,69 @@ const EmployeeDetailApplication = ({ route }: any) => {
 export default EmployeeDetailApplication;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingTop: 15,
+    paddingBottom: 15,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderColor: "#eee",
+    borderBottomColor: "#eee",
   },
-  backBtn: {
-    padding: 6,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.text.primary,
-  },
-  infoContainer: {
-    marginBottom: spacing.md,
+  backBtn: { padding: 6 },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: colors.text.primary },
+
+  // --- Sections ---
+  section: {
+    marginBottom: spacing.xl,
   },
   label: {
     fontSize: 14,
-    color: colors.text.secondary,
-    marginBottom: spacing.xs,
+    fontWeight: "600",
+    color: colors.primary.start,
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
   jobTitle: {
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
     color: colors.text.primary,
-  },
-  statusRow: {
-    flexDirection: "row",
-    marginTop: spacing.xs,
+    backgroundColor: "#ffffffff",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
   },
   statusBadge: {
     borderWidth: 1,
     borderRadius: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     alignSelf: "flex-start",
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
   },
-  sectionTitle: {
-    color: "#F57C00",
-    fontSize: 15,
-    fontWeight: "700",
-    marginBottom: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  coverLetter: {
-    fontSize: 14,
-    color: colors.text.primary,
-    lineHeight: 20,
-    backgroundColor: "#fafafa",
-    borderRadius: 8,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: "#eee",
-  },
-  attachmentContainer: {
-    height: 500,
-    borderRadius: 8,
+  previewContainer: {
+    height: 480,
+    borderRadius: 10,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#ddd",
-    backgroundColor: "#fff",
   },
+  textArea: {
+    backgroundColor: "#ffffffff",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    padding: spacing.md,
+    fontSize: 15,
+    color: colors.text.primary,
+    lineHeight: 22,
+    minHeight: 140,
+  }
 });

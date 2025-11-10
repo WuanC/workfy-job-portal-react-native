@@ -5,62 +5,63 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { Ionicons, FontAwesome } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import { getEmployerProfile, updateEmployerWebsiteUrls } from "../../services/employerService";
+import {
+  getEmployerProfile,
+  updateEmployerWebsiteUrls,
+} from "../../services/employerService";
+import { colors, gradients } from "../../theme/colors";
+import { spacing, borderRadius, shadows } from "../../theme/spacing";
+import KeyboardAvoidingWrapper from "../../components/KeyboardAvoidingWrapper";
 
 const UpdateCompanyMedia = () => {
   const navigation = useNavigation();
-
   const [websiteLinks, setWebsiteLinks] = useState<string[]>([""]);
   const [facebookUrl, setFacebookUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [googleUrl, setGoogleUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [companyImage, setCompanyImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  /** 🧠 Lấy dữ liệu từ API /me */
+  /** 🧠 Lấy dữ liệu ban đầu */
   useEffect(() => {
-    const fetchEmployerData = async () => {
+    const fetchData = async () => {
       try {
         const data = await getEmployerProfile();
         if (data) {
-          setWebsiteLinks(data.websiteUrls && data.websiteUrls.length > 0 ? data.websiteUrls : [""]);
+          setWebsiteLinks(data.websiteUrls?.length ? data.websiteUrls : [""]);
           setFacebookUrl(data.facebookUrl || "");
           setTwitterUrl(data.twitterUrl || "");
           setLinkedinUrl(data.linkedinUrl || "");
           setGoogleUrl(data.googleUrl || "");
           setYoutubeUrl(data.youtubeUrl || "");
-          setCompanyImage(data.backgroundUrl || null);
         }
       } catch (error) {
-        console.log("❌ Lỗi khi lấy employer:", error);
+        console.log("❌ Lỗi khi tải dữ liệu:", error);
       }
     };
-    fetchEmployerData();
+    fetchData();
   }, []);
 
+  /** 🧩 Xử lý thay đổi */
   const handleAddWebsite = () => setWebsiteLinks((prev) => [...prev, ""]);
-
   const handleWebsiteChange = (index: number, text: string) => {
     const updated = [...websiteLinks];
     updated[index] = text;
     setWebsiteLinks(updated);
   };
-
-  const handleRemoveWebsite = (index: number) => {
+  const handleRemoveWebsite = (index: number) =>
     setWebsiteLinks((prev) => prev.filter((_, i) => i !== index));
-  };
 
-
-  const handleCancel = () => navigation.goBack();
-
+  /** 💾 Gửi cập nhật */
   const handleUpdate = async () => {
     try {
       setLoading(true);
@@ -72,13 +73,12 @@ const UpdateCompanyMedia = () => {
         googleUrl,
         youtubeUrl,
       };
-
       await updateEmployerWebsiteUrls(payload);
       const { ToastService } = require("../../services/toastService");
-      ToastService.success("Thành công", "Cập nhật liên kết và hình ảnh công ty thành công!");
-      setTimeout(() => navigation.goBack(), 900);
+      ToastService.success("Thành công", "Cập nhật thông tin công ty!");
+      navigation.goBack();
     } catch (error) {
-      console.log("Lỗi khi cập nhật:", error);
+      console.log("❌ Cập nhật lỗi:", error);
       const { ToastService } = require("../../services/toastService");
       ToastService.error("Lỗi", "Không thể cập nhật thông tin.");
     } finally {
@@ -87,212 +87,187 @@ const UpdateCompanyMedia = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => navigation.goBack()}
+    <KeyboardAvoidingWrapper>
+
+
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={22} color={colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Liên kết</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
         >
-          <Ionicons name="arrow-back" size={22} color="#333" />
-        </TouchableOpacity>
-
-        <Text
-          style={styles.headerTitle}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          Liên kết và hình ảnh
-        </Text>
-        <View style={{ width: 38 }} />
-      </View>
-
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Website & Liên kết mạng xã hội</Text>
-
-        {/* Website */}
-        <Text style={styles.label}>Trang web công ty</Text>
-        {websiteLinks.map((link, index) => (
-          <View key={index} style={styles.inputRow}>
-            <Ionicons name="globe-outline" size={20} color="#666" style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.input}
-              placeholder="https://example.com"
-              value={link}
-              onChangeText={(text) => handleWebsiteChange(index, text)}
-            />
-            {index > 0 && (
-              <TouchableOpacity onPress={() => handleRemoveWebsite(index)}>
-                <Ionicons name="remove-circle" size={22} color="red" />
-              </TouchableOpacity>
-            )}
+          {/* Website */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>🌐 Website công ty</Text>
+            {websiteLinks.map((link, index) => (
+              <View key={index} style={styles.inputRow}>
+                <Ionicons name="globe-outline" size={18} color="#555" />
+                <TextInput
+                  placeholder="https://example.com"
+                  style={styles.input}
+                  value={link}
+                  autoCapitalize="none"
+                  onChangeText={(t) => handleWebsiteChange(index, t)}
+                />
+                {index > 0 && (
+                  <TouchableOpacity onPress={() => handleRemoveWebsite(index)}>
+                    <Ionicons name="close-circle" size={22} color="red" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+            <TouchableOpacity onPress={handleAddWebsite} style={styles.addBtn}>
+              <Ionicons name="add-circle-outline" size={20} color={colors.primary.start} />
+              <Text style={styles.addText}>Thêm website</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-        <TouchableOpacity style={styles.addLinkBtn} onPress={handleAddWebsite}>
-          <Text style={styles.addLinkText}>+ Thêm website</Text>
-        </TouchableOpacity>
 
-        {/* Facebook */}
-        <Text style={[styles.label]}>Facebook</Text>
-        <View style={styles.inputRow}>
-          <FontAwesome name="facebook" size={20} color="#1877F2" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.input}
-            placeholder="https://facebook.com/your-page"
-            value={facebookUrl}
-            onChangeText={setFacebookUrl}
-          />
-        </View>
+          {/* Mạng xã hội */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>🔗 Liên kết mạng xã hội</Text>
+            {[
+              { label: "Facebook", icon: "logo-facebook", color: "#1877F2", value: facebookUrl, set: setFacebookUrl },
+              { label: "Twitter", icon: "logo-twitter", color: "#1DA1F2", value: twitterUrl, set: setTwitterUrl },
+              { label: "LinkedIn", icon: "logo-linkedin", color: "#0077b5", value: linkedinUrl, set: setLinkedinUrl },
+              { label: "Google", icon: "logo-google", color: "#DB4437", value: googleUrl, set: setGoogleUrl },
+              { label: "YouTube", icon: "logo-youtube", color: "#FF0000", value: youtubeUrl, set: setYoutubeUrl },
+            ].map((item, i) => (
+              <View key={i} style={styles.inputRow}>
+                <Ionicons name={item.icon as any} size={20} color={item.color} />
+                <TextInput
+                  placeholder={`https://${item.label.toLowerCase()}.com/...`}
+                  style={styles.input}
+                  value={item.value}
+                  autoCapitalize="none"
+                  onChangeText={item.set}
+                />
+              </View>
+            ))}
+          </View>
+        </ScrollView>
 
-        {/* Twitter */}
-        <Text style={[styles.label]}>Twitter</Text>
-        <View style={styles.inputRow}>
-          <FontAwesome name="twitter" size={20} color="#1DA1F2" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.input}
-            placeholder="https://twitter.com/your-handle"
-            value={twitterUrl}
-            onChangeText={setTwitterUrl}
-          />
-        </View>
-
-        {/* LinkedIn */}
-        <Text style={[styles.label]}>LinkedIn</Text>
-        <View style={styles.inputRow}>
-          <FontAwesome name="linkedin" size={20} color="#1877F2" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.input}
-            placeholder="https://linkedin.com/company/your-company"
-            value={linkedinUrl}
-            onChangeText={setLinkedinUrl}
-          />
-        </View>
-
-        {/* Google */}
-        <Text style={[styles.label]}>Google</Text>
-        <View style={styles.inputRow}>
-          <FontAwesome name="google" size={20} color="#DB4437" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.input}
-            placeholder="https://google.com/your-profile"
-            value={googleUrl}
-            onChangeText={setGoogleUrl}
-          />
-        </View>
-
-        {/* YouTube */}
-        <Text style={[styles.label]}>YouTube</Text>
-        <View style={styles.inputRow}>
-          <FontAwesome name="youtube-play" size={20} color="#FF0000" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.input}
-            placeholder="https://youtube.com/@your-channel"
-            value={youtubeUrl}
-            onChangeText={setYoutubeUrl}
-          />
-        </View>
-
-        {/* Hình ảnh công ty */}
-        {/* <Text style={[styles.label, { marginTop: 20 }]}>Hình ảnh công ty</Text>
-        <TouchableOpacity style={styles.imageBox} onPress={handlePickImage}>
-          {companyImage ? (
-            <Image source={{ uri: companyImage }} style={styles.image} />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons name="image-outline" size={40} color="#666" />
-              <Text style={{ color: "#666", marginTop: 5 }}>Thêm hình ảnh mới</Text>
-            </View>
-          )}
-        </TouchableOpacity> */}
-
-        {/* Nút */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelText}>Hủy</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.updateButton} onPress={handleUpdate} disabled={loading}>
-            <Text style={styles.updateText}>{loading ? "Đang lưu..." : "Cập nhật"}</Text>
+        {/* Nút lưu cố định dưới cùng */}
+        <View style={styles.saveButtonContainer}>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleUpdate}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[colors.primary.start, colors.primary.end]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveText}>Lưu thay đổi</Text>
+              )}
+            </LinearGradient>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </View>
+      </View>
+    </KeyboardAvoidingWrapper>
   );
 };
 
-/** 🎨 Giao diện */
+/** 🎨 Styles */
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderColor: "#e5e7eb",
-    position: "relative",
+    borderBottomColor: colors.border.light,
   },
-  iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
+  backButton: {
+    padding: 6,
+  },
   headerTitle: {
-    position: "absolute",
-    left: 40, // 👈 đẩy sang phải để tránh icon Back
-    right: 40,
+    color: colors.text.primary,
+    fontSize: 18,
+    fontWeight: "700",
+    flex: 1,
     textAlign: "center",
+  },
+  scrollContainer: {
+    padding: spacing.md,
+    paddingBottom: 120, // chừa chỗ cho nút
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    ...shadows.soft,
+  },
+  cardTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#075985",
-    paddingLeft: 10, // 👈 thêm khoảng cách nhẹ bên trái // ❌ không dùng trong StyleSheet (đưa vào component)
+    marginBottom: spacing.sm,
+    color: colors.text.primary,
   },
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 18, fontWeight: "bold", marginBottom: 10, color: "#222" },
-  label: { fontSize: 14, color: "#333", marginTop: 12, marginBottom: 5 },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    paddingHorizontal: 10,
+    backgroundColor: "#f8f9fa",
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.sm,
     height: 50,
-    marginBottom: 10,
-    backgroundColor: "#fff",
+    marginBottom: spacing.sm,
   },
-  input: { flex: 1, fontSize: 15, color: "#333" },
-  addLinkBtn: { marginTop: 4 },
-  addLinkText: { color: "#007bff", fontSize: 15 },
-  imageBox: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderStyle: "dashed",
-    borderRadius: 10,
-    height: 150,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
+  input: {
+    flex: 1,
+    marginLeft: 8,
+    color: colors.text.primary,
+    fontSize: 15,
   },
-  imagePlaceholder: { alignItems: "center", justifyContent: "center" },
-  image: { width: "100%", height: "100%", borderRadius: 10 },
-  buttonRow: {
+  addBtn: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 25,
-    marginBottom: 100,
-    gap: 10,
+    alignItems: "center",
+    marginTop: spacing.xs,
+    gap: spacing.xs,
   },
-  cancelButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-    backgroundColor: "#eee",
+  addText: {
+    color: colors.primary.start,
+    fontWeight: "600",
   },
-  cancelText: { color: "#333", fontWeight: "500" },
-  updateButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-    backgroundColor: "#007bff",
+  saveButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: spacing.md,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
   },
-  updateText: { color: "#fff", fontWeight: "600" },
+  saveButton: {
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  gradientButton: {
+    paddingVertical: spacing.md,
+    alignItems: "center",
+  },
+  saveText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+  },
 });
 
 export default UpdateCompanyMedia;

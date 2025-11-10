@@ -25,6 +25,7 @@ const CVPreview = ({ url }: { url: string }) => {
         source={{ uri: viewerUrl }}
         style={styles.webview}
         startInLoadingState
+        nestedScrollEnabled={true}
         renderError={() => (
           <View style={styles.errorContainer}>
             <Text>Không thể xem trước tệp này</Text>

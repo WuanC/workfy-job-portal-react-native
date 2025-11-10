@@ -6,14 +6,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   FlatList,
   useWindowDimensions,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import JobCard from "../../components/JobCard";
+import { colors } from "../../theme/colors";
+import { spacing, borderRadius, shadows } from "../../theme/spacing";
 import {
   getEmployerProfile,
   updateEmployerAvatar,
@@ -37,10 +39,16 @@ const MyCompany = () => {
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [openJobs, setOpenJobs] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = 10;
 
   const [logoUri, setLogoUri] = useState<string | null>(null);
   const [bannerUri, setBannerUri] = useState<string | null>(null);
   const { width } = useWindowDimensions();
+
   useFocusEffect(
     useCallback(() => {
       const fetchCompany = async () => {
@@ -57,25 +65,57 @@ const MyCompany = () => {
     }, [])
   );
 
-  // Lấy danh sách job khi có company.id
+  const fetchOpenJobs = async () => {
+    if (!companyId) return;
+    try {
+      setLoading(true);
+      setPageNumber(1);
+      const data = await getEmployerJobOpenings(companyId, 1, pageSize);
+      setOpenJobs(data.items || []);
+      if (!data.items || data.items.length < pageSize) {
+        setHasMore(false);
+      } else {
+        setHasMore(true);
+      }
+    } catch (err) {
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("Lỗi", "Không thể tải danh sách công việc.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMoreJobs = async () => {
+    if (loadingMore || !hasMore || !companyId) return;
+    try {
+      setLoadingMore(true);
+      const nextPage = pageNumber + 1;
+      const data = await getEmployerJobOpenings(companyId, nextPage, pageSize);
+      const newJobs = data.items || [];
+      if (newJobs.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      setOpenJobs(prev => [...prev, ...newJobs]);
+      setPageNumber(nextPage);
+      if (newJobs.length < pageSize) {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải thêm công việc:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
-      //console.log("Fetching open jobs for companyId:", companyId);
-      if (!companyId) return;
-      const fetchOpenJobs = async () => {
-        try {
-          const data = await getEmployerJobOpenings(companyId);
-          setOpenJobs(data.items);
-        } catch (err) {
-          const { ToastService } = require("../../services/toastService");
-          ToastService.error("Lỗi", "Không thể tải danh sách công việc.");
-        }
-      };
-      fetchOpenJobs();
+      if (companyId) {
+        fetchOpenJobs();
+      }
     }, [companyId])
   );
 
-  // 📸 Hàm chọn ảnh chung
   const pickImage = async (onPicked: (uri: string) => void) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -94,7 +134,6 @@ const MyCompany = () => {
     }
   };
 
-  // 🖼️ Cập nhật banner
   const onEditBanner = () => {
     pickImage(async (uri) => {
       try {
@@ -114,7 +153,6 @@ const MyCompany = () => {
     });
   };
 
-  // 🖼️ Cập nhật logo
   const onEditLogo = () => {
     pickImage(async (uri) => {
       try {
@@ -134,30 +172,30 @@ const MyCompany = () => {
     });
   };
 
-  return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Banner */}
-        <View style={styles.bannerContainer}>
-          <Image
-            source={
-              bannerUri
-                ? { uri: bannerUri }
-                : company?.backgroundUrl
-                  ? { uri: company.backgroundUrl }
-                  : require("../../../assets/App/companyBannerDefault.jpg")
-            }
-            style={styles.banner}
-          />
-          <TouchableOpacity
-            style={styles.editBannerButton}
-            onPress={onEditBanner}
-          >
-            <Ionicons name="create-outline" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
+  const Header = () => (
+    <View>
+      {/* Banner */}
+      <View style={styles.bannerContainer}>
+        <Image
+          source={
+            bannerUri
+              ? { uri: bannerUri }
+              : company?.backgroundUrl
+              ? { uri: company.backgroundUrl }
+              : require("../../../assets/App/companyBannerDefault.jpg")
+          }
+          style={styles.banner}
+        />
+        <TouchableOpacity
+          style={styles.editBannerButton}
+          onPress={onEditBanner}
+        >
+          <Ionicons name="create-outline" size={20} color={colors.text.inverse} />
+        </TouchableOpacity>
+      </View>
 
-        {/* Company Info */}
+      {/* Company Info Card */}
+      <View style={{ paddingHorizontal: spacing.md }}>
         <View style={styles.headerContainer}>
           <View style={{ position: "relative" }}>
             <Image
@@ -165,8 +203,8 @@ const MyCompany = () => {
                 logoUri
                   ? { uri: logoUri }
                   : company?.avatarUrl
-                    ? { uri: company.avatarUrl }
-                    : require("../../../assets/App/companyLogoDefault.png")
+                  ? { uri: company.avatarUrl }
+                  : require("../../../assets/App/companyLogoDefault.png")
               }
               style={styles.logo}
             />
@@ -174,11 +212,11 @@ const MyCompany = () => {
               style={styles.editLogoButton}
               onPress={onEditLogo}
             >
-              <Ionicons name="create-outline" size={16} color="#007bff" />
+              <Ionicons name="create-outline" size={16} color={colors.primary.start} />
             </TouchableOpacity>
           </View>
 
-          <View style={{ flex: 1, marginLeft: 10 }}>
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
             <Text style={styles.companyName}>{company?.companyName}</Text>
             <Text style={styles.companyLocation}>
               {company?.district?.name}, {company?.province?.name}, Việt Nam
@@ -194,16 +232,23 @@ const MyCompany = () => {
               navigation.navigate("UpdateCompanyInfo", { id: company?.id })
             }
           >
-            <Ionicons name="create-outline" size={20} color="#007bff" />
+            <Ionicons name="create-outline" size={20} color={colors.primary.start} />
           </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Tabs */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === "about" && styles.activeTab]}
-            onPress={() => setActiveTab("about")}
-          >
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "about" && styles.activeTab]}
+          onPress={() => setActiveTab("about")}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons
+              name="information-circle-outline"
+              size={18}
+              color={activeTab === "about" ? colors.text.inverse : colors.text.primary}
+            />
             <Text
               style={[
                 styles.tabText,
@@ -212,12 +257,19 @@ const MyCompany = () => {
             >
               About us
             </Text>
-          </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === "jobs" && styles.activeTab]}
-            onPress={() => setActiveTab("jobs")}
-          >
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "jobs" && styles.activeTab]}
+          onPress={() => setActiveTab("jobs")}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons
+              name="briefcase-outline"
+              size={18}
+              color={activeTab === "jobs" ? colors.text.inverse : colors.text.primary}
+            />
             <Text
               style={[
                 styles.tabText,
@@ -226,11 +278,17 @@ const MyCompany = () => {
             >
               Opening jobs
             </Text>
-          </TouchableOpacity>
-        </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
-        {/* Nội dung */}
-        {activeTab === "about" ? (
+  return (
+    <View style={styles.container}>
+      {activeTab === "about" ? (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Header />
           <View style={styles.contentContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
@@ -251,7 +309,8 @@ const MyCompany = () => {
                 <Text style={{ color: "#555" }}>Chưa có mô tả về công ty.</Text>
               )}
             </Text>
-            {/* Các link */}
+
+            {/* Liên hệ */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
               <TouchableOpacity
@@ -261,138 +320,183 @@ const MyCompany = () => {
                 <Ionicons name="create-outline" size={18} color="#007bff" />
               </TouchableOpacity>
             </View>
-            {company?.websiteUrls?.length ? (
-              company.websiteUrls.map((url: string, i: number) => (
-                <View style={styles.infoRow} key={i}>
-                  <Ionicons name="globe-outline" size={18} color="#007bff" />
-                  <Text style={styles.infoText}>{url}</Text>
-                </View>
-              ))
-            ) : (
-              <Text style={{ color: "#555", marginVertical: 4 }}>
-                Không có website
-              </Text>
-            )}
+
+            {/* Website + Mạng xã hội */}
+            {(() => {
+              const links = [
+                ...(company?.websiteUrls || []).map((url: string, i: number) => ({
+                  icon: "globe-outline",
+                  color: "#007bff",
+                  url,
+                })),
+                { icon: "logo-facebook", color: "#3b5998", url: company?.facebookUrl },
+                { icon: "logo-twitter", color: "#1DA1F2", url: company?.twitterUrl },
+                { icon: "logo-linkedin", color: "#0077b5", url: company?.linkedinUrl },
+                { icon: "logo-google", color: "#DB4437", url: company?.googleUrl },
+                { icon: "logo-youtube", color: "#FF0000", url: company?.youtubeUrl },
+              ].filter((l) => l.url);
+
+              return links.length > 0 ? (
+                links.map((l, i) => (
+                  <View style={styles.infoRow} key={i}>
+                    <Ionicons name={l.icon as any} size={18} color={l.color} />
+                    <Text style={styles.infoText}>{l.url}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={{ color: "#555", marginVertical: 4 }}>
+                  Không có mạng xã hội
+                </Text>
+              );
+            })()}
           </View>
-        ) : (
-          <View style={styles.contentContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Việc làm đang tuyển</Text>
-            </View>
-            {openJobs.length > 0 ? (
-              <FlatList
-                data={openJobs}
-                keyExtractor={(item) => item.id}
-                scrollEnabled={false} // ❗ Không cho FlatList tự cuộn
-                nestedScrollEnabled={false}
-                renderItem={({ item }) => (
-                  <JobCard
-                    id={item.id}
-                    logo_path={item.avatarUrl}
-                    job_title={item.jobTitle}
-                    company_name={item.companyName}
-                    job_location={item.jobLocations[0].province.name}
-                    salary_range={
-                      item.salaryType === "RANGE"
-                        ? `${item.minSalary?.toLocaleString()} ${item.salaryUnit}  - ${item.maxSalary?.toLocaleString()} ${item.salaryUnit} `
-                        : item.salaryType === "GREATER_THAN"
-                          ? `Trên ${item.minSalary?.toLocaleString()}`
-                          : item.salaryType === "NEGOTIABLE"
-                            ? "Thỏa thuận"
-                            : item.salaryType === "COMPETITIVE"
-                              ? "Cạnh tranh"
-                              : "Không rõ"
-                    }
-                    time_passed={item.expirationDate}
-                  />
-                )}
-                contentContainerStyle={{ paddingBottom: 80 }}
-                showsVerticalScrollIndicator={false}
-              />
-            ) : (
-              <Text style={{ color: "#777", marginTop: 10 }}>
-                Chưa có công việc nào.
-              </Text>
-            )}
-          </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        <FlatList
+          ListHeaderComponent={<Header />}
+          data={openJobs}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <JobCard
+              id={item.id}
+              logo_path={item.avatarUrl}
+              job_title={item.jobTitle}
+              company_name={item.companyName}
+              job_location={item.jobLocations[0].province.name}
+              salary_range={
+                item.salaryType === "RANGE"
+                  ? `${item.minSalary?.toLocaleString()} ${item.salaryUnit}  - ${item.maxSalary?.toLocaleString()} ${item.salaryUnit} `
+                  : item.salaryType === "GREATER_THAN"
+                  ? `Trên ${item.minSalary?.toLocaleString()}`
+                  : item.salaryType === "NEGOTIABLE"
+                  ? "Thỏa thuận"
+                  : item.salaryType === "COMPETITIVE"
+                  ? "Cạnh tranh"
+                  : "Không rõ"
+              }
+              isEmployer = {true}
+              time_passed={item.expirationDate}
+            />
+          )}
+          onEndReached={loadMoreJobs}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={() =>
+            loadingMore ? (
+              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={colors.primary.start} />
+              </View>
+            ) : null
+          }
+          contentContainerStyle={{ paddingBottom: 80 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  bannerContainer: { position: "relative" },
-  banner: { width: "100%", height: 180, resizeMode: "cover" },
+  container: { flex: 1, backgroundColor: colors.background },
+  bannerContainer: { position: "relative", backgroundColor: colors.primary.start },
+  banner: { width: "100%", height: 200 },
   editBannerButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: spacing.md,
+    right: spacing.md,
     backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 16,
-    padding: 6,
+    borderRadius: borderRadius.full,
+    padding: spacing.sm,
+    ...shadows.soft,
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
-    marginTop: 15,
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    ...shadows.soft,
   },
   logo: {
-    width: 70,
-    height: 70,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#fff",
-    backgroundColor: "#fff",
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.lg,
+    borderWidth: 3,
+    borderColor: colors.primary.start,
+    backgroundColor: colors.surface,
+    ...shadows.soft,
   },
   editLogoButton: {
     position: "absolute",
-    bottom: 0,
-    right: -5,
-    borderRadius: 12,
-    padding: 4,
+    bottom: -spacing.sm,
+    right: -spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    ...shadows.soft,
   },
-  companyName: { fontSize: 18, fontWeight: "bold", color: "#333" },
-  companyLocation: { fontSize: 14, color: "#555", marginTop: 2 },
-  companySize: { fontSize: 13, color: "#777", marginTop: 2 },
-  editIcon: { padding: 5 },
+  companyName: { fontSize: 20, fontWeight: "800", color: colors.text.primary },
+  companyLocation: { fontSize: 14, color: colors.text.secondary },
+  companySize: { fontSize: 13, color: colors.text.tertiary },
+  editIcon: {
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    ...shadows.soft,
+  },
   tabContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: 15,
+    justifyContent: "center",
+    marginVertical: spacing.lg,
+    gap: spacing.md,
   },
   tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 25,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    ...shadows.soft,
   },
-  activeTab: { backgroundColor: "#007bff20" },
-  tabText: { color: "#333", fontWeight: "500" },
-  activeTabText: { color: "#007bff", fontWeight: "700" },
-  contentContainer: { paddingHorizontal: 15, paddingBottom: 30 },
+  activeTab: { backgroundColor: colors.primary.start },
+  tabText: { color: colors.text.primary, fontWeight: "600", fontSize: 15 },
+  activeTabText: { color: colors.text.inverse, fontWeight: "700" },
+  contentContainer: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#333" },
-  editSmallButton: { padding: 5 },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.text.primary },
+  editSmallButton: {
+    padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    ...shadows.soft,
+  },
   description: {
-    fontSize: 14,
-    color: "#444",
-    lineHeight: 20,
+    fontSize: 15,
+    color: colors.text.secondary,
+    lineHeight: 24,
     textAlign: "justify",
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 10,
+    ...shadows.soft,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 4,
+    marginVertical: 2,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 10,
+    ...shadows.soft,
   },
-  infoText: { marginLeft: 8, color: "#007bff" },
+  infoText: { marginLeft: spacing.md, color: colors.primary.start, fontSize: 15 },
 });
 
 export default MyCompany;

@@ -22,7 +22,7 @@ export interface TokenResponse {
 
 export const loginUser = async (payload: LoginRequest) => {
     try {
-        console.log("Employee login")
+        // Attempting employee login
         const res = await apiInstance.post("/auth/users/sign-in", payload);
         return res.data.data as TokenResponse;
     } catch (err: any) {
@@ -35,10 +35,9 @@ export const loginUser = async (payload: LoginRequest) => {
 };
 export const loginEmployer = async (payload: LoginRequest) => {
     try {
-        console.log("Employer login")
+        // Attempting employer login
         const res = await apiInstance.post("/auth/employers/sign-in", payload);
         const { accessToken } = res.data?.data || {};
-        console.log("Access Token:", accessToken);
         if (accessToken) {
             await AsyncStorage.setItem("accessToken", accessToken);
         }
@@ -227,7 +226,7 @@ export const logoutService = async () => {
         const refreshToken = await AsyncStorage.getItem("refreshToken");
 
         if (!accessToken || !refreshToken) {
-            console.warn("Thiếu token khi logout.");
+            return;
             return;
         }
 
@@ -242,7 +241,7 @@ export const logoutService = async () => {
             }
         );
     } catch (err) {
-        console.error("Logout request failed:", err);
+        // Ignoring logout errors
     }
 };
 
@@ -255,8 +254,7 @@ export const forgotPasswordEmployee = async (email: string) => {
 
         return res.data;
     } catch (error: any) {
-        console.error("❌ Lỗi gửi yêu cầu quên mật khẩu:", error.response?.data || error.message);
-
+        // Handle forgot password errors
         const status = error.response?.status;
         const backendStatus = error.response?.data?.status; // lấy status thật của backend (vì lỗi 411 có thể bị wrapped thành 500)
 
@@ -287,8 +285,7 @@ export const forgotPasswordEmployer = async (email: string) => {
         );
         return res.data;
     } catch (error: any) {
-        console.error("❌ Lỗi gửi yêu cầu quên mật khẩu:", error.response?.data || error.message);
-
+        // Handle forgot password errors
         const status = error.response?.status;
         const backendStatus = error.response?.data?.status; // lấy status thật của backend (vì lỗi 411 có thể bị wrapped thành 500)
 

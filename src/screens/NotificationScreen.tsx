@@ -132,8 +132,8 @@ const NotificationScreen = () => {
     switch (type) {
       case 'NEW_APPLICATION':
         return {
-          border: colors.success.start,
-          background: colors.success.light + '20',
+          border: colors.primary.dark,
+          background: colors.primary.light,
           icon: 'person-add-outline' as const,
         };
       case 'APPLICATION_STATUS_UPDATE':
@@ -237,12 +237,6 @@ const NotificationScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Thông báo</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity

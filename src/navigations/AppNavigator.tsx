@@ -56,6 +56,8 @@ import ForgotPasswordScreen from "../screens/Auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "../screens/Auth/ResetPasswordScreen";
 import EmployeeDetailApplication from "../screens/JobSeeker/EmployeeDetailApplication";
 import NotificationScreen from "../screens/NotificationScreen";
+import ApplicationsByJobScreen from "../screens/Employer/ApplicationsByJobScreen";
+import EmployerDetailApplication from "../screens/Employer/EmployerDetailApplication";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -132,6 +134,8 @@ const EmployerJobStackScreen = () => (
     <MenuStack.Screen name="EmployerJob" component={EmployerJobScreen} />
     <MenuStack.Screen name="PostJob" component={PostJobScreen} />
     <MenuStack.Screen name="UpdateJob" component={UpdateJobScreen} />
+    <MenuStack.Screen name="ApplicationsByJob" component={ApplicationsByJobScreen} />
+    <MenuStack.Screen name="EmployerDetailApplication" component={EmployerDetailApplication} />
   </MenuStack.Navigator>
 );
 
@@ -152,17 +156,17 @@ const EmployerMyCompanyStackScreen = () => (
 
 
 // ========== Component để hiển thị icon với badge ==========
-const TabBarIconWithBadge = ({ 
-  iconName, 
-  color, 
-  badgeCount 
-}: { 
-  iconName: keyof typeof Ionicons.glyphMap; 
-  color: string; 
+const TabBarIconWithBadge = ({
+  iconName,
+  color,
+  badgeCount
+}: {
+  iconName: keyof typeof Ionicons.glyphMap;
+  color: string;
   badgeCount?: number;
 }) => {
   const showBadge = badgeCount !== undefined && badgeCount > 0;
-  
+
   return (
     <View style={{ position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
       <Ionicons name={iconName} size={24} color={color} />
@@ -180,7 +184,7 @@ const TabBarIconWithBadge = ({
 // ========== Bottom Tabs ==========
 const MainAppEmployee = () => {
   const { isAuthenticated } = useAuth();
-  
+
   // Lấy số thông báo chưa đọc
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["notifications", "unread-count"],
@@ -227,7 +231,7 @@ const MainAppEmployee = () => {
       <Tab.Screen name="SearchStack" component={SearchStackScreen} options={{ title: "Tìm kiếm" }} />
       <Tab.Screen name="MyJobStack" component={EmployeeApplicationStackScreen} options={{ title: "Việc của tôi" }} />
       <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: "Thông báo" }} />
-      <Tab.Screen name="CVStack" component={CVScreen} options={{ title: "Viết CV" }} />
+      {/* <Tab.Screen name="CVStack" component={CVScreen} options={{ title: "Viết CV" }} /> */}
       <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: "Menu" }} />
     </Tab.Navigator>
   );
@@ -235,7 +239,7 @@ const MainAppEmployee = () => {
 
 const MainAppEmployer = () => {
   const { isAuthenticated } = useAuth();
-  
+
   // Lấy số thông báo chưa đọc
   const { data: unreadCount = 0 } = useQuery({
     queryKey: ["notifications", "unread-count"],
@@ -265,22 +269,24 @@ const MainAppEmployer = () => {
         tabBarIcon: ({ color }) => {
           if (route.name === "EmployerMyJobStack")
             return <MaterialIcons name="work-outline" size={24} color={color} />;
-          if (route.name === "MyCandidateStack")
-            return <Ionicons name="document-text-outline" size={24} color={color} />;
+          // if (route.name === "MyCandidateStack")
+          //   return <Ionicons name="document-text-outline" size={24} color={color} />;
           if (route.name === "NotificationStack")
             return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
           if (route.name === "EmployerSetting")
-            return <Ionicons name="menu-outline" size={24} color={color} />;
+            return <Ionicons name="settings-outline" size={24} color={color} />;
+
           if (route.name === "MyCompanStack")
-            return <Ionicons name="menu-outline" size={24} color={color} />;
+            return <Ionicons name="business-outline" size={24} color={color} />;
         },
       })}
     >
       <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
-      <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} />
+      {/* <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} /> */}
       <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: "Thông báo" }} />
-      <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
       <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: "Công ty" }} />
+      <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
+
     </Tab.Navigator>
   );
 };

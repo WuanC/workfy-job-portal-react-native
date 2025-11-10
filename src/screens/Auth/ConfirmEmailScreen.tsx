@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { verifyEmployeeEmail, verifyEmployerEmail } from "../../services/authService";
+import { AntDesign } from '@expo/vector-icons';
 
 const ConfirmEmailScreen = ({ navigation, route }: any) => {
   const { email, role } = route.params as { email: string; role: string };
@@ -48,62 +49,128 @@ const ConfirmEmailScreen = ({ navigation, route }: any) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🔒 Nhập mã OTP xác nhận</Text>
-      <Text style={styles.message}>
-        Chúng tôi đã gửi mã xác nhận gồm 8 chữ số đến email của bạn.
-      </Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => navigation.goBack()}
+      >
+        <AntDesign name="arrow-left" size={24} color="#1E293B" />
+      </TouchableOpacity>
 
-      <View style={styles.otpContainer}>
-        {otp.map((digit, index) => (
-          <TextInput
-            key={index}
-            ref={(ref) => { inputs.current[index] = ref; }}
+      <View style={styles.contentContainer}>
+        <View style={styles.card}>
+          <Text style={styles.title}>Xác nhận email</Text>
+          <Text style={styles.label}>
+            Chúng tôi đã gửi mã xác nhận gồm 8 chữ số đến email của bạn
+          </Text>
 
-            style={styles.otpInput}
-            keyboardType="numeric"
-            maxLength={1}
-            value={digit}
-            onChangeText={(text) => handleChange(text, index)}
-            onKeyPress={({ nativeEvent }) => {
-              if (nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
-                inputs.current[index - 1]?.focus();
-              }
-            }}
-          />
-        ))}
+          <View style={styles.otpContainer}>
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => { inputs.current[index] = ref; }}
+                style={styles.otpInput}
+                keyboardType="numeric"
+                maxLength={1}
+                value={digit}
+                onChangeText={(text) => handleChange(text, index)}
+                onKeyPress={({ nativeEvent }) => {
+                  if (nativeEvent.key === "Backspace" && !otp[index] && index > 0) {
+                    inputs.current[index - 1]?.focus();
+                  }
+                }}
+              />
+            ))}
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={handleConfirm}>
+            <Text style={styles.buttonText}>Xác nhận</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleConfirm}>
-        <Text style={styles.buttonText}>Xác nhận</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.replace("Login")}>
-        <Text style={styles.linkText}>Đăng nhập ngay</Text>
-      </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-  title: { fontSize: 22, fontWeight: "bold", color: "#1976d2", marginBottom: 10 },
-  message: { fontSize: 16, color: "#555", textAlign: "center", marginBottom: 30 },
-  otpContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 30 },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  backButton: {
+    position: 'absolute',
+    top: 44,
+    left: 20,
+    zIndex: 1,
+    padding: 8,
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 24,
+    justifyContent: "center",
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#1E293B",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  label: {
+    fontSize: 14,
+    color: "#475569",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  otpContainer: { 
+    flexDirection: "row", 
+    justifyContent: "center", 
+    marginBottom: 24 
+  },
   otpInput: {
     width: 40,
-    height: 50,
-    marginHorizontal: 5,
+    height: 48,
+    marginHorizontal: 4,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+    borderColor: "#CBD5E1",
+    borderRadius: 10,
     textAlign: "center",
     fontSize: 18,
-    color: "#000",
+    color: "#1E293B",
   },
-  button: { backgroundColor: "#1976d2", paddingVertical: 14, paddingHorizontal: 60, borderRadius: 8 },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  linkText: { color: "#1976d2", marginTop: 20, fontSize: 15 },
+  button: {
+    backgroundColor: "#2563EB",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  linkButton: {
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#2563EB",
+    fontSize: 14,
+    fontWeight: "500",
+  },
 });
 
 export default ConfirmEmailScreen;

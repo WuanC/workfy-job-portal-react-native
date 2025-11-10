@@ -121,15 +121,16 @@ export const BenefitType = {
   OTHER: "Khác",
 };
 export const ApplicationStatus = {
-  UNREAD: "Hồ sơ mới gửi, chưa được nhà tuyển dụng đọc.",
-  VIEWED: "Nhà tuyển dụng đã mở và xem hồ sơ.",
-  EMAILED: "Đã liên hệ ứng viên qua email.",
-  SCREENING: "Đang sàng lọc hồ sơ.",
-  SCREENING_PENDING: "Đã sàng lọc, đang chờ quyết định tiếp theo.",
-  INTERVIEW_SCHEDULING: "Đang lên lịch phỏng vấn.",
-  INTERVIEWED_PENDING: "Đã phỏng vấn, chờ quyết định.",
-  OFFERED: "Đã gửi offer cho ứng viên.",
-  REJECTED: "Từ chối hồ sơ.",
+  ALL: "Tất cả",
+  UNREAD: "Chưa đọc",
+  VIEWED: "Đã xem",
+  EMAILED: "Đã gửi email",
+  SCREENING: "Đang sàng lọc hồ sơ",
+  SCREENING_PENDING: "Đã sàng lọc",
+  INTERVIEW_SCHEDULING: "Lên lịch phỏng vấn",
+  INTERVIEWED_PENDING: "Đã phỏng vấn",
+  OFFERED: "Đã gửi offer",
+  REJECTED: "Từ chối",
 };
 
 // ===== UTILS =====

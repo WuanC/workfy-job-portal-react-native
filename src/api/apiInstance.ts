@@ -71,21 +71,21 @@ apiInstance.interceptors.response.use(
     if (originalRequest.url?.endsWith("/sign-in") || originalRequest.url?.endsWith("/forgot-password") || originalRequest.url?.endsWith("/reset-password") || originalRequest.url?.endsWith("/refresh-token")) {
       return Promise.reject(error);
     }
-    console.log("a")
+    // Starting token refresh process
     // Nếu token hết hạn
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      console.log("b")
+      // Checking refresh token
       if (!isRefreshing) {
         isRefreshing = true;
         const refreshToken = await AsyncStorage.getItem("refreshToken");
-        console.log(refreshToken)
+        // Got refresh token
         if (refreshToken) {
           try {
             const res = await apiInstance.post("/auth/users/refresh-token", {}, {
               headers: { "Y-Token": refreshToken },
             });
-            console.log("d")
+            // Token refresh success
             const newAccessToken: string = res.data.data.accessToken;
             const newRefreshToken: string = res.data.data.refreshToken;
 
@@ -101,14 +101,14 @@ apiInstance.interceptors.response.use(
             return apiInstance(originalRequest);
           } catch (refreshError) {
             isRefreshing = false;
-            console.log("e")
+            // Token refresh failed
             await AsyncStorage.multiRemove(["accessToken", "refreshToken"]);
 
             console.warn("⚠️ Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
             throw new Error("Phieen banr đăng nhập hết hạn.");
           }
         } else {
-          console.log("f")
+          // Critical token error
           console.warn("⚠️ Không có refresh token, cần đăng nhập lại.");
         }
       }

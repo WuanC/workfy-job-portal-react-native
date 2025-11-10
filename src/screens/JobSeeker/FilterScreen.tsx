@@ -87,15 +87,6 @@ const FilterScreen = ({ route }: any) => {
 
   const handleSearch = async () => {
     try {
-      // console.log("🧩 [DEBUG] Giá trị filter hiện tại:");
-      // console.log("selectedSort:", selectedSort);
-      // console.log("selectedIndustry:", selectedIndustry);
-      // console.log("selectedLocations:", selectedLocations);
-      // console.log("selectedJobLevels:", selectedJobLevels);
-      //console.log("selectedJobType:", selectedJobType);
-      // console.log("selectedExperienceLevels:", selectedExperienceLevels);
-      // console.log("selectedEducationLevels:", selectedEducationLevels);
-      // console.log("salaryRange:", salaryRange);
       const filter: AdvancedJobQuery = {
         keyword: currentFilter?.keyword ?? "",
         industryIds: selectedIndustry,
@@ -114,7 +105,6 @@ const FilterScreen = ({ route }: any) => {
       //await updateJobStatus(1, "APPROVED");
       //const res = await getAdvancedJobs(filter);
 
-      console.log(filter.minSalary, filter.maxSalary, filter.salaryUnit);
       if (onApply) {
         onApply(filter); // ✅ Gọi callback để gửi dữ liệu ngược về
       }
@@ -122,7 +112,8 @@ const FilterScreen = ({ route }: any) => {
 
 
     } catch (error) {
-      console.error("Lỗi tìm kiếm nâng cao:", error);
+        const { ToastService } = require("../../services/toastService");
+        ToastService.error("Lỗi", "Không thể tìm kiếm. Vui lòng thử lại sau.");
     }
   };
   const [listProvinces, setListProvinces] = useState<Province[]>([]);
@@ -168,7 +159,8 @@ const FilterScreen = ({ route }: any) => {
         setListProvinces(listProvinces);
         setListIndustries(listIndustries);
       } catch (err: any) {
-        console.error("Lỗi load:", err);
+        const { ToastService } = require("../../services/toastService");
+        ToastService.error("Lỗi", "Không thể tải dữ liệu. Vui lòng thử lại sau.");
       }
     };
     load();

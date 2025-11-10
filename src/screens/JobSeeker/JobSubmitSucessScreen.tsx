@@ -2,111 +2,74 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { colors } from "../../theme";
 
 const JobSubmitSucessScreen = () => {
-    const navigation = useNavigation();
-    return (
-        <View style={styles.container}>
-            {/* Header */}
-            <Text style={styles.header}>Thành công</Text>
+  const navigation = useNavigation();
 
-            {/* Icon check */}
-            <View style={styles.iconWrapper}>
-                <Ionicons name="checkmark-circle" size={60} color="#4CAF50" />
-            </View>
+  return (
+    <View style={styles.container}>
+      
+      {/* Success Icon */}
+      <View style={styles.iconContainer}>
+        <Ionicons name="checkmark-circle" size={100} color={colors.primary.light} />
+      </View>
 
-            {/* Thông báo */}
-            <Text style={styles.successText}>Bạn đã nộp hồ sơ thành công</Text>
-            <Text style={styles.subText}>
-                Đơn đăng ký Middle/Senior Unity Game Developer (C#) - Thu Nhập
-                Lên Đến 50 Triệu/Tháng của bạn đã được gửi. Chúc bạn ứng tuyển
-                thành công!
-            </Text>
+      {/* Title */}
+      <Text style={styles.title}>Nộp hồ sơ thành công!</Text>
+      <Text style={styles.description}>
+        Nhà tuyển dụng đã nhận được hồ sơ của bạn. Hãy chờ phản hồi trong thời gian sớm nhất.
+      </Text>
 
-            {/* Box lưu CV */}
-            <View style={styles.saveBox}>
-                <Text style={styles.saveTitle}>Dùng lại CV lần sau?</Text>
-                <Text style={styles.saveSub}>
-                    Lưu Test-Documentation.pdf vào tủ hồ sơ trên CareerLink và
-                    ứng tuyển nhanh hơn lần sau
-                </Text>
-                <TouchableOpacity style={styles.saveButton}>
-                    <Text style={styles.saveButtonText}>
-                        Lưu CV vào tủ hồ sơ
-                    </Text>
-                </TouchableOpacity>
-            </View>
+      {/* Button */}
+      <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+        <Text style={styles.buttonText}>Quay lại</Text>
+      </TouchableOpacity>
 
-            {/* Quay lại */}
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text style={styles.backText}>Quay lại</Text>
-            </TouchableOpacity>
-        </View>
-    );
+    </View>
+  );
 };
+
 export default JobSubmitSucessScreen;
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#fff",
-        alignItems: "center",
-        padding: 20,
-    },
-    header: {
-        fontSize: 20,
-        fontWeight: "600",
-        marginVertical: 15,
-        color: "#000",
-    },
-    iconWrapper: {
-        marginVertical: 10,
-    },
-    successText: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#000",
-        textAlign: "center",
-        marginTop: 10,
-    },
-    subText: {
-        fontSize: 14,
-        color: "#555",
-        textAlign: "center",
-        marginTop: 8,
-        lineHeight: 20,
-    },
-    saveBox: {
-        backgroundColor: "#E6F7E6",
-        padding: 15,
-        borderRadius: 8,
-        marginVertical: 20,
-        width: "100%",
-    },
-    saveTitle: {
-        fontSize: 15,
-        fontWeight: "600",
-        marginBottom: 5,
-        color: "#000",
-    },
-    saveSub: {
-        fontSize: 13,
-        color: "#333",
-        marginBottom: 12,
-    },
-    saveButton: {
-        backgroundColor: "#007BFF",
-        paddingVertical: 10,
-        borderRadius: 6,
-        alignItems: "center",
-    },
-    saveButtonText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: 14,
-    },
-    backText: {
-        color: "#007BFF",
-        fontSize: 14,
-        marginTop: 15,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 30,
+  },
+  iconContainer: {
+    backgroundColor: colors.primary.light + 20,
+    padding: 25,
+    borderRadius: 100,
+    marginBottom: 25,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#111",
+    textAlign: "center",
+  },
+  description: {
+    fontSize: 15,
+    color: "#555",
+    textAlign: "center",
+    marginTop: 10,
+    lineHeight: 22,
+    maxWidth: 300,
+  },
+  button: {
+    marginTop: 40,
+    backgroundColor: colors.primary.start,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
 });

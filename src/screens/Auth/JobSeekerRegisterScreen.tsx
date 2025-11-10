@@ -17,6 +17,7 @@ import { LOGO_IMG } from "../../utilities/constant";
 import Checkbox from "expo-checkbox";
 import { useState } from "react";
 import { registerEmployee } from "../../services/authService";
+import { validateField } from "../../utilities/validation";
 
 const JobSeekerRegisterScreen = ({ navigation }: any) => {
     const [fullName, setFullName] = useState("");
@@ -27,14 +28,26 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
     const [loading, setLoading] = useState(false);
 
     const handleRegister = async () => {
+        const { ToastService } = require("../../services/toastService");
+
         if (!fullName || !email || !password || !confirmPassword) {
-            const { ToastService } = require("../../services/toastService");
             ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
             return;
         }
 
+        const emailError = validateField(email, "email");
+        if (emailError) {
+            ToastService.error("Lỗi", emailError);
+            return;
+        }
+
+        const passwordError = validateField(password, "password");
+        if (passwordError) {
+            ToastService.error("Lỗi", passwordError);
+            return;
+        }
+
         if (password !== confirmPassword) {
-            const { ToastService } = require("../../services/toastService");
             ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
             return;
         }
@@ -67,13 +80,13 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={styles.container}>
                     <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-                    <Text style={styles.title}>Job Seeker Registration</Text>
+                    <Text style={styles.title}>Đăng ký tài khoản</Text>
 
                     {/* Fullname input */}
                     <View style={styles.inputContainer}>
-                        <Ionicons name="person-outline" size={22} color="#888" style={styles.icon} />
+                        <Ionicons name="person-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Enter your full name"
+                            placeholder="Nhập họ và tên"
                             value={fullName}
                             onChangeText={setFullName}
                             style={styles.input}
@@ -82,37 +95,40 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
 
                     {/* Email input */}
                     <View style={styles.inputContainer}>
-                        <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
+                        <Ionicons name="mail-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Enter your email"
+                            placeholder="Nhập email của bạn"
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
                             style={styles.input}
+                            autoCapitalize="none"
                         />
                     </View>
 
                     {/* Password input */}
                     <View style={styles.inputContainer}>
-                        <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
+                        <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Password"
+                            placeholder="Nhập mật khẩu"
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
                             style={styles.input}
+                            autoCapitalize="none"
                         />
                     </View>
 
                     {/* Confirm Password input */}
                     <View style={styles.inputContainer}>
-                        <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
+                        <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Confirm password"
+                            placeholder="Xác nhận mật khẩu"
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
                             style={styles.input}
+                            autoCapitalize="none"
                         />
                     </View>
 
@@ -121,19 +137,19 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                         <Checkbox
                             value={isChecked}
                             onValueChange={setChecked}
-                            color={isChecked ? "#1976d2" : undefined}
+                            color={isChecked ? "#2563EB" : undefined}
                             style={styles.checkbox}
                         />
                         <Text style={styles.agreeText}>
-                            I agree to the{" "}
-                            <Text style={styles.link}>Terms & Conditions</Text>
+                            Tôi đồng ý với{" "}
+                            <Text style={styles.link}>Điều khoản & Điều kiện</Text>
                         </Text>
                     </View>
 
                     {/* Sign up button */}
                     <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
                         <Text style={styles.buttonText}>
-                            {loading ? "Registering..." : "Sign Up"}
+                            {loading ? "Đang đăng ký..." : "Đăng ký ngay"}
                         </Text>
                     </TouchableOpacity>
 
@@ -141,8 +157,8 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.bottomLinks}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
                             <Text style={styles.linkText}>
-                                Already have an account?{" "}
-                                <Text style={styles.linkHighlight}>Log In</Text>
+                                Đã có tài khoản?{" "}
+                                <Text style={styles.linkHighlight}>Đăng nhập</Text>
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -157,7 +173,7 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         justifyContent: "center",
         alignItems: "center",
-        padding: 20,
+        padding: 24,
         backgroundColor: "#fff",
     },
     logo: {
@@ -166,24 +182,29 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     title: {
-        fontSize: 22,
+        fontSize: 26,
         fontWeight: "bold",
-        marginBottom: 20,
-        color: "#333",
+        marginBottom: 24,
+        color: "#1E293B",
     },
     inputContainer: {
         flexDirection: "row",
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#ccc",
+        borderColor: "#CBD5E1",
         borderRadius: 10,
-        paddingHorizontal: 10,
+        paddingHorizontal: 14,
         marginVertical: 8,
         width: "100%",
-        height: 50,
+        height: 48,
     },
     icon: { marginRight: 8 },
-    input: { flex: 1, paddingVertical: 10 },
+    input: { 
+        flex: 1, 
+        paddingVertical: 10,
+        color: "#1E293B",
+        fontSize: 15
+    },
     agreeContainer: {
         flexDirection: "row",
         alignItems: "flex-start",
@@ -191,28 +212,40 @@ const styles = StyleSheet.create({
         width: "100%",
     },
     checkbox: { marginRight: 8, marginTop: 3 },
-    agreeText: { flex: 1, color: "#555", fontSize: 14, lineHeight: 20 },
-    link: { color: "#1976d2", fontWeight: "600" },
+    agreeText: { 
+        flex: 1, 
+        color: "#475569", 
+        fontSize: 14, 
+        lineHeight: 20 
+    },
+    link: { 
+        color: "#2563EB", 
+        fontWeight: "600" 
+    },
     button: {
-        backgroundColor: "#1976d2",
-        paddingVertical: 16,
-        borderRadius: 8,
+        backgroundColor: "#2563EB",
+        paddingVertical: 14,
+        borderRadius: 10,
         width: "100%",
         alignItems: "center",
         marginTop: 10,
     },
-    buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+    buttonText: { 
+        color: "#fff", 
+        fontSize: 16, 
+        fontWeight: "600" 
+    },
     bottomLinks: {
         marginTop: 20,
         alignItems: "center",
     },
     linkText: {
-        color: "#555",
+        color: "#475569",
         fontSize: 14,
     },
     linkHighlight: {
-        color: "#1976d2",
-        fontWeight: "bold",
+        color: "#2563EB",
+        fontWeight: "600",
     },
 });
 

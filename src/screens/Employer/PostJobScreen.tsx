@@ -22,6 +22,9 @@ import { Benefit, createJob, JobRequest } from "../../services/jobService";
 import { JobLocation } from "../../types/type";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import { getEmployerProfile } from "../../services/employerService";
+import { validateField } from "../../utilities/validation";
+import KeyboardAvoidingWrapper from "../../components/KeyboardAvoidingWrapper";
+import { colors } from "../../theme";
 
 const PostJobScreen = () => {
   const navigation = useNavigation();
@@ -104,7 +107,6 @@ const PostJobScreen = () => {
 
 
   const [expiryDate, setExpiryDate] = useState(new Date());
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
 
   // --- Editor ---
@@ -176,6 +178,14 @@ const PostJobScreen = () => {
         ToastService.warning("Thiếu thông tin", "Vui lòng nhập người liên hệ và số điện thoại");
         return;
       }
+
+      // validate phone
+      const phoneErr = validateField(contactPhone || "", "phone");
+      if (phoneErr) {
+        const { ToastService } = require("../../services/toastService");
+        ToastService.warning("Sai định dạng", phoneErr);
+        return;
+      }
       // ======== 2️⃣ TẠO DỮ LIỆU JOBREQUEST ========
       const jobData: JobRequest = {
         companyName,
@@ -240,16 +250,6 @@ const PostJobScreen = () => {
     }
   };
 
-  // --- Xử lý chọn ngày hết hạn ---
-  const handleConfirm = (date: Date) => {
-    setExpiryDate(date);
-    setDatePickerVisibility(false);
-  };
-
-  // --- Hàm ẩn DatePicker ---
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
-  };
 
   // --- Hàm format theo dd/MM/yyyy ---
   const formatDate = (date: Date) => {
@@ -265,7 +265,11 @@ const PostJobScreen = () => {
       try {
         const data = await getAllIndustries();
         const listProvinces = await getAllProvince();
-        const info = await getEmployerProfile(); // gọi service bạn đã viết
+        const info = await getEmployerProfile();
+        const createdDate = new Date(); // ngày tạo hiện tại
+        const expiry = new Date(createdDate);
+        expiry.setMonth(expiry.getMonth() + 2); // +2 tháng
+        setExpiryDate(expiry); // gọi service bạn đã viết
         if (cancelled) return;
         setCompanyName(info.companyName || "");
         setCompanySize(info.companySize || "");
@@ -359,864 +363,846 @@ const PostJobScreen = () => {
     );
   }
   return (
-    <View style={styles.container}>
-      {/* ---------- HEADER ---------- */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color="#333" />
-        </TouchableOpacity>
+    <KeyboardAvoidingWrapper>
+      <View style={styles.container}>
+        {/* ---------- HEADER ---------- */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={22} color="#333" />
+          </TouchableOpacity>
 
-        <Text
-          style={styles.headerTitle}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          Đăng tin tuyển dụng
-        </Text>
-        <View style={{ width: 38 }} />
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* ---------- THÔNG TIN CÔNG TY ---------- */}
-        <View style={styles.card}>
-          <Text style={styles.title}>Thông tin công ty</Text>
-
-          <Text style={styles.label}>
-            Tên công ty<Text style={styles.required}>*</Text>
+          <Text
+            style={styles.headerTitle}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            Đăng tin tuyển dụng
           </Text>
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: NPT Software"
-            value={companyName}
-            onChangeText={setCompanyName}
-          />
-
-          <Text style={styles.label}>
-            Số nhân viên<Text style={styles.required}> *</Text>
-          </Text>
-          <Dropdown
-            data={getEnumOptions(LevelCompanySize)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn số nhân viên"
-            value={companySize}
-            onChange={(item) => setCompanySize(item.value)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          <Text style={styles.label}>Website công ty</Text>
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: https://nptsoftware.vn"
-            value={companyWebSite}
-            onChangeText={setCompanyWebSite}
-          />
-
-          <Text style={styles.label}>
-            Sơ lược công ty<Text style={styles.required}> *</Text>
-          </Text>
-          <View style={styles.editorWrapper}>
-            <RichToolbar
-              editor={richRefs.aboutCompany}
-              actions={[
-                actions.setBold,
-                actions.setItalic,
-                actions.setUnderline,
-                actions.alignLeft,
-                actions.alignCenter,
-                actions.alignRight,
-                actions.alignFull,
-                actions.insertBulletsList,
-                actions.insertOrderedList,
-                actions.undo,
-                actions.redo,
-              ]}
-              iconTint="#555"
-              selectedIconTint="#007AFF"
-              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
-              style={styles.toolbar}
-              iconSize={18}
-            />
-
-            <RichEditor
-              ref={richRefs.aboutCompany}
-              style={styles.editor}
-              placeholder="Nhập yêu cầu công việc..."
-              initialHeight={180}
-              editorInitializedCallback={() => handleEditorReady("aboutCompany")}
-              onChange={(html) => setAboutCompany(html)}
-            />
-          </View>
+          <View style={{ width: 38 }} />
         </View>
 
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* ---------- THÔNG TIN CÔNG TY ---------- */}
+          <View style={styles.card}>
+            <Text style={styles.title}>Thông tin công ty</Text>
 
-        {/* ---------- THÔNG TIN CÔNG VIỆC ---------- */}
-        <View style={styles.card}>
-          <Text style={styles.title}>Thông tin công việc</Text>
-
-          <Text style={styles.label}>
-            Tên công việc<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: Lập trình viên React Native"
-            value={jobTitle}
-            onChangeText={setJobTitle}
-          />
-
-          <Text style={styles.label}>
-            Địa điểm<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            data={listProvinces}
-            labelField="name"
-            valueField="id"
-            placeholder="Chọn Tỉnh / Thành phố"
-            value={jobProvincedId}
-            onChange={(item) => {
-              setJobProvinceId(item.id)
-            }}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          {/* --- Quận / Huyện --- */}
-          <Dropdown
-            data={listJobDistricts}
-            labelField="name"
-            valueField="id"
-            placeholder="Chọn Quận / Huyện"
-            value={jobDistrictdId}
-            onChange={(item) => {
-              console.log(item.id)
-              setJobDistrictId(item.id)
-            }}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          {/* --- Số nhà / Địa chỉ chi tiết --- */}
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: 123 Nguyễn Trãi, Phường 5"
-            value={jobDetailAddress}
-            onChangeText={setJobDetailAddress}
-          />
-
-          <Text style={styles.label}>
-            Lương<Text style={styles.required}>*</Text>
-          </Text>
-
-          {/* --- Dropdown chọn loại lương --- */}
-          <Dropdown
-            data={getEnumOptions(SalaryType)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn mức lương"
-            value={salaryType}
-            onChange={(item) => {
-              console.log(typeof salaryType, salaryType);
-              console.log(typeof SalaryType.GREATER_THAN, SalaryType.GREATER_THAN);
-              setSalaryType(item.value)
-            }
-            }
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          {/* --- Nếu chọn “Trên” --- */}
-          {salaryType === "GREATER_THAN" && (
-            <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
-              <TextInput
-                placeholderTextColor={"#999"}
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Nhập mức lương tối thiểu"
-                keyboardType="numeric"
-                value={minSalary?.toString() ?? ""}   // number -> string
-                onChangeText={(text) => {
-                  setMinSalary(text ? parseFloat(text) : null);
-                }}
-              />
-              <Dropdown
-                data={getEnumOptions(SalaryUnit)}
-                labelField="label"
-                valueField="value"
-                placeholder="Đơn vị"
-                value={salaryUnit}
-                onChange={(item) => setSalaryUnit(item.value)}
-                style={[styles.dropdown, { flex: 1 }]}
-                placeholderStyle={styles.placeholder}
-                selectedTextStyle={styles.selectedText}
-              />
-            </View>
-          )}
-
-          {/* --- Nếu chọn “Trong khoảng” --- */}
-          {salaryType === "RANGE" && (
-            <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
-              <TextInput
-                placeholderTextColor={"#999"}
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Min"
-                keyboardType="numeric"
-                value={minSalary?.toString() ?? ""}   // number -> string
-                onChangeText={(text) => {
-                  setMinSalary(text ? parseFloat(text) : null);
-                }}
-              />
-              <TextInput
-                placeholderTextColor={"#999"}
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Max"
-                keyboardType="numeric"
-                value={maxSalary?.toString() ?? ""}   // number -> string
-                onChangeText={(text) => {
-                  setMaxSalary(text ? parseFloat(text) : null);
-                }}
-              />
-              <Dropdown
-                data={getEnumOptions(SalaryUnit)}
-                labelField="label"
-                valueField="value"
-                placeholder="Đơn vị"
-                value={salaryUnit}
-                onChange={(item) => setSalaryUnit(item.value)}
-                style={[styles.dropdown, { flex: 1 }]}
-                placeholderStyle={styles.placeholder}
-                selectedTextStyle={styles.selectedText}
-              />
-            </View>
-          )}
-
-          <Text style={styles.label}>Mô tả công việc</Text>
-          <View style={styles.editorWrapper}>
-            <RichToolbar
-              editor={richRefs.jobDescription}
-              actions={[
-                actions.setBold,
-                actions.setItalic,
-                actions.setUnderline,
-                actions.alignLeft,
-                actions.alignCenter,
-                actions.alignRight,
-                actions.alignFull,
-                actions.insertBulletsList,
-                actions.insertOrderedList,
-                actions.undo,
-                actions.redo,
-              ]}
-              iconTint="#555"
-              selectedIconTint="#007AFF"
-              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
-              style={styles.toolbar}
-              iconSize={18}
+            <Text style={styles.label}>
+              Tên công ty<Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              placeholderTextColor={"#999"}
+              style={styles.input}
+              placeholder="VD: NPT Software"
+              value={companyName}
+              onChangeText={setCompanyName}
             />
 
-            <RichEditor
-              ref={richRefs.jobDescription}
-              style={styles.editor}
-              placeholder="Nhập yêu cầu công việc..."
-              initialHeight={180}
-              editorInitializedCallback={() => handleEditorReady("jobDescription")}
-              onChange={(html) => setJobDescription(html)}
+            <Text style={styles.label}>
+              Số nhân viên<Text style={styles.required}> *</Text>
+            </Text>
+            <Dropdown
+              data={getEnumOptions(LevelCompanySize)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn số nhân viên"
+              value={companySize}
+              onChange={(item) => setCompanySize(item.value)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
             />
+
+            <Text style={styles.label}>Website công ty</Text>
+            <TextInput
+              placeholderTextColor={"#999"}
+              style={styles.input}
+              placeholder="VD: https://nptsoftware.vn"
+              value={companyWebSite}
+              onChangeText={setCompanyWebSite}
+            />
+
+            <Text style={styles.label}>
+              Sơ lược công ty<Text style={styles.required}> *</Text>
+            </Text>
+            <View style={styles.editorWrapper}>
+              <RichToolbar
+                editor={richRefs.aboutCompany}
+                actions={[
+                  actions.setBold,
+                  actions.setItalic,
+                  actions.setUnderline,
+                  actions.alignLeft,
+                  actions.alignCenter,
+                  actions.alignRight,
+                  actions.alignFull,
+                  actions.insertBulletsList,
+                  actions.insertOrderedList,
+                  actions.undo,
+                  actions.redo,
+                ]}
+                iconTint="#555"
+                selectedIconTint="#007AFF"
+                selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+                style={styles.toolbar}
+                iconSize={18}
+              />
+
+              <RichEditor
+                ref={richRefs.aboutCompany}
+                style={styles.editor}
+                placeholder="Nhập yêu cầu công việc..."
+                initialHeight={180}
+                editorInitializedCallback={() => handleEditorReady("aboutCompany")}
+                onChange={(html) => setAboutCompany(html)}
+              />
+            </View>
           </View>
 
 
-          <Text style={styles.label}>Yêu cầu công việc</Text>
+          {/* ---------- THÔNG TIN CÔNG VIỆC ---------- */}
+          <View style={styles.card}>
+            <Text style={styles.title}>Thông tin công việc</Text>
 
-          <View style={styles.editorWrapper}>
-            <RichToolbar
-              editor={richRefs.requirement}
-              actions={[
-                actions.setBold,
-                actions.setItalic,
-                actions.setUnderline,
-                actions.alignLeft,
-                actions.alignCenter,
-                actions.alignRight,
-                actions.alignFull,
-                actions.insertBulletsList,
-                actions.insertOrderedList,
-                actions.undo,
-                actions.redo,
-              ]}
-              iconTint="#555"
-              selectedIconTint="#007AFF"
-              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
-              style={styles.toolbar}
-              iconSize={18}
+            <Text style={styles.label}>
+              Tên công việc<Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              placeholderTextColor={"#999"}
+              style={styles.input}
+              placeholder="VD: Lập trình viên React Native"
+              value={jobTitle}
+              onChangeText={setJobTitle}
             />
 
-            <RichEditor
-              ref={richRefs.requirement}
-              style={styles.editor}
-              placeholder="Nhập yêu cầu công việc..."
-              initialHeight={180}
-              editorInitializedCallback={() => handleEditorReady("requirement")}
-              onChange={(html) => setRequirement(html)}
-            />
-          </View>
-          <Text style={styles.label}>
-            Phúc lợi<Text style={styles.required}>*</Text>
-          </Text>
-
-          <MultiSelect
-            data={getEnumOptions(BenefitType)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn phúc lợi"
-            value={benefits.map((b) => b.type)}
-            onChange={(selectedValues) => {
-              const selectedBenefits = selectedValues.map((val) => {
-                const existing = benefits.find((b) => b.type === val);
-                return existing || { type: val, description: "" };
-              });
-              setBenefits(selectedBenefits);
-            }}
-            style={[styles.dropdown]}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-            activeColor="#f0f0f0"
-            search
-            searchPlaceholder="Tìm phúc lợi..."
-            renderSelectedItem={(item, unSelect) => (
-              <View style={styles.selectedItem}>
-                <Text style={styles.selectedItemText}>{item.label}</Text>
-                <Ionicons
-                  name="close-circle"
-                  size={16}
-                  color="#747474ff"
-                  style={styles.removeIcon}
-                  onPress={() => unSelect?.(item)}
-                />
-              </View>
-            )}
-          />
-
-          {benefits.map((benefit, index) => (
-            <View key={benefit.type} style={styles.benefitItem}>
-              <Text style={styles.benefitLabel}>
-                {BenefitType[benefit.type as keyof typeof BenefitType]}
-              </Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập mô tả phúc lợi..."
-                value={benefit.description}
-                onChangeText={(text) => {
-                  const updated = [...benefits];
-                  updated[index].description = text;
-                  setBenefits(updated);
-                }}
-              />
-            </View>
-          ))}
-        </View>
-        {/* ---------- CHI TIẾT CÔNG VIỆC ---------- */}
-        <View style={styles.card}>
-          <Text style={styles.title}>Chi tiết công việc</Text>
-
-          <Text style={styles.label}>
-            Trình độ học vấn<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            data={getEnumOptions(EducationLevel)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn trình độ học vấn"
-            value={education}
-            onChange={(item) => setEducation(item.value)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          <Text style={styles.label}>
-            Mức kinh nghiệm<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            data={getEnumOptions(ExperienceLevel)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn kinh nghiệm làm việc"
-            value={experience}
-            onChange={(item) => setExperience(item.value)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          <Text style={styles.label}>
-            Cấp bậc<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            data={getEnumOptions(JobLevel)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn cấp bậc"
-            value={jobLevel}
-            onChange={(item) => setJobLevel(item.value)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          <Text style={styles.label}>
-            Loại công việc<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            data={getEnumOptions(JobType)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn loại công việc"
-            value={jobType}
-            onChange={(item) => setJobType(item.value)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          <Text style={styles.label}>
-            Giới tính<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            data={getEnumOptions(JobGender)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn giới tính"
-            value={jobGender}
-            onChange={(item) => setJobGender(item.value)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-
-          <Text style={styles.label}>Mã việc làm</Text>
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: RN-2025-01"
-            value={jobCode}
-            onChangeText={(text) => setJobCode(text)}
-          />
-
-          <Text style={styles.label}>
-            Ngành nghề<Text style={styles.required}>*</Text>
-          </Text>
-
-          {/** Duyệt qua danh sách ngành nghề đã chọn **/}
-          {selectIndustryList.map((selected, index) => (
-            <View
-              key={index}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginTop: 6,
-                gap: 5,
+            <Text style={styles.label}>
+              Địa điểm<Text style={styles.required}>*</Text>
+            </Text>
+            <Dropdown
+              data={listProvinces}
+              labelField="name"
+              valueField="id"
+              placeholder="Chọn Tỉnh / Thành phố"
+              value={jobProvincedId}
+              onChange={(item) => {
+                setJobProvinceId(item.id)
               }}
-            >
-              <View style={{ flex: 1 }}>
-                <Dropdown
-                  data={industries}
-                  labelField="name"
-                  valueField="id"
-                  placeholder="Vui lòng chọn"
-                  value={selected}
-                  onChange={(item) => {
-                    const updated = [...selectIndustryList];
-                    updated[index] = item.id;
-                    setSelectIndustryList(updated);
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+            {/* --- Quận / Huyện --- */}
+            <Dropdown
+              data={listJobDistricts}
+              labelField="name"
+              valueField="id"
+              placeholder="Chọn Quận / Huyện"
+              value={jobDistrictdId}
+              onChange={(item) => {
+                console.log(item.id)
+                setJobDistrictId(item.id)
+              }}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+            {/* --- Số nhà / Địa chỉ chi tiết --- */}
+            <TextInput
+              placeholderTextColor={"#999"}
+              style={styles.input}
+              placeholder="VD: 123 Nguyễn Trãi, Phường 5"
+              value={jobDetailAddress}
+              onChangeText={setJobDetailAddress}
+            />
+
+            <Text style={styles.label}>
+              Lương<Text style={styles.required}>*</Text>
+            </Text>
+
+            {/* --- Dropdown chọn loại lương --- */}
+            <Dropdown
+              data={getEnumOptions(SalaryType)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn mức lương"
+              value={salaryType}
+              onChange={(item) => {
+                console.log(typeof salaryType, salaryType);
+                console.log(typeof SalaryType.GREATER_THAN, SalaryType.GREATER_THAN);
+                setSalaryType(item.value)
+              }
+              }
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+            {/* --- Nếu chọn “Trên” --- */}
+            {salaryType === "GREATER_THAN" && (
+              <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
+                <TextInput
+                  placeholderTextColor={"#999"}
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Nhập mức lương tối thiểu"
+                  keyboardType="numeric"
+                  value={minSalary?.toString() ?? ""}   // number -> string
+                  onChangeText={(text) => {
+                    setMinSalary(text ? parseFloat(text) : null);
                   }}
-                  style={styles.dropdown}
+                />
+                <Dropdown
+                  data={getEnumOptions(SalaryUnit)}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Đơn vị"
+                  value={salaryUnit}
+                  onChange={(item) => setSalaryUnit(item.value)}
+                  style={[styles.dropdown, { flex: 1 }]}
                   placeholderStyle={styles.placeholder}
                   selectedTextStyle={styles.selectedText}
                 />
               </View>
+            )}
 
-              {index > 0 && (
-                <TouchableOpacity
-                  onPress={() => {
-                    const updated = selectIndustryList.filter((_, i) => i !== index);
-                    setSelectIndustryList(updated);
+            {/* --- Nếu chọn “Trong khoảng” --- */}
+            {salaryType === "RANGE" && (
+              <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
+                <TextInput
+                  placeholderTextColor={"#999"}
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Min"
+                  keyboardType="numeric"
+                  value={minSalary?.toString() ?? ""}   // number -> string
+                  onChangeText={(text) => {
+                    setMinSalary(text ? parseFloat(text) : null);
                   }}
-                >
-                  <Ionicons name="trash-outline" size={22} color="red" style={{
-                    marginRight: 15,
-                  }} />
-                </TouchableOpacity>
-              )}
+                />
+                <TextInput
+                  placeholderTextColor={"#999"}
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Max"
+                  keyboardType="numeric"
+                  value={maxSalary?.toString() ?? ""}   // number -> string
+                  onChangeText={(text) => {
+                    setMaxSalary(text ? parseFloat(text) : null);
+                  }}
+                />
+                <Dropdown
+                  data={getEnumOptions(SalaryUnit)}
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Đơn vị"
+                  value={salaryUnit}
+                  onChange={(item) => setSalaryUnit(item.value)}
+                  style={[styles.dropdown, { flex: 1 }]}
+                  placeholderStyle={styles.placeholder}
+                  selectedTextStyle={styles.selectedText}
+                />
+              </View>
+            )}
+
+            <Text style={styles.label}>Mô tả công việc</Text>
+            <View style={styles.editorWrapper}>
+              <RichToolbar
+                editor={richRefs.jobDescription}
+                actions={[
+                  actions.setBold,
+                  actions.setItalic,
+                  actions.setUnderline,
+                  actions.alignLeft,
+                  actions.alignCenter,
+                  actions.alignRight,
+                  actions.alignFull,
+                  actions.insertBulletsList,
+                  actions.insertOrderedList,
+                  actions.undo,
+                  actions.redo,
+                ]}
+                iconTint="#555"
+                selectedIconTint="#007AFF"
+                selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+                style={styles.toolbar}
+                iconSize={18}
+              />
+
+              <RichEditor
+                ref={richRefs.jobDescription}
+                style={styles.editor}
+                placeholder="Nhập yêu cầu công việc..."
+                initialHeight={180}
+                editorInitializedCallback={() => handleEditorReady("jobDescription")}
+                onChange={(html) => setJobDescription(html)}
+              />
             </View>
-          ))}
-
-          <TouchableOpacity
-            onPress={() => setSelectIndustryList([...selectIndustryList, null])}
-            style={{ marginHorizontal: 16, marginTop: 8 }}
-          >
-            <Text style={{ color: "#1a73e8", fontWeight: "500" }}>+ Thêm danh mục</Text>
-          </TouchableOpacity>
 
 
+            <Text style={styles.label}>Yêu cầu công việc</Text>
 
-          <Text style={styles.label}>
-            Tuổi<Text style={styles.required}>*</Text>
-          </Text>
-          {/* --- Dropdown chọn loại tuổi --- */}
-          <Dropdown
-            data={getEnumOptions(AgeType)}
-            labelField="label"
-            valueField="value"
-            placeholder="Chọn điều kiện độ tuổi"
-            value={ageType}
-            onChange={(item) => setAgeType(item.value)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
+            <View style={styles.editorWrapper}>
+              <RichToolbar
+                editor={richRefs.requirement}
+                actions={[
+                  actions.setBold,
+                  actions.setItalic,
+                  actions.setUnderline,
+                  actions.alignLeft,
+                  actions.alignCenter,
+                  actions.alignRight,
+                  actions.alignFull,
+                  actions.insertBulletsList,
+                  actions.insertOrderedList,
+                  actions.undo,
+                  actions.redo,
+                ]}
+                iconTint="#555"
+                selectedIconTint="#007AFF"
+                selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+                style={styles.toolbar}
+                iconSize={18}
+              />
 
-          {/* --- Nếu chọn “Trên” thì hiện 1 ô nhập --- */}
-          {ageType === "ABOVE" && (
+              <RichEditor
+                ref={richRefs.requirement}
+                style={styles.editor}
+                placeholder="Nhập yêu cầu công việc..."
+                initialHeight={180}
+                editorInitializedCallback={() => handleEditorReady("requirement")}
+                onChange={(html) => setRequirement(html)}
+              />
+            </View>
+            <Text style={styles.label}>
+              Phúc lợi<Text style={styles.required}>*</Text>
+            </Text>
+
+            <MultiSelect
+              data={getEnumOptions(BenefitType)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn phúc lợi"
+              value={benefits.map((b) => b.type)}
+              onChange={(selectedValues) => {
+                const selectedBenefits = selectedValues.map((val) => {
+                  const existing = benefits.find((b) => b.type === val);
+                  return existing || { type: val, description: "" };
+                });
+                setBenefits(selectedBenefits);
+              }}
+              style={[styles.dropdown]}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+              activeColor="#f0f0f0"
+              search
+              searchPlaceholder="Tìm phúc lợi..."
+              renderSelectedItem={(item, unSelect) => (
+                <View style={styles.selectedItem}>
+                  <Text style={styles.selectedItemText}>{item.label}</Text>
+                  <Ionicons
+                    name="close-circle"
+                    size={16}
+                    color="#747474ff"
+                    style={styles.removeIcon}
+                    onPress={() => unSelect?.(item)}
+                  />
+                </View>
+              )}
+            />
+
+            {benefits.map((benefit, index) => (
+              <View key={benefit.type} style={styles.benefitItem}>
+                <Text style={styles.benefitLabel}>
+                  {BenefitType[benefit.type as keyof typeof BenefitType]}
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nhập mô tả phúc lợi..."
+                  value={benefit.description}
+                  onChangeText={(text) => {
+                    const updated = [...benefits];
+                    updated[index].description = text;
+                    setBenefits(updated);
+                  }}
+                />
+              </View>
+            ))}
+          </View>
+          {/* ---------- CHI TIẾT CÔNG VIỆC ---------- */}
+          <View style={styles.card}>
+            <Text style={styles.title}>Chi tiết công việc</Text>
+
+            <Text style={styles.label}>
+              Trình độ học vấn<Text style={styles.required}>*</Text>
+            </Text>
+            <Dropdown
+              data={getEnumOptions(EducationLevel)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn trình độ học vấn"
+              value={education}
+              onChange={(item) => setEducation(item.value)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+            <Text style={styles.label}>
+              Mức kinh nghiệm<Text style={styles.required}>*</Text>
+            </Text>
+            <Dropdown
+              data={getEnumOptions(ExperienceLevel)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn kinh nghiệm làm việc"
+              value={experience}
+              onChange={(item) => setExperience(item.value)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+            <Text style={styles.label}>
+              Cấp bậc<Text style={styles.required}>*</Text>
+            </Text>
+            <Dropdown
+              data={getEnumOptions(JobLevel)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn cấp bậc"
+              value={jobLevel}
+              onChange={(item) => setJobLevel(item.value)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+            <Text style={styles.label}>
+              Loại công việc<Text style={styles.required}>*</Text>
+            </Text>
+            <Dropdown
+              data={getEnumOptions(JobType)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn loại công việc"
+              value={jobType}
+              onChange={(item) => setJobType(item.value)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+            <Text style={styles.label}>
+              Giới tính<Text style={styles.required}>*</Text>
+            </Text>
+            <Dropdown
+              data={getEnumOptions(JobGender)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn giới tính"
+              value={jobGender}
+              onChange={(item) => setJobGender(item.value)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
+
+
+            <Text style={styles.label}>Mã việc làm</Text>
             <TextInput
               placeholderTextColor={"#999"}
               style={styles.input}
-
-              placeholder="Nhập độ tuổi tối thiểu"
-              keyboardType="numeric"
-              value={minAge?.toString() ?? ""}   // number -> string
-              onChangeText={(text) => {
-                setMinAge(text ? parseFloat(text) : null);
-              }}
+              placeholder="VD: RN-2025-01"
+              value={jobCode}
+              onChangeText={(text) => setJobCode(text)}
             />
-          )}
 
-          {/* --- Nếu chọn “Dưới” thì hiện 1 ô nhập --- */}
-          {ageType === "BELOW" && (
-            <TextInput
-              placeholderTextColor={"#999"}
-              style={styles.input}
-              placeholder="Nhập độ tuổi tối đa"
-              keyboardType="numeric"
-              value={maxAge?.toString() ?? ""}   // number -> string
-              onChangeText={(text) => {
-                setMaxAge(text ? parseFloat(text) : null);
-              }}
+            <Text style={styles.label}>
+              Ngành nghề<Text style={styles.required}>*</Text>
+            </Text>
+
+            {/** Duyệt qua danh sách ngành nghề đã chọn **/}
+            {selectIndustryList.map((selected, index) => (
+              <View
+                key={index}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginTop: 6,
+                  gap: 5,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Dropdown
+                    data={industries}
+                    labelField="name"
+                    valueField="id"
+                    placeholder="Vui lòng chọn"
+                    value={selected}
+                    onChange={(item) => {
+                      const updated = [...selectIndustryList];
+                      updated[index] = item.id;
+                      setSelectIndustryList(updated);
+                    }}
+                    style={styles.dropdown}
+                    placeholderStyle={styles.placeholder}
+                    selectedTextStyle={styles.selectedText}
+                  />
+                </View>
+
+                {index > 0 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      const updated = selectIndustryList.filter((_, i) => i !== index);
+                      setSelectIndustryList(updated);
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={22} color="red" style={{
+                      marginRight: 15,
+                    }} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+
+            <TouchableOpacity
+              onPress={() => setSelectIndustryList([...selectIndustryList, null])}
+              style={{ marginHorizontal: 16, marginTop: 8 }}
+            >
+              <Text style={{ color: "#1a73e8", fontWeight: "500" }}>+ Thêm danh mục</Text>
+            </TouchableOpacity>
+
+
+
+            <Text style={styles.label}>
+              Tuổi<Text style={styles.required}>*</Text>
+            </Text>
+            {/* --- Dropdown chọn loại tuổi --- */}
+            <Dropdown
+              data={getEnumOptions(AgeType)}
+              labelField="label"
+              valueField="value"
+              placeholder="Chọn điều kiện độ tuổi"
+              value={ageType}
+              onChange={(item) => setAgeType(item.value)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
             />
-          )}
 
-          {/* --- Nếu chọn “Trong khoảng” thì hiện 2 ô nhập --- */}
-          {ageType === "INPUT" && (
-            <View style={{ flexDirection: "row", gap: 8, marginHorizontal: 16 }}>
+            {/* --- Nếu chọn “Trên” thì hiện 1 ô nhập --- */}
+            {ageType === "ABOVE" && (
               <TextInput
                 placeholderTextColor={"#999"}
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Từ tuổi"
+                style={styles.input}
+
+                placeholder="Nhập độ tuổi tối thiểu"
                 keyboardType="numeric"
                 value={minAge?.toString() ?? ""}   // number -> string
                 onChangeText={(text) => {
                   setMinAge(text ? parseFloat(text) : null);
                 }}
               />
+            )}
+
+            {/* --- Nếu chọn “Dưới” thì hiện 1 ô nhập --- */}
+            {ageType === "BELOW" && (
               <TextInput
                 placeholderTextColor={"#999"}
-                style={[styles.input, { flex: 1 }]}
-                placeholder="Đến tuổi"
+                style={styles.input}
+                placeholder="Nhập độ tuổi tối đa"
                 keyboardType="numeric"
                 value={maxAge?.toString() ?? ""}   // number -> string
                 onChangeText={(text) => {
                   setMaxAge(text ? parseFloat(text) : null);
                 }}
               />
-            </View>
-          )}
-        </View>
-        {/* ---------- THÔNG TIN LIÊN HỆ ---------- */}
-        <View style={styles.card}>
-          <Text style={styles.title}>Thông tin liên hệ</Text>
+            )}
 
-          <Text style={styles.label}>
-            Người liên hệ<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: Lê Hữu Nam"
-            value={contactName}
-            onChangeText={setContactName}
-          />
-
-          <Text style={styles.label}>
-            Điện thoại liên lạc<Text style={styles.required}>*</Text>
-          </Text>
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: 0905 123 456"
-            keyboardType="phone-pad"
-            value={contactPhone}
-            onChangeText={setContactPhone}
-          />
-
-          <Text style={styles.label}>
-            Địa điểm<Text style={styles.required}>*</Text>
-          </Text>
-          <Dropdown
-            data={listProvinces}
-            labelField="name"
-            valueField="id"
-            placeholder="Chọn Tỉnh / Thành phố"
-            value={contactProvinceId}
-            onChange={(item) => {
-              setContactProvinceId(item.id)
-            }}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          {/* --- Quận / Huyện --- */}
-          <Dropdown
-            data={listContactDistricts
-            }
-            labelField="name"
-            valueField="id"
-            placeholder="Chọn Quận / Huyện"
-            value={contactDistrictdId}
-            onChange={(item) => setContactDistrictId(item.id)}
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholder}
-            selectedTextStyle={styles.selectedText}
-          />
-
-          {/* --- Số nhà / Địa chỉ chi tiết --- */}
-          <TextInput
-            placeholderTextColor={"#999"}
-            style={styles.input}
-            placeholder="VD: 123 Nguyễn Trãi, Phường 5"
-            value={contactDetailAddress}
-            onChangeText={setContactDetailAddress}
-          />
-
-          <Text style={styles.label}>Mô tả</Text>
-          <View style={styles.editorWrapper}>
-            <RichToolbar
-              editor={richRefs.description}
-              actions={[
-                actions.setBold,
-                actions.setItalic,
-                actions.setUnderline,
-                actions.alignLeft,
-                actions.alignCenter,
-                actions.alignRight,
-                actions.alignFull,
-                actions.insertBulletsList,
-                actions.insertOrderedList,
-                actions.undo,
-                actions.redo,
-              ]}
-              iconTint="#555"
-              selectedIconTint="#007AFF"
-              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
-              style={styles.toolbar}
-              iconSize={18}
-            />
-
-            <RichEditor
-              ref={richRefs.description}
-              style={styles.editor}
-              placeholder="Nhập yêu cầu công việc..."
-              initialHeight={180}
-              editorInitializedCallback={() => handleEditorReady("description")}
-              onChange={(html) => setDescription(html)}
-            />
+            {/* --- Nếu chọn “Trong khoảng” thì hiện 2 ô nhập --- */}
+            {ageType === "INPUT" && (
+              <View style={{ flexDirection: "row", gap: 8, marginHorizontal: 16 }}>
+                <TextInput
+                  placeholderTextColor={"#999"}
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Từ tuổi"
+                  keyboardType="numeric"
+                  value={minAge?.toString() ?? ""}   // number -> string
+                  onChangeText={(text) => {
+                    setMinAge(text ? parseFloat(text) : null);
+                  }}
+                />
+                <TextInput
+                  placeholderTextColor={"#999"}
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder="Đến tuổi"
+                  keyboardType="numeric"
+                  value={maxAge?.toString() ?? ""}   // number -> string
+                  onChangeText={(text) => {
+                    setMaxAge(text ? parseFloat(text) : null);
+                  }}
+                />
+              </View>
+            )}
           </View>
+          {/* ---------- THÔNG TIN LIÊN HỆ ---------- */}
+          <View style={styles.card}>
+            <Text style={styles.title}>Thông tin liên hệ</Text>
 
+            <Text style={styles.label}>
+              Người liên hệ<Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              placeholderTextColor={"#999"}
+              style={styles.input}
+              placeholder="VD: Lê Hữu Nam"
+              value={contactName}
+              onChangeText={setContactName}
+            />
 
-          {/* ---------- PHÂN CÔNG THÀNH VIÊN ----------
-        <Text style={styles.title}>Phân công thành viên</Text>
+            <Text style={styles.label}>
+              Điện thoại liên lạc<Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              placeholderTextColor={"#999"}
+              style={styles.input}
+              placeholder="VD: 0905 123 456"
+              keyboardType="phone-pad"
+              value={contactPhone}
+              onChangeText={setContactPhone}
+            />
 
-        <Text style={styles.label}>Thành viên được phân công</Text>
-        <View style={styles.pickerContainer}>
-          <Picker selectedValue={assignedMember} onValueChange={setAssignedMember}>
-            <Picker.Item label="Chọn thành viên" value="" />
-            <Picker.Item label="Nguyễn Văn A" value="a" />
-            <Picker.Item label="Trần Thị B" value="b" />
-            <Picker.Item label="Lê Văn C" value="c" />
-          </Picker>
-        </View>
+            <Text style={styles.label}>
+              Địa điểm<Text style={styles.required}>*</Text>
+            </Text>
+            <Dropdown
+              data={listProvinces}
+              labelField="name"
+              valueField="id"
+              placeholder="Chọn Tỉnh / Thành phố"
+              value={contactProvinceId}
+              onChange={(item) => {
+                setContactProvinceId(item.id)
+              }}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
 
-        <Text style={styles.label}>Thêm email nhận thông báo</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="VD: notify@nptsoftware.vn"
-          value={notifyEmail}
-          onChangeText={setNotifyEmail}
-        />
+            {/* --- Quận / Huyện --- */}
+            <Dropdown
+              data={listContactDistricts
+              }
+              labelField="name"
+              valueField="id"
+              placeholder="Chọn Quận / Huyện"
+              value={contactDistrictdId}
+              onChange={(item) => setContactDistrictId(item.id)}
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholder}
+              selectedTextStyle={styles.selectedText}
+            />
 
-        {/* ---------- NGÀY ĐĂNG ---------- */}
-          {/* <Text style={styles.title}>Ngày đăng</Text>
-        <Text style={styles.label}>
-          Ngày đăng<Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={postDate.toLocaleDateString("vi-VN")}
-          editable={false}
-        /> */}
+            {/* --- Số nhà / Địa chỉ chi tiết --- */}
+            <TextInput
+              placeholderTextColor={"#999"}
+              style={styles.input}
+              placeholder="VD: 123 Nguyễn Trãi, Phường 5"
+              value={contactDetailAddress}
+              onChangeText={setContactDetailAddress}
+            />
 
-          <Text style={styles.label}>
-            Ngày hết hạn<Text style={styles.required}>*</Text>
-          </Text>
-          <TouchableOpacity onPress={() => setDatePickerVisibility(true)} style={styles.input}>
-            <Text>{formatDate(expiryDate)}</Text>
+            <Text style={styles.label}>Mô tả</Text>
+            <View style={styles.editorWrapper}>
+              <RichToolbar
+                editor={richRefs.description}
+                actions={[
+                  actions.setBold,
+                  actions.setItalic,
+                  actions.setUnderline,
+                  actions.alignLeft,
+                  actions.alignCenter,
+                  actions.alignRight,
+                  actions.alignFull,
+                  actions.insertBulletsList,
+                  actions.insertOrderedList,
+                  actions.undo,
+                  actions.redo,
+                ]}
+                iconTint="#555"
+                selectedIconTint="#007AFF"
+                selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
+                style={styles.toolbar}
+                iconSize={18}
+              />
+
+              <RichEditor
+                ref={richRefs.description}
+                style={styles.editor}
+                placeholder="Nhập yêu cầu công việc..."
+                initialHeight={180}
+                editorInitializedCallback={() => handleEditorReady("description")}
+                onChange={(html) => setDescription(html)}
+              />
+            </View>
+            <Text style={styles.label}>
+              Ngày hết hạn<Text style={styles.required}>*</Text>
+            </Text>
+            <View style={[styles.input, { justifyContent: "center" }]}>
+              <Text>{formatDate(expiryDate)}</Text>
+            </View>
+          </View>
+          {/* ---------- NGÔN NGỮ HỒ SƠ ỨNG VIÊN ---------- */}
+
+        </ScrollView>
+        <View style={styles.buttonRow}>
+
+          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+            <Text style={styles.submitText}>Đăng công việc</Text>
           </TouchableOpacity>
-
-          {/* --- Modal chọn ngày --- */}
-          <DateTimePickerModal
-            isVisible={isDatePickerVisible}
-            mode="date"
-            onConfirm={handleConfirm}
-            onCancel={hideDatePicker}
-            date={expiryDate}
-          />
         </View>
-        {/* ---------- NGÔN NGỮ HỒ SƠ ỨNG VIÊN ---------- */}
-
-      </ScrollView>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={styles.saveBtn}
-          onPress={() => {
-            const { ToastService } = require("../../services/toastService");
-            ToastService.info("Đã lưu nháp!");
-          }}
-        >
-          <Text style={styles.saveText}>Lưu việc làm</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-          <Text style={styles.submitText}>Đăng công việc</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingWrapper>
   );
 };
 
 export default PostJobScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8fafc" },
+  container: { flex: 1, backgroundColor: "#f9fafb" },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderBottomWidth: 1,
     borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
     position: "relative",
   },
-  iconButton: { padding: 8, borderRadius: 8, zIndex: 100 },
+  iconButton: { padding: 8, borderRadius: 999, backgroundColor: "#f3f4f6", zIndex: 100 },
   headerTitle: {
     position: "absolute",
     left: 40, // 👈 đẩy sang phải để tránh icon Back
     right: 40,
     textAlign: "center",
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#075985",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1f2937",
     paddingLeft: 10, // 👈 thêm khoảng cách nhẹ bên trái // ❌ không dùng trong StyleSheet (đưa vào component)
   },
   card: {
-    backgroundColor: "#fff",
-    paddingVertical: 20,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    backgroundColor: "#ffffff",
+    paddingVertical: 24,
+    marginVertical: 12,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  title: { fontSize: 20, fontWeight: "700", color: "#075985", marginVertical: 5, paddingHorizontal: 10 },
-  label: { fontSize: 15, fontWeight: "600", marginTop: 14, color: "#000000ff", paddingHorizontal: 10 },
-  required: { color: "red" },
+  title: { fontSize: 20, fontWeight: "600", color: "#1f2937", marginVertical: 8, paddingHorizontal: 16 },
+  label: { fontSize: 14, fontWeight: "500", marginTop: 16, color: "#374151", paddingHorizontal: 16 },
+  required: { color: "#ef4444" },
   input: {
     borderWidth: 1,
-    borderColor: "#E0E0E0",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginHorizontal: 10,
-    marginVertical: 6,
-    backgroundColor: "#FFFFFF",
-    fontSize: 15,
-    color: "#333",
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: "#ffffff",
+    fontSize: 16,
+    color: "#111827",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     elevation: 1,
-    height: 50,
+    height: 52,
   },
   submitBtn: {
-    backgroundColor: "#1a73e8",
-    borderRadius: 10,
+    backgroundColor: colors.primary.start,
+    borderRadius: 12,
     alignItems: "center",
-    paddingVertical: 14,
+    paddingVertical: 16,
     marginHorizontal: 1,
     flex: 1.5,
+    shadowColor: "#3b82f6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  submitText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  submitText: { color: "#ffffff", fontWeight: "600", fontSize: 16 },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: 10,
-    backgroundColor: "#fff",
-    borderWidth: 1,
+    gap: 12,
+    backgroundColor: "#ffffff",
+    borderTopWidth: 1,
     borderColor: "#e5e7eb",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
     position: "relative",
   },
   saveBtn: {
     borderWidth: 1.5,
-    borderColor: "#1a73e8",
-    borderRadius: 10,
+    borderColor: "#3b82f6",
+    borderRadius: 12,
     alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     flex: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   saveText: {
-    color: "#1a73e8",
+    color: "#3b82f6",
     fontWeight: "600",
     fontSize: 16,
   },
   dropdown: {
-    height: 50,
-    borderColor: "#ccc",
+    height: 52,
+    borderColor: "#d1d5db",
     borderWidth: 1,
-    borderRadius: 8,
-    marginHorizontal: 10,
-    marginTop: 6,
-    paddingHorizontal: 12,
-    marginVertical: 6,
-    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 8,
+    paddingHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     elevation: 1,
   },
   placeholder: {
-    color: "#999",
-    fontSize: 15,
+    color: "#9ca3af",
+    fontSize: 16,
   },
   selectedText: {
-    color: "#333",
-    fontSize: 15,
+    color: "#111827",
+    fontSize: 16,
     fontWeight: "500",
   },
 
@@ -1227,76 +1213,84 @@ const styles = StyleSheet.create({
   selectedItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f6fa",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "#dcdde1",
+    borderColor: "#e5e7eb",
     marginRight: 8,
     marginTop: 8,
-    marginLeft: 14,
+    marginLeft: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 1.5,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     elevation: 1,
   },
   selectedItemText: {
-    color: "#2f3640",
+    color: "#1f2937",
     fontSize: 14,
     fontWeight: "500",
   },
   removeIcon: {
-    marginLeft: 6,
+    marginLeft: 8,
   },
   //rich editor
   editorWrapper: {
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "#d1d5db",
     borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#ffffff",
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-    marginHorizontal: 10,
-    marginVertical: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    marginHorizontal: 16,
+    marginVertical: 8,
   },
   toolbar: {
-    backgroundColor: "#F7F9FC",
+    backgroundColor: "#f9fafb",
     borderBottomWidth: 1,
-    borderBottomColor: "#E4E6EB",
-    paddingVertical: 6,
+    borderBottomColor: "#e5e7eb",
+    paddingVertical: 8,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
-    minHeight: 44,
+    minHeight: 48,
   },
   editor: {
-    minHeight: 180,
-    padding: 12,
-    fontSize: 15,
-    color: "#333",
-    backgroundColor: "#FFFFFF",
+    minHeight: 200,
+    padding: 16,
+    fontSize: 16,
+    color: "#111827",
+    backgroundColor: "#ffffff",
   },
   ///
   benefitItem: {
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 10,
+    borderColor: "#e5e7eb",
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   benefitLabel: {
-    fontWeight: "bold",
-    marginBottom: 5,
-    marginLeft: 10,
+    fontWeight: "500",
+    marginBottom: 6,
+    color: "#374151",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
   },
 });

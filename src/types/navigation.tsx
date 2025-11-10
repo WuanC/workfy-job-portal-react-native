@@ -43,6 +43,8 @@ export type RootStackParamList = {
 
   //Application
   EmployeeDetailApplication: {applicationId: number; status: string; coverLetter: string; jobTitle: string; cvUrl: string}
+  EmployerDetailApplication: {applicationId: number}
+  ApplicationsByJob: { jobId: number;}
 };
 // type JobDetailNavigationProp = NativeStackNavigationProp<
 //   RootStackParamList,

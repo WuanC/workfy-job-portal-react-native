@@ -23,6 +23,7 @@ interface IJobCardProps {
   salary_range: string;
   time_passed: string;
   applied?: boolean;
+  isEmployer?: boolean
 }
 
 type JobDetailNavigationProp = NativeStackNavigationProp<
@@ -39,6 +40,7 @@ const JobCard: React.FC<IJobCardProps> = ({
   salary_range,
   time_passed,
   applied = false,
+  isEmployer = false,
 }) => {
   const navigation = useNavigation<JobDetailNavigationProp>();
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -81,18 +83,18 @@ const JobCard: React.FC<IJobCardProps> = ({
     }
 
   };
-    const handleToggleSavea =  () => {
-      console.log(logo_path)
 
-  };
 
   return (
     <Pressable
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={() => {
-        handleToggleSavea()
-        navigation.navigate("JobDetail", { id })}}
+        if (isEmployer == false) {
+          navigation.navigate("JobDetail", { id })
+        }
+
+      }}
       style={({ pressed }) => [
         styles.card,
         pressed && { opacity: 0.95 },
@@ -127,20 +129,25 @@ const JobCard: React.FC<IJobCardProps> = ({
                   <Text numberOfLines={2} style={styles.jobTitle}>
                     {job_title}
                   </Text>
-                  <Pressable onPress={() => {
-                    handleHeartPress()
-                    handleToggleSave(id)
-                    setheartApply(!heartApply)
-                  }}>
-                    <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                      <Ionicons
-                        name={heartApply ? "heart" : "heart-outline"}
-                        size={24}
-                        color={heartApply ? "#f5576c" : "#d1d5db"}
-                        style={styles.heartIcon}
-                      />
-                    </Animated.View>
-                  </Pressable>
+                  {!isEmployer && (
+                    <Pressable
+                      onPress={() => {
+                        handleHeartPress();
+                        // handleToggleSave(id);
+                        // setheartApply(!heartApply);
+                      }}
+                    >
+                      <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+                        <Ionicons
+                          name={heartApply ? "heart" : "heart-outline"}
+                          size={24}
+                          color={heartApply ? "#f5576c" : "#d1d5db"}
+                          style={styles.heartIcon}
+                        />
+                      </Animated.View>
+                    </Pressable>
+                  )}
+
                 </View>
 
                 <Text style={styles.company} numberOfLines={1}>

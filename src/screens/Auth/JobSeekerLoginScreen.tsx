@@ -55,13 +55,13 @@ const JobSeekerLoginScreen = () => {
   return (
     <View style={styles.container}>
       <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-      <Text style={styles.title}>Job Seeker Log In</Text>
+      <Text style={styles.title}>Đăng nhập</Text>
 
       {/* Email input */}
       <View style={styles.inputContainer}>
         <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
         <TextInput
-          placeholder="Enter your email"
+          placeholder="Nhập email của bạn"
           style={styles.input}
           value={email}
           onChangeText={setEmail}
@@ -74,7 +74,7 @@ const JobSeekerLoginScreen = () => {
       <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
         <TextInput
-          placeholder="Enter your password"
+          placeholder="Nhập mật khẩu"
           secureTextEntry={true}
           style={styles.input}
           value={password}
@@ -90,13 +90,13 @@ const JobSeekerLoginScreen = () => {
           <Checkbox
             value={isChecked}
             onValueChange={setChecked}
-            color={isChecked ? "#1976d2" : undefined}
+            color={isChecked ? "#2563EB" : undefined}
             style={styles.checkbox}
           />
-          <Text style={styles.remember}>Remember me</Text>
+          <Text style={styles.remember}>Ghi nhớ đăng nhập</Text>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: true })}>
-          <Text style={styles.forgot}>Forgot password?</Text>
+          <Text style={styles.forgot}>Quên mật khẩu?</Text>
         </TouchableOpacity>
       </View>
 
@@ -107,39 +107,39 @@ const JobSeekerLoginScreen = () => {
         disabled={loading}
       >
         <Text style={styles.buttonText}>
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </Text>
       </TouchableOpacity>
 
       {/* Divider */}
       <View style={styles.divider}>
         <View style={styles.line} />
-        <Text style={styles.or}>or</Text>
+        <Text style={styles.or}>hoặc</Text>
         <View style={styles.line} />
       </View>
 
       {/* Social Login */}
       <TouchableOpacity style={styles.socialButton}>
         <Ionicons name="logo-google" size={24} color="#DB4437" />
-        <Text style={styles.socialText}>Sign in with Google</Text>
+        <Text style={styles.socialText}>Đăng nhập bằng Google</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.socialButton}>
         <Ionicons name="logo-linkedin" size={24} color="#0077B5" />
-        <Text style={styles.socialText}>Sign in with LinkedIn</Text>
+        <Text style={styles.socialText}>Đăng nhập bằng LinkedIn</Text>
       </TouchableOpacity>
 
       {/* 🆕 Signup and Employer login */}
       <View style={styles.bottomLinks}>
         <TouchableOpacity onPress={() => navigation.navigate("Register")}>
           <Text style={styles.linkText}>
-            Don't have an account? <Text style={styles.linkHighlight}>Sign Up</Text>
+            Chưa có tài khoản? <Text style={styles.linkHighlight}>Đăng ký ngay</Text>
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("EmployerLogin")}>
           <Text style={styles.linkText}>
-            Are you an employer? <Text style={styles.linkHighlight}>Sign in here</Text>
+            Bạn là nhà tuyển dụng? <Text style={styles.linkHighlight}>Đăng nhập tại đây</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -210,9 +210,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   button: {
-    backgroundColor: "#1976d2",
-    paddingVertical: 16,
-    borderRadius: 8,
+    backgroundColor: "#2563EB",
+    paddingVertical: 14,
+    borderRadius: 10,
     width: "100%",
     alignItems: "center",
     marginTop: 10,
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
   divider: {
     flexDirection: "row",
@@ -231,41 +231,43 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: "#ccc",
+    backgroundColor: "#CBD5E1",
   },
   or: {
     marginHorizontal: 8,
     fontSize: 14,
-    color: "#555",
+    color: "#475569",
   },
   socialButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
-    height: 50,
-    backgroundColor: "#f5f5f5",
+    height: 48,
+    backgroundColor: "#F8FAFC",
     borderRadius: 10,
     marginVertical: 6,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
   },
   socialText: {
     marginLeft: 10,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "500",
-    color: "#333",
+    color: "#1E293B",
   },
   bottomLinks: {
     marginTop: 20,
     alignItems: "center",
   },
   linkText: {
-    color: "#555",
+    color: "#475569",
     fontSize: 14,
     marginVertical: 4,
   },
   linkHighlight: {
-    color: "#1976d2",
-    fontWeight: "bold",
+    color: "#2563EB",
+    fontWeight: "600",
   },
 });
 

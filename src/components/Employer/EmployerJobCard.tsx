@@ -1,91 +1,106 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../../theme";
 
 interface Props {
-  status?: "draft" | "active" | "expired";
+  status?: string;
   title: string;
-  duration: string;
-  dateRange: string;
-  views?: number;
+  expireationDate: string;
   applications?: number;
+  salaryRange: string;
   onOptionsPress?: () => void;
+  companyLogo?: string;
+  companyName?: string;
 }
 
 export const EmployerJobCard = ({
-  status = "draft",
+  status = "PENDING",
   title,
-  duration,
-  dateRange,
-  views = 0,
+  expireationDate,
   applications = 0,
+  salaryRange,
   onOptionsPress,
+  companyLogo,
+  companyName = "Công ty chưa xác định",
 }: Props) => {
   const getStatusColor = () => {
     switch (status) {
-      case "active":
+      case "PENDING":
+        return "#f2c94c";
+      case "APPROVED":
         return "#4caf50";
-      case "expired":
+      case "REJECTED":
         return "#f44336";
+      case "CLOSED":
+        return "#9e9e9e";
+      case "EXPIRED":
+        return "#ff9800";
       default:
         return "#607d8b";
     }
   };
 
-  // const getStatusText = () => {
-  //   switch (status) {
-  //     case "active":
-  //       return "ĐANG DUYỆT";
-  //     case "expired":
-  //       return "HẾT HẠN";
-  //     default:
-  //       return "BẢN TẠM";
-  //   }
-  // };
-
   return (
-    <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <View style={[styles.statusTag, { backgroundColor: getStatusColor() }]}>
-          <Text style={styles.statusText}>{status}</Text>
-        </View>
+    <View style={styles.cardContainer}>
+      <View style={styles.cardBody}>
+        {/* Header Row */}
+        <View style={styles.row}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={
+                companyLogo
+                  ? { uri: companyLogo }
+                  : require("../../../assets/App/companyLogoDefault.png")
+              }
+              style={styles.logo}
+            />
+          </View>
 
-        {/* 👇 Thêm TouchableOpacity để click dấu ba chấm */}
-        <TouchableOpacity
-          onPress={onOptionsPress}
-          activeOpacity={0.6}
-          style={styles.iconButton}
-        >
-          <Ionicons name="ellipsis-horizontal" size={22} color="#555" />
-        </TouchableOpacity>
-      </View>
+          <View style={styles.info}>
+            <View style={styles.titleRow}>
+              <Text style={styles.jobTitle} numberOfLines={2}>
+                {title && title.trim() !== "" ? title : "(Chưa có tiêu đề)"}
+              </Text>
+              <TouchableOpacity
+                onPress={onOptionsPress}
+                style={styles.iconButton}
+              >
+                <Ionicons name="ellipsis-horizontal" size={20} color="#777" />
+              </TouchableOpacity>
+            </View>
 
-      {/* Title */}
-      <Text style={styles.title}>
-        {title && title.trim() !== "" ? title : "(Chưa có tiêu đề)"}
-      </Text>
 
-      {/* Date info */}
-      <Text style={styles.duration}>
-        {duration} | {dateRange}
-      </Text>
+            <View style={styles.statusRow}>
+              <View
+                style={[styles.statusTag, { backgroundColor: getStatusColor() }]}
+              >
+                <Text style={styles.statusText}>{status}</Text>
+              </View>
+              <Text style={styles.expireText}> {expireationDate}</Text>
+            </View>
 
-      {/* Footer stats */}
-      <View style={styles.footer}>
-        <View style={styles.footerItem}>
-          <Ionicons name="document-text-outline" size={18} color="#4caf50" />
-          <Text style={styles.footerText}>{applications}</Text>
-        </View>
+            <View style={styles.footerRow}>
+              <View style={styles.salaryBadge}>
+                <Text style={styles.salaryText}>{salaryRange}</Text>
+              </View>
 
-        <View style={styles.footerItem}>
-          <Ionicons name="eye-outline" size={18} color="#4caf50" />
-          <Text style={styles.footerText}>{views}</Text>
-        </View>
-
-        <View style={{ marginLeft: "auto", alignItems: "center" }}>
-          <Text style={styles.createdBy}>Được tạo bởi</Text>
-          <Ionicons name="person-circle-outline" size={22} color="#bbb" />
+              <View style={styles.appCount}>
+                <Ionicons
+                  name="document-text-outline"
+                  size={16}
+                  color= {colors.primary.start}
+                />
+                <Text style={styles.appText}>{applications}</Text>
+              </View>
+            </View>
+          </View>
         </View>
       </View>
     </View>
@@ -93,63 +108,112 @@ export const EmployerJobCard = ({
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 14,
+  cardContainer: {
     marginVertical: 8,
-    marginHorizontal: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginHorizontal: 6,
+    borderRadius: 24,
+    shadowColor: "#667eea",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
+    backgroundColor: "#fff",
   },
-  headerRow: {
+  cardBody: {
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(102, 126, 234, 0.08)",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  logoContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: "#f9f9f9",
+    padding: 8,
+    marginRight: 12,
+  },
+  logo: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
+  info: {
+    flex: 1,
+  },
+  titleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
-  statusTag: {
-    borderRadius: 4,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-  },
-  statusText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
+  jobTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    flex: 1,
+    marginRight: 8,
   },
   iconButton: {
     padding: 4,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
+  companyName: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 8,
   },
-  duration: {
-    fontSize: 13,
-    color: "#666",
-    marginTop: 2,
+  statusTag: {
+    borderRadius: 6,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
   },
-  footer: {
+  statusText: {
+    fontSize: 12,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  expireText: {
+    fontSize: 12,
+    color: "#888",
+    marginLeft: 10,
+  },
+  footerRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginTop: 12,
   },
-  footerItem: {
+  salaryBadge: {
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "rgba(102,126,234,0.1)",
+  },
+  salaryText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.primary.dark,
+  },
+  appCount: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 16,
+    backgroundColor: "rgba(102,126,234,0.1)",
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
   },
-  footerText: {
+  appText: {
     marginLeft: 4,
-    color: "#333",
-  },
-  createdBy: {
-    fontSize: 11,
-    color: "#888",
-    textAlign: "right",
+    fontSize: 13,
+    color: colors.primary.dark,
+    fontWeight: "500",
   },
 });

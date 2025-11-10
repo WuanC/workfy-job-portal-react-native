@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { getUserProfile } from "../../services/employeeService";
+import { validateField } from "../../utilities/validation";
 import {
   applyWithFileCV,
   applyWithLinkCV,
@@ -24,7 +25,7 @@ import {
 import { RootStackParamList } from "../../types/navigation";
 import { colors, gradients } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
-import { actions, RichEditor, RichToolbar } from "react-native-pell-rich-editor";
+// Using plain TextInput for cover letter instead of rich text editor
 
 type JobSubmitSuccessNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -34,9 +35,7 @@ type JobSubmitSuccessNavigationProp = NativeStackNavigationProp<
 const JobSubmitScreen = ({ route }: any) => {
   const { jobId, jobName } = route.params as { jobId: number; jobName: string };
   const navigation = useNavigation<JobSubmitSuccessNavigationProp>();
-  const richCoverLetter = useRef<RichEditor>(null);
-  const [isEditorReady, setIsEditorReady] = useState(false);
-  const isInitialLoad = useRef(true);
+  // cover letter is a plain textarea (TextInput)
   const [profile, setProfile] = useState<any>(null);
   const [latestJob, setLatestJob] = useState<any>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -121,6 +120,20 @@ const JobSubmitScreen = ({ route }: any) => {
     }
 
     try {
+      // validate phone before submitting
+      const phoneErr = validateField(phoneNumber || "", "phone");
+      if (phoneErr) {
+        ToastService.warning("Sai định dạng", phoneErr);
+        return;
+      }
+      // validate profile email if present
+      if (profile?.email) {
+        const emailErr = validateField(profile.email, "email");
+        if (emailErr) {
+          ToastService.warning("Sai định dạng", emailErr);
+          return;
+        }
+      }
       if (useLink) {
         await applyWithLinkCV({
           fullName: profile.fullName,
@@ -151,17 +164,7 @@ const JobSubmitScreen = ({ route }: any) => {
       ToastService.error("Lỗi ứng tuyển", "Không thể gửi ứng tuyển, thử lại sau.");
     }
   };
-  useEffect(() => {
-    if (isEditorReady && coverContent && isInitialLoad.current) {
-      richCoverLetter.current?.setContentHTML(coverContent);
-      isInitialLoad.current = false;
-    }
-  }, [isEditorReady, coverContent]);
-
-
-  const handleEditorReady = () => {
-    setIsEditorReady(true);
-  };
+  // no rich editor initialization required for plain TextInput
   return (
     <View style={styles.container}>
       {/* 🔹 Header */}
@@ -173,7 +176,6 @@ const JobSubmitScreen = ({ route }: any) => {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <View>
-          <Text style={styles.headerTitle}>Nộp đơn cho</Text>
           <Text style={styles.jobTitle}>{jobName}</Text>
         </View>
       </View>
@@ -294,35 +296,13 @@ const JobSubmitScreen = ({ route }: any) => {
             Thư xin việc <Text style={styles.required}>*</Text>
           </Text>
           <View style={styles.editorWrapper}>
-            <RichToolbar
-              editor={richCoverLetter}
-              actions={[
-                actions.setBold,
-                actions.setItalic,
-                actions.setUnderline,
-                actions.alignLeft,
-                actions.alignCenter,
-                actions.alignRight,
-                actions.alignFull,
-                actions.insertBulletsList,
-                actions.insertOrderedList,
-                actions.undo,
-                actions.redo,
-              ]}
-              iconTint="#555"
-              selectedIconTint="#007AFF"
-              selectedButtonStyle={{ backgroundColor: "#EAF2FF", borderRadius: 6 }}
-              style={styles.toolbar}
-              iconSize={18}
-            />
-
-            <RichEditor
-              ref={richCoverLetter}
-              style={styles.editor}
-              placeholder="Nhập yêu cầu công việc..."
-              initialHeight={180}
-              editorInitializedCallback={() => handleEditorReady()}
-              onChange={(html) => setCoverContent(html)}
+            <TextInput
+              style={[styles.editor, { textAlignVertical: 'top' }]}
+              placeholder="Nhập thư xin việc..."
+              multiline
+              value={coverContent}
+              onChangeText={setCoverContent}
+              numberOfLines={10}
             />
           </View>
         </View>
@@ -333,7 +313,7 @@ const JobSubmitScreen = ({ route }: any) => {
       <View style={styles.footer}>
         <TouchableOpacity onPress={handleSubmit}>
           <LinearGradient
-            colors={gradients.sunnyYellow as any}
+            colors={gradients.purpleDream as any}
             style={styles.submitButton}
           >
 

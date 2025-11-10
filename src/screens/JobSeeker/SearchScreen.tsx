@@ -43,12 +43,20 @@ const SearchScreen = ({ route }: any) => {
     sort: "createdAt",
   });
   const [loading, setLoading] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
+  const pageSize = 10;
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   // 🟢 Gọi API job khi filter thay đổi
   useEffect(() => {
     if (activeTab === "jobs") {
-      fetchFilteredJobs(advanceFilter);
+      // load first page whenever filter or tab changes
+      setHasMore(true);
+      setPageNumber(1);
+      fetchFilteredJobs(advanceFilter, 1, false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [advanceFilter, activeTab]);
 
   // 🟢 Gọi API ngành nghề khi chuyển tab
@@ -58,15 +66,40 @@ const SearchScreen = ({ route }: any) => {
     }
   }, [activeTab]);
 
-  const fetchFilteredJobs = async (filter: AdvancedJobQuery) => {
+  const fetchFilteredJobs = async (
+    filter: AdvancedJobQuery,
+    page: number = 1,
+    append: boolean = false
+  ) => {
     try {
-      setLoading(true);
-      const data = await getAdvancedJobs(filter);
-      setJobs(data.items || []);
+      if (page === 1) setLoading(true);
+      const query = { ...filter, pageNumber: page, pageSize } as AdvancedJobQuery;
+      const data = await getAdvancedJobs(query);
+      const items = data.items || [];
+      if (append) setJobs((prev) => [...prev, ...items]);
+      else setJobs(items);
+
+      // determine if more pages exist
+      if (!items || items.length < pageSize) setHasMore(false);
+      else setHasMore(true);
     } catch (e) {
       console.error("fetchFilteredJobs error:", e);
     } finally {
-      setLoading(false);
+      if (page === 1) setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreJobs = async () => {
+    if (loadingMore || loading || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const next = pageNumber + 1;
+      await fetchFilteredJobs(advanceFilter, next, true);
+      setPageNumber(next);
+    } catch (e) {
+      console.error("loadMoreJobs error:", e);
+      setLoadingMore(false);
     }
   };
 
@@ -145,7 +178,7 @@ const SearchScreen = ({ route }: any) => {
       ) : activeTab === "jobs" ? (
         <FlatList
           data={jobs}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id?.toString()}
           renderItem={({ item }) => {
             return (
               <JobCard
@@ -165,6 +198,15 @@ const SearchScreen = ({ route }: any) => {
               />
             );
           }}
+          onEndReached={loadMoreJobs}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={() =>
+            loadingMore ? (
+              <View style={{ paddingVertical: 14, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={colors.primary.start} />
+              </View>
+            ) : null
+          }
           contentContainerStyle={{ padding: spacing.md }}
         />
       ) : (

@@ -1,16 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   FlatList,
   TouchableOpacity,
   Modal,
-  ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,117 +16,72 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { closeJob, deleteJob, getMyJobs } from "../../services/jobService";
 import { EmployerJobCard } from "../../components/Employer/EmployerJobCard";
+import { colors, gradients } from "../../theme/colors";
+import { spacing } from "../../theme/spacing";
 
 type EmployerJobNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "PostJob" | "UpdateJob"
 >;
 
-export default function EmployerJobScreen() {
+ const EmployerJobScreen = () =>  {
   const navigation = useNavigation<EmployerJobNavigationProp>();
 
-  const [selectedId, setSelectedId] = useState<number>(-1)
-
-  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<number>(-1);
+  const [isSelectedClosed, setIsSelectedClosed] = useState<boolean>(false)
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Filter dropdown modal
-  const [filterModal, setFilterModal] = useState<"status" | "career" | "location" | null>(null);
-
-  // Action menu state
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
+  const pageSize = 10;
+  const [hasMore, setHasMore] = useState(true);
   const [showActionMenu, setShowActionMenu] = useState(false);
-  const [selectedJob, setSelectedJob] = useState<any>(null);
 
-  // Mock filter data
-  const [statusOptions, setStatusOptions] = useState<{ id: number; name: string }[]>([]);
-  const [careerOptions, setCareerOptions] = useState<{ id: number; name: string }[]>([]);
-  const [locationOptions, setLocationOptions] = useState<{ id: number; name: string }[]>([]);
-
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
-  const [selectedCareer, setSelectedCareer] = useState<string[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const res = await getMyJobs();
-      if (res.status === 200) {
-
-        setJobs(res.data.items);
-      }
+      setPageNumber(1);
+      const res = await getMyJobs(1, pageSize);
+      const items = res.data?.items ?? res.items ?? [];
+      setJobs(items);
+      // determine if more pages exist
+      if (Array.isArray(items) && items.length < pageSize) setHasMore(false);
+      else setHasMore(true);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách công việc:", err);
     } finally {
       setLoading(false);
     }
   };
-  // Fetch job list
-  // useEffect(() => {
 
-  //   fetchJobs();
-  // }, []);
+  const loadMoreJobs = async () => {
+    if (loadingMore || !hasMore) return;
+    try {
+      setLoadingMore(true);
+      const nextPage = pageNumber + 1;
+      const res = await getMyJobs(nextPage, pageSize);
+      const items = res.data?.items ?? res.items ?? [];
+      if (!items || items.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      setJobs((prev) => [...prev, ...items]);
+      setPageNumber(nextPage);
+      if (items.length < pageSize) setHasMore(false);
+    } catch (err) {
+      console.error("Lỗi khi load thêm công việc:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchJobs();
     }, [])
   );
-  // Chọn / Bỏ chọn filter
-  const toggleSelect = (id: number, name: string, selected: string[], setter: any) => {
-    if (selected.includes(name)) setter(selected.filter((s) => s !== name));
-    else setter([...selected, name]);
-  };
 
-  // Render modal filter
-  const renderFilterModal = (type: "status" | "career" | "location") => {
-    const data =
-      type === "status"
-        ? statusOptions
-        : type === "career"
-          ? careerOptions
-          : locationOptions;
-
-    const selected =
-      type === "status"
-        ? selectedStatus
-        : type === "career"
-          ? selectedCareer
-          : selectedLocation;
-
-    const setter =
-      type === "status"
-        ? setSelectedStatus
-        : type === "career"
-          ? setSelectedCareer
-          : setSelectedLocation;
-
-    return (
-      <Modal visible={filterModal === type} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setFilterModal(null)}>
-          <View style={styles.modalBox}>
-            <ScrollView>
-              {data.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.optionRow}
-                  onPress={() => toggleSelect(item.id, item.name, selected, setter)}
-                >
-                  <Ionicons
-                    name={selected.includes(item.name) ? "checkbox" : "square-outline"}
-                    size={22}
-                    color="#007bff"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={styles.optionText}>{item.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </Pressable>
-      </Modal>
-    );
-  };
   const handleDeleteJob = async (id: number) => {
-    // Non-blocking delete with toast feedback
     try {
       const res = await deleteJob(id);
       if (res.status === 200) {
@@ -138,136 +90,97 @@ export default function EmployerJobScreen() {
         fetchJobs();
       }
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Không thể xóa công việc. Vui lòng thử lại.";
+      const msg =
+        error.response?.data?.message ||
+        "Không thể xóa công việc. Vui lòng thử lại.";
       const { ToastService } = require("../../services/toastService");
       ToastService.error("❌ Lỗi", msg);
     }
   };
 
-  const handleCloseJob = async (id: number) => {
+  const handleCloseJob = async (id: number, isClosed: boolean) => {
+    if(isClosed) return;
     try {
       const res = await closeJob(id);
       if (res.status === 200) {
         const { ToastService } = require("../../services/toastService");
         ToastService.success("✅ Thành công", res.message);
-        await fetchJobs(); // 🔁 Cập nhật lại danh sách công việc
+        await fetchJobs();
       }
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Không thể đóng tin tuyển dụng. Vui lòng thử lại.";
+      const msg =
+        error.response?.data?.message ||
+        "Không thể đóng tin tuyển dụng. Vui lòng thử lại.";
       const { ToastService } = require("../../services/toastService");
       ToastService.error("❌ Lỗi", msg);
     }
   };
-    if (loading) {
-      return (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#0ea5e9" />
-        </View>
-      );
-    }
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary.start} />
+        <Text style={{ color: "#777", marginTop: 8 }}>Đang tải dữ liệu...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Modern Header */}
-      <LinearGradient
-        colors={["#667eea", "#764ba2"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <Text style={styles.title}>Công việc của tôi</Text>
-      </LinearGradient>
-
-      {/* Modern New Job Button */}
-      <TouchableOpacity
-        onPress={() => navigation.navigate("PostJob")}
-        activeOpacity={0.8}
-      >
-        <LinearGradient
-          colors={["#11998e", "#38ef7d"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.newJobButton}
-        >
-          <Ionicons name="add-circle-outline" size={24} color="#fff" />
-          <Text style={styles.newJobButtonText}>Đăng công việc mới</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-
-      {/* Modern Search */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput
-          placeholder="Tìm công việc..."
-          style={styles.searchInput}
-          value={search}
-          onChangeText={setSearch}
-          placeholderTextColor="#999"
-        />
-      </View>
-
-      {/* Modern Filter Chips */}
-      <View style={styles.filterRow}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Công việc của tôi</Text>
         <TouchableOpacity
-          style={styles.filterChip}
-          onPress={() => setFilterModal("status")}
+          style={styles.addBtn}
+          onPress={() => navigation.navigate("PostJob")}
         >
-          <Ionicons name="funnel-outline" size={16} color="#667eea" />
-          <Text style={styles.filterChipText}>Trạng thái</Text>
-          <Ionicons name="chevron-down" size={14} color="#667eea" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.filterChip}
-          onPress={() => setFilterModal("career")}
-        >
-          <Ionicons name="briefcase-outline" size={16} color="#667eea" />
-          <Text style={styles.filterChipText}>Ngành nghề</Text>
-          <Ionicons name="chevron-down" size={14} color="#667eea" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.filterChip}
-          onPress={() => setFilterModal("location")}
-        >
-          <Ionicons name="location-outline" size={16} color="#667eea" />
-          <Text style={styles.filterChipText}>Địa điểm</Text>
-          <Ionicons name="chevron-down" size={14} color="#667eea" />
+          <LinearGradient
+            colors={gradients.purpleDream as any}
+            style={styles.addBtnGradient}
+          >
+            <Ionicons name="add" size={22} color="#fff" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />
-      ) : (
-        <FlatList
-          data={jobs.filter((j) =>
-            j?.jobTitle?.toLowerCase().includes(search.toLowerCase())
-          )}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <EmployerJobCard
-              status={item.status}
-              title={item.jobTitle}
-              duration={"60 ngày"}
-              dateRange={`${new Date(item.createdAt).toLocaleDateString(
-                "vi-VN"
-              )} - ${new Date(item.expirationDate).toLocaleDateString("vi-VN")}`}
-              applications={0}
-              views={0}
-              onOptionsPress={() => {
-                setSelectedJob(item);
-                setShowActionMenu(true);
-                setSelectedId(item.id)
-              }}
-            />
-          )}
-          contentContainerStyle={{ paddingBottom: 40 }}
-        />
-      )}
+      {/* Danh sách công việc */}
+      <FlatList
+        data={jobs}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <EmployerJobCard
+            status={item.status}
+            title={item.jobTitle}
+            expireationDate={item.expirationDate}
+            applications={item.numberOfApplications}
+            salaryRange={
+              item.salaryType === "RANGE"
+                ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
+                : item.salaryType === "NEGOTIABLE"
+                ? "Thỏa thuận"
+                : "Không rõ"
+            }
+            onOptionsPress={() => {
+              setIsSelectedClosed(item.status == "CLOSED")
+              console.log(item.status == "ACLOSED")
+              setSelectedId(item.id);
+              setShowActionMenu(true);
+            }}
+          />
+        )}
+        onEndReached={loadMoreJobs}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={() =>
+          loadingMore ? (
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={colors.primary.start} />
+            </View>
+          ) : null
+        }
+        contentContainerStyle={{ padding: spacing.md, paddingBottom: 80 }}
+      />
 
-      {/* Filter modals */}
-      {renderFilterModal("status")}
-      {renderFilterModal("career")}
-      {renderFilterModal("location")}
-
-      {/* Action menu */}
+      {/* Menu hành động */}
       <Modal
         visible={showActionMenu}
         transparent
@@ -279,37 +192,66 @@ export default function EmployerJobScreen() {
           onPress={() => setShowActionMenu(false)}
         >
           <View style={styles.menuBox}>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Đăng việc này</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Sao chép</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={[styles.menuText, { color: "#ff6600" }]}>Ẩn</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}
-              onPress={() => {
-                setShowActionMenu(false);
-                handleDeleteJob(selectedId)
-              }}>
-              <Text style={[styles.menuText, { color: "#ff0000" }]}>Xóa</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}
-              onPress={() => {
-                setShowActionMenu(false);
-                handleCloseJob(selectedId)
-              }}>
-              <Text style={[styles.menuText, { color: "#ff0000" }]}>Đóng</Text>
-            </TouchableOpacity>
+            <Text style={styles.menuTitle}>Thao tác</Text>
+
             <TouchableOpacity
-              style={[styles.menuItem, { borderTopWidth: 1, borderColor: "#eee" }]}
+              style={styles.menuItem}
               onPress={() => {
                 setShowActionMenu(false);
-                navigation.navigate("UpdateJob", { id: selectedId })
+                navigation.navigate("ApplicationsByJob", { jobId: selectedId });
               }}
             >
-              <Text style={styles.menuText}>Sửa</Text>
+              <Ionicons
+                name="people-outline"
+                size={18}
+                color={colors.primary.start}
+              />
+              <Text style={styles.menuText}>Xem ứng viên</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowActionMenu(false);
+                navigation.navigate("UpdateJob", { id: selectedId });
+              }}
+            >
+              <Ionicons
+                name="create-outline"
+                size={18}
+                color={colors.primary.start}
+              />
+              <Text style={styles.menuText}>Sửa thông tin</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowActionMenu(false);
+                handleCloseJob(selectedId, isSelectedClosed);
+              }}
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={18}
+                color="#ff8800"
+              />
+              <Text style={[styles.menuText, { color: "#ff8800" }]}>
+                Đóng công việc
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setShowActionMenu(false);
+                handleDeleteJob(selectedId);
+              }}
+            >
+              <Ionicons name="trash-outline" size={18} color="#ff3b30" />
+              <Text style={[styles.menuText, { color: "#ff3b30" }]}>
+                Xóa công việc
+              </Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -317,140 +259,70 @@ export default function EmployerJobScreen() {
     </View>
   );
 }
-
+export default EmployerJobScreen
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
-  headerGradient: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    paddingTop: 50,
-  },
-  title: { 
-    fontSize: 28, 
-    fontWeight: "800", 
-    color: "#ffffff",
-  },
-  newJobButton: {
+  container: { flex: 1, backgroundColor: colors.background },
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 20,
-    paddingVertical: 16,
-    borderRadius: 16,
-    shadowColor: "#11998e",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+    paddingTop: 15,
+    paddingBottom: 15,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
-  newJobButtonText: {
-    color: "#fff",
+  headerTitle: {
+    fontSize: 22,
     fontWeight: "800",
-    fontSize: 16,
+    color: colors.text.primary,
+    alignContent: "center"
   },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  addBtn: {
+    marginLeft: 10,
   },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: "#1a1a1a",
-  },
-  filterRow: { 
-    flexDirection: "row", 
-    paddingHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 16,
-    gap: 8,
-  },
-  filterChip: {
-    flex: 1,
-    backgroundColor: "#fff",
-    flexDirection: "row",
+  addBtnGradient: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
   },
-  filterChipText: {
-    fontSize: 13,
-    color: "#667eea",
-    fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalBox: {
-    width: "85%",
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    maxHeight: 400,
-    paddingVertical: 20,
-  },
-  optionRow: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    padding: 16,
-    marginHorizontal: 12,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  optionText: { 
-    fontSize: 15,
-    color: "#1a1a1a",
-    fontWeight: "500",
-  },
-
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: spacing.md,
   },
   menuBox: {
     backgroundColor: "#fff",
-    borderRadius: 24,
-    width: 240,
-    paddingVertical: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
+    borderRadius: 20,
+    width: "85%",
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text.primary,
+    marginBottom: 10,
   },
   menuItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f2f2f2",
   },
   menuText: {
-    fontSize: 16,
-    color: "#1a1a1a",
+    marginLeft: 12,
+    fontSize: 15,
     fontWeight: "600",
+    color: colors.text.primary,
   },
-    center: {
+  center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",

@@ -158,6 +158,8 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
                 ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
                 : item.salaryType === "NEGOTIABLE"
                 ? "Thỏa thuận"
+                : item.salaryType === "GREATER_THAN"
+                ? ` Trên ${item.minSalary} ${item.salaryUnit}`
                 : "Không rõ"
             }
             onOptionsPress={() => {

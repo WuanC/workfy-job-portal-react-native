@@ -192,7 +192,9 @@ const SearchScreen = ({ route }: any) => {
                     ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
                     : item.salaryType === "NEGOTIABLE"
                       ? "Thỏa thuận"
-                      : "Không rõ"
+                      : item.salaryType === "GREATER_THAN"
+                        ? ` Trên ${item.minSalary} ${item.salaryUnit}`
+                        : "Không rõ"
                 }
                 time_passed={item.expirationDate}
               />

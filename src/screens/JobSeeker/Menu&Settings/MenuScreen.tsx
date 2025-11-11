@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
+import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { RootStackParamList } from "../../../types/navigation"
@@ -110,19 +111,19 @@ const MenuScreen = () => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.employersSection}>
+          {/* <TouchableOpacity style={styles.employersSection}>
             <View>
               <Text style={styles.employersLabel}>Nhà tuyển dụng đã xem</Text>
               <Text style={styles.employersCount}>0</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <Text style={styles.registrationDate}>Ngày đăng ký: {profile?.createdAt}</Text>
         </View>
 
         {/* === My CareerLink Section === */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>My CareerLink</Text>
           <View style={styles.menuGrid}>
             <TouchableOpacity style={[styles.menuCard, { borderColor: colors.primary.light }]}>
@@ -135,7 +136,7 @@ const MenuScreen = () => {
               <Text style={styles.menuText}>Thư xin việc</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {/* === Settings Section === */}
         <View style={styles.section}>
@@ -179,8 +180,15 @@ const MenuScreen = () => {
         </View>
 
         {/* === Logout Button === */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Đăng xuất</Text>
+        <TouchableOpacity onPress={handleLogout} activeOpacity={0.8}>
+          <LinearGradient
+            colors={[colors.primary.start, colors.primary.end || "#667eea"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.btn, { shadowColor: colors.error.start || "#f5576c" }]}
+          >
+            <Text style={styles.btnText}>Đăng xuất</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
         <Text style={styles.versionText}>Phiên bản 1.0.19</Text>
@@ -346,6 +354,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.error.start,
     fontWeight: "500",
+  },
+  btn: {
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    shadowColor: colors.primary.start,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+    marginBottom: 14,
+  },
+  btnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
   },
   versionText: {
     textAlign: "center",

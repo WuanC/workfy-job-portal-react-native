@@ -7,6 +7,7 @@ import {
   TextInput,
   ScrollView,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { ToastService } from "../../services/toastService";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
@@ -48,6 +49,7 @@ const JobSubmitScreen = ({ route }: any) => {
   const [useLink, setUseLink] = useState(false);
 
   const [coverContent, setCoverContent] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -119,21 +121,23 @@ const JobSubmitScreen = ({ route }: any) => {
       return;
     }
 
-    try {
-      // validate phone before submitting
-      const phoneErr = validateField(phoneNumber || "", "phone");
-      if (phoneErr) {
-        ToastService.warning("Sai định dạng", phoneErr);
+    // validate phone before submitting
+    const phoneErr = validateField(phoneNumber || "", "phone");
+    if (phoneErr) {
+      ToastService.warning("Sai định dạng", phoneErr);
+      return;
+    }
+    // validate profile email if present
+    if (profile?.email) {
+      const emailErr = validateField(profile.email, "email");
+      if (emailErr) {
+        ToastService.warning("Sai định dạng", emailErr);
         return;
       }
-      // validate profile email if present
-      if (profile?.email) {
-        const emailErr = validateField(profile.email, "email");
-        if (emailErr) {
-          ToastService.warning("Sai định dạng", emailErr);
-          return;
-        }
-      }
+    }
+
+    setLoading(true);
+    try {
       if (useLink) {
         await applyWithLinkCV({
           fullName: profile.fullName,
@@ -156,12 +160,15 @@ const JobSubmitScreen = ({ route }: any) => {
         );
       }
       ToastService.success("Ứng tuyển thành công", "Đơn ứng tuyển đã được gửi!");
+      setLoading(false);
       navigation.replace("JobSubmitSuccess");
     } catch (error: any) {
       setCvFileUri("")
       setFile(null)
       console.error("Lỗi ứng tuyển:", error);
       ToastService.error("Lỗi ứng tuyển", "Không thể gửi ứng tuyển, thử lại sau.");
+    } finally {
+      setLoading(false);
     }
   };
   // no rich editor initialization required for plain TextInput
@@ -311,14 +318,17 @@ const JobSubmitScreen = ({ route }: any) => {
 
       {/* 🟩 Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity onPress={handleSubmit}>
+        <TouchableOpacity onPress={handleSubmit} disabled={loading} activeOpacity={0.8}>
           <LinearGradient
             colors={gradients.purpleDream as any}
             style={styles.submitButton}
           >
-
-            <Text style={styles.submitText}>Nộp đơn ngay</Text>
-
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              {loading && (
+                <ActivityIndicator size="small" color="#fff" style={{ marginRight: 10 }} />
+              )}
+              <Text style={styles.submitText}>{loading ? "Đang gửi..." : "Nộp đơn ngay"}</Text>
+            </View>
           </LinearGradient>
         </TouchableOpacity>
       </View>

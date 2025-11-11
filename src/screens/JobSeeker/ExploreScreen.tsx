@@ -27,7 +27,7 @@ import { getTopHiringEmployers } from "../../services/employerService"
 
 type ExploreNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
-    "Blog" | "Notification"
+    "Blog" | "Notification" | "CompanyDetail"
 >
 
 const ExploreScreen = () => {
@@ -94,7 +94,8 @@ const ExploreScreen = () => {
     );
 
     const renderCompany = (company: any) => (
-        <TouchableOpacity key={company.id} style={styles.companyCard}>
+        <TouchableOpacity key={company.id} style={styles.companyCard}
+            onPress={() => navigation.navigate("CompanyDetail", { id: company.id })}>
             <Image source={
                 company.backgroundUrl
                     ? typeof company.backgroundUrl === "string"

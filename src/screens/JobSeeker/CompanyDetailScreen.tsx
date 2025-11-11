@@ -122,7 +122,7 @@ const CompanyDetailScreen = ({ route }: any) => {
       <View style={styles.bannerContainer}>
         <Image
           source={
-            company.backgroundUrl
+            company?.backgroundUrl
               ? typeof company.backgroundUrl === "string"
                 ? { uri: company.backgroundUrl }
                 : company.backgroundUrl
@@ -137,7 +137,7 @@ const CompanyDetailScreen = ({ route }: any) => {
         <View style={styles.headerContainer}>
           <Image
             source={
-              company.avatarUrl
+              company?.avatarUrl
                 ? typeof company.avatarUrl === "string"
                   ? { uri: company.avatarUrl }
                   : company.avatarUrl

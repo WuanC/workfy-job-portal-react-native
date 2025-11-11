@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
-  row: { flexDirection: "row", alignItems: "center" },
+  row: { flexDirection: "row", alignItems: "flex-start" },
 
   logoContainer: {
     width: 60,
@@ -129,6 +129,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
     padding: 8,
     marginRight: 14,
+    // lift slightly so it visually aligns higher than center
+    marginTop: 4,
     elevation: 2,
   },
   logo: { width: "100%", height: "100%", resizeMode: "contain" },

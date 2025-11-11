@@ -245,7 +245,7 @@ const MyJobScreen = () => {
                         style={styles.content}
                         data={applications}
                         keyExtractor={(item) => item.id}
-                        ref = {applicationListRef}
+                        ref={applicationListRef}
                         renderItem={({ item }) => (
                             <View>
                                 <AppliedJobCard
@@ -297,7 +297,9 @@ const MyJobScreen = () => {
                                         ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
                                         : item.salaryType === "NEGOTIABLE"
                                             ? "Thỏa thuận"
-                                            : "Không rõ"
+                                            : item.salaryType === "GREATER_THAN"
+                                                ? ` Trên ${item.minSalary} ${item.salaryUnit}`
+                                                : "Không rõ"
                                 }
                                 time_passed={item.expirationDate}
                                 applied={true}

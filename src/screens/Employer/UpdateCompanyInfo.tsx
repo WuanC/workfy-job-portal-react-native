@@ -45,7 +45,7 @@ const UpdateCompanyInfo = ({ route }: any) => {
   const [email, setEmail] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactPhone, setContactPhone] = useState("");
-
+  const [scrollEnabled, setScrollEnabled] = useState(true);
 
   useEffect(() => {
     let cancelled = false; // flag để tránh setState sau unmount
@@ -191,7 +191,7 @@ const UpdateCompanyInfo = ({ route }: any) => {
           <View style={{ width: 38 }} />
         </View>
 
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} scrollEnabled={scrollEnabled}>
           <Text style={styles.title}>Thông tin công ty</Text>
 
           {/* Tên công ty */}
@@ -255,6 +255,8 @@ const UpdateCompanyInfo = ({ route }: any) => {
               initialHeight={180}
               editorInitializedCallback={() => handleEditorReady()}
               onChange={(html) => setAboutCompany(html)}
+              onTouchStart={() => setScrollEnabled(false)}  // ⛔ Tắt scroll ngoài khi chạm vào editor
+              onTouchEnd={() => setScrollEnabled(true)}
             />
           </View>
           {/* Địa chỉ liên hệ */}
@@ -481,6 +483,7 @@ const styles = StyleSheet.create({
   editor: {
     minHeight: 200,
     padding: 16,
+    paddingBottom: -10,
     fontSize: 16,
     color: "#111827",
     backgroundColor: "#ffffff",

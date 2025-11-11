@@ -83,19 +83,12 @@ const EmployerLoginScreen = () => {
                     onChangeText={setPassword}
                     autoCapitalize="none"
                 />
-                <MaterialIcons name="visibility" size={22} color="#888" style={styles.iconRight} />
+                {/* <MaterialIcons name="visibility" size={22} color="#888" style={styles.iconRight} /> */}
             </View>
 
             {/* Remember & Forgot */}
             <View style={styles.row}>
                 <View style={styles.rememberContainer}>
-                    <Checkbox
-                        value={isChecked}
-                        onValueChange={setChecked}
-                        color={isChecked ? "#2563EB" : undefined}
-                        style={styles.checkbox}
-                    />
-                    <Text style={styles.remember}>Ghi nhớ đăng nhập</Text>
                 </View>
                 <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: false })}>
                     <Text style={styles.forgot}>Quên mật khẩu?</Text>

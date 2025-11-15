@@ -10,7 +10,6 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/components/CustomToast';
 import CVScreen from './src/screens/JobSeeker/CVScreen';
 import * as Linking from 'expo-linking';
-import { authorize } from 'react-native-app-auth';
 import * as WebBrowser from "expo-web-browser";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 //import * as AuthSession from "expo-auth-session";

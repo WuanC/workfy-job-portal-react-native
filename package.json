@@ -38,14 +38,16 @@
     "expo-random": "^14.0.1",
     "expo-status-bar": "~2.2.3",
     "expo-web-browser": "~14.2.0",
+    "i18next": "^25.6.2",
     "mime": "^4.1.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "react-i18next": "^16.3.3",
     "react-native": "0.79.6",
-    "react-native-app-auth": "^8.1.0",
     "react-native-blob-util": "^0.23.2",
     "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-localize": "^3.6.0",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-paper": "^5.14.5",
@@ -58,7 +60,8 @@
     "react-native-toast-message": "^2.3.3",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.20.0",
-    "sockjs-client": "^1.6.1"
+    "sockjs-client": "^1.6.1",
+    "react-native-webview": "13.13.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

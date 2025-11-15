@@ -15,6 +15,7 @@ import CVPreview from "../../components/CVPreview";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { getApplicationStatusLabel } from "../../utilities/constant";
+import { useI18n } from "../../hooks/useI18n";
 
 type EmployeeDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -88,6 +89,7 @@ const statusStyles: any = {
 
 const EmployeeDetailApplication = ({ route }: any) => {
   const navigation = useNavigation<EmployeeDetailNavigationProp>();
+  const { t } = useI18n();
 
   const { id, status, cvUrl, jobTitle, coverLetter } = route.params as {
     id: number;
@@ -104,7 +106,7 @@ const EmployeeDetailApplication = ({ route }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Đơn ứng tuyển của tôi</Text>
+        <Text style={styles.headerTitle}>{t('application.myApplication')}</Text>
         {/* <Ionicons name="chatbox-outline" size={20} color="#000" /> */}
         <View></View>
       </View>
@@ -116,13 +118,13 @@ const EmployeeDetailApplication = ({ route }: any) => {
       >
         {/* 🧾 Job Info */}
         <View style={styles.section}>
-          <Text style={styles.label}>Công việc</Text>
-          <Text style={styles.jobTitle}>{jobTitle || "Không rõ"}</Text>
+          <Text style={styles.label}>{t('job.jobTitle')}</Text>
+          <Text style={styles.jobTitle}>{jobTitle || t('common.unknown')}</Text>
         </View>
 
         {/* Status Section */}
         <View style={styles.section}>
-          <Text style={styles.label}>Trạng thái hồ sơ</Text>
+          <Text style={styles.label}>{t('application.profileStatus')}</Text>
           <View
             style={[
               styles.statusBadge,
@@ -135,19 +137,19 @@ const EmployeeDetailApplication = ({ route }: any) => {
                 (statusStyles[status] || statusStyles.DEFAULT).text,
               ]}
             >
-              {getApplicationStatusLabel(status) || "Trạng thái không xác định"}
+              {getApplicationStatusLabel(status) || t('application.unknownStatus')}
             </Text>
           </View>
         </View>
 
         {/* 📝 Cover Letter */}
         <View style={styles.section}>
-          <Text style={styles.label}>Thư xin việc</Text>
+          <Text style={styles.label}>{t('application.coverLetter')}</Text>
           <TextInput
             style={styles.textArea}
             multiline
             numberOfLines={6}
-            placeholder="Ứng viên không gửi thư xin việc."
+            placeholder={t('application.noCoverLetter')}
             value={coverLetter || ""}
             editable={false}
             scrollEnabled
@@ -157,7 +159,7 @@ const EmployeeDetailApplication = ({ route }: any) => {
 
         {/* 📎 CV đính kèm */}
         <View style={styles.section}>
-          <Text style={styles.label}>Tệp đính kèm (CV)</Text>
+          <Text style={styles.label}>{t('application.attachedCV')}</Text>
           <View style={styles.previewContainer}>
             <CVPreview url={cvUrl} />
           </View>

@@ -12,6 +12,7 @@ import { spacing } from "../theme/spacing";
 import { useQuery } from "@tanstack/react-query";
 import { getUnreadCount } from "../services/notificationService";
 import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../hooks/useI18n";
 
 // 🔗 Navigation Ref để điều hướng bên ngoài
 import { navigationRef } from "./NavigationRef";
@@ -184,6 +185,7 @@ const TabBarIconWithBadge = ({
 // ========== Bottom Tabs ==========
 const MainAppEmployee = () => {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
 
   // Lấy số thông báo chưa đọc
   const { data: unreadCount = 0 } = useQuery({
@@ -227,18 +229,19 @@ const MainAppEmployee = () => {
         },
       })}
     >
-      <Tab.Screen name="ExploreStack" component={ExploreStackScreen} options={{ title: "Khám phá" }} />
-      <Tab.Screen name="SearchStack" component={SearchStackScreen} options={{ title: "Tìm kiếm" }} />
-      <Tab.Screen name="MyJobStack" component={EmployeeApplicationStackScreen} options={{ title: "Việc của tôi" }} />
-      <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: "Thông báo" }} />
-      {/* <Tab.Screen name="CVStack" component={CVScreen} options={{ title: "Viết CV" }} /> */}
-      <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: "Menu" }} />
+      <Tab.Screen name="ExploreStack" component={ExploreStackScreen} options={{ title: t('navigation.explore') }} />
+      <Tab.Screen name="SearchStack" component={SearchStackScreen} options={{ title: t('navigation.search') }} />
+      <Tab.Screen name="MyJobStack" component={EmployeeApplicationStackScreen} options={{ title: t('navigation.myJobs') }} />
+      <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: t('navigation.notifications') }} />
+      {/* <Tab.Screen name="CVStack" component={CVScreen} options={{ title: t('navigation.writeCV') }} /> */}
+      <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: t('navigation.menu') }} />
     </Tab.Navigator>
   );
 };
 
 const MainAppEmployer = () => {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
 
   // Lấy số thông báo chưa đọc
   const { data: unreadCount = 0 } = useQuery({
@@ -281,11 +284,11 @@ const MainAppEmployer = () => {
         },
       })}
     >
-      <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: "Công việc" }} />
-      {/* <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: "Ứng viên" }} /> */}
-      <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: "Thông báo" }} />
-      <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: "Công ty" }} />
-      <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: "Cài đặt" }} />
+      <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: t('navigation.jobs') }} />
+      {/* <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: t('navigation.candidates') }} /> */}
+      <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: t('navigation.notifications') }} />
+      <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: t('navigation.company') }} />
+      <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: t('navigation.settings') }} />
 
     </Tab.Navigator>
   );
@@ -294,6 +297,8 @@ const MainAppEmployer = () => {
 // ========== Root Stack ==========
 const AppNavigator = () => {
   const { user, isAuthenticated, loading } = useAuth();
+  const { t } = useI18n();
+  
   if (loading) {
     return (
       <View
@@ -306,7 +311,7 @@ const AppNavigator = () => {
       >
         <ActivityIndicator size="large" color={colors.primary.start} />
         <Text style={{ color: colors.text.secondary, marginTop: 12, fontSize: 16 }}>
-          Đang tải dữ liệu người dùng...
+          {t('navigation.loadingUser')}
         </Text>
       </View>
     );

@@ -37,6 +37,7 @@ import { AdvancedJobQuery, getAdvancedJobs, getAllJobsAdmin, updateJobStatus } f
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { Dropdown } from "react-native-element-dropdown";
+import useI18n from "../../hooks/useI18n";
 type FilterNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "SearchMain"
@@ -44,6 +45,7 @@ type FilterNavigationProp = NativeStackNavigationProp<
 const FilterScreen = ({ route }: any) => {
   const navigation = useNavigation<FilterNavigationProp>()
   const { currentFilter, onApply } = route.params;
+  const { t } = useI18n();
   useEffect(() => {
     if (currentFilter) {
       setSelectedSort(currentFilter.sort || "");
@@ -113,7 +115,7 @@ const FilterScreen = ({ route }: any) => {
 
     } catch (error) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.error("Lỗi", "Không thể tìm kiếm. Vui lòng thử lại sau.");
+        ToastService.error(t('common.error'), t('filter.searchError'));
     }
   };
   const [listProvinces, setListProvinces] = useState<Province[]>([]);
@@ -160,7 +162,7 @@ const FilterScreen = ({ route }: any) => {
         setListIndustries(listIndustries);
       } catch (err: any) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.error("Lỗi", "Không thể tải dữ liệu. Vui lòng thử lại sau.");
+        ToastService.error(t('common.error'), t('filter.loadError'));
       }
     };
     load();
@@ -181,7 +183,7 @@ const FilterScreen = ({ route }: any) => {
         .filter((l) => selectedLocations.includes(l.id))
         .map((l) => l.name)
         .join(", ")
-      : "Chọn địa điểm";
+      : t('filter.selectLocation');
 
   const displayIndustry =
     selectedIndustry.length > 0
@@ -189,7 +191,7 @@ const FilterScreen = ({ route }: any) => {
         .filter((i) => selectedIndustry.includes(i.id))
         .map((i) => i.name)
         .join(", ")
-      : "Danh mục công việc";
+      : t('filter.selectIndustry');
 
   const resetFilters = () => {
     setSelectedSort("createdAt");
@@ -212,16 +214,16 @@ const FilterScreen = ({ route }: any) => {
             {/* Header */}
             <View style={styles.header}>
               <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text style={styles.cancel}>Hủy</Text>
+                <Text style={styles.cancel}>{t('common.cancel')}</Text>
               </TouchableOpacity>
-              <Text style={styles.title}>Bộ lọc tìm kiếm</Text>
+              <Text style={styles.title}>{t('filter.title')}</Text>
               <TouchableOpacity onPress={resetFilters}>
-                <Text style={styles.reset}>Đặt lại</Text>
+                <Text style={styles.reset}>{t('filter.reset')}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Sort */}
-            <Text style={styles.sectionTitle}>Tìm kiếm theo</Text>
+            <Text style={styles.sectionTitle}>{t('filter.searchBy')}</Text>
             <View style={styles.row}>
               {getEnumOptions(Sort).map((item) => (
                 <TouchableOpacity
@@ -245,7 +247,7 @@ const FilterScreen = ({ route }: any) => {
             </View>
 
             {/* Location */}
-            <Text style={styles.sectionTitle}>Tỉnh/Thành phố</Text>
+            <Text style={styles.sectionTitle}>{t('filter.province')}</Text>
             <TouchableOpacity
               style={styles.inputBox}
               onPress={() => {
@@ -261,7 +263,7 @@ const FilterScreen = ({ route }: any) => {
             </TouchableOpacity>
 
             {/* Industry */}
-            <Text style={styles.sectionTitle}>Ngành nghề</Text>
+            <Text style={styles.sectionTitle}>{t('job.industry')}</Text>
             <TouchableOpacity
               style={styles.inputBox}
               onPress={() => {
@@ -276,7 +278,7 @@ const FilterScreen = ({ route }: any) => {
             </TouchableOpacity>
 
             {/* Rank */}
-            <Text style={styles.sectionTitle}>Cấp bậc</Text>
+            <Text style={styles.sectionTitle}>{t('filter.rank')}</Text>
             <View style={styles.rowWrap}>
               {getEnumOptions(JobLevel).map((item) => (
                 <TouchableOpacity
@@ -303,7 +305,7 @@ const FilterScreen = ({ route }: any) => {
             </View>
 
             {/* Experience */}
-            <Text style={styles.sectionTitle}>Kinh nghiệm</Text>
+            <Text style={styles.sectionTitle}>{t('job.experience')}</Text>
             <View style={styles.rowWrap}>
               {getEnumOptions(ExperienceLevel).map((item) => (
                 <TouchableOpacity
@@ -335,7 +337,7 @@ const FilterScreen = ({ route }: any) => {
             </View>
 
             {/* Experience */}
-            <Text style={styles.sectionTitle}>Loại công việc</Text>
+            <Text style={styles.sectionTitle}>{t('job.jobType')}</Text>
             <View style={styles.rowWrap}>
               {getEnumOptions(JobType).map((item) => (
                 <TouchableOpacity
@@ -366,7 +368,7 @@ const FilterScreen = ({ route }: any) => {
               ))}
             </View>
             {/* Experience */}
-            <Text style={styles.sectionTitle}>Học vấn</Text>
+            <Text style={styles.sectionTitle}>{t('job.education')}</Text>
             <View style={styles.rowWrap}>
               {getEnumOptions(EducationLevel).map((item) => (
                 <TouchableOpacity
@@ -434,7 +436,7 @@ const FilterScreen = ({ route }: any) => {
               />
             </View> */}
             <View>
-              <Text style={styles.sectionTitle}>Mức lương mong muốn</Text>
+              <Text style={styles.sectionTitle}>{t('filter.desiredSalary')}</Text>
 
               {/* Chọn kiểu nhập */}
               <View style={styles.optionContainer}>
@@ -451,7 +453,7 @@ const FilterScreen = ({ route }: any) => {
                       salaryOption === "none" && styles.optionTextActive,
                     ]}
                   >
-                    Không nhập lương
+                    {t('filter.noSalary')}
                   </Text>
                 </TouchableOpacity>
 
@@ -468,7 +470,7 @@ const FilterScreen = ({ route }: any) => {
                       salaryOption === "custom" && styles.optionTextActive,
                     ]}
                   >
-                    Nhập lương
+                    {t('filter.inputSalary')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -476,21 +478,21 @@ const FilterScreen = ({ route }: any) => {
               {/* Khi chọn nhập lương */}
               {salaryOption === "custom" && (
                 <View style={styles.salaryBox}>
-                  <Text style={styles.inputLabel}>Mức lương tối thiểu</Text>
+                  <Text style={styles.inputLabel}>{t('filter.minSalary')}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Nhập mức lương tối thiểu"
+                    placeholder={t('filter.minSalaryPlaceholder')}
                     keyboardType="numeric"
                     value={minSalary?.toString() || ""}
                     onChangeText={(text) => setMinSalary(text ? Number(text) : null)}
                   />
 
                   <Text style={[styles.inputLabel, { marginTop: 10 }]}>
-                    Mức lương tối đa
+                    {t('filter.maxSalary')}
                   </Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Nhập mức lương tối đa"
+                    placeholder={t('filter.maxSalaryPlaceholder')}
                     keyboardType="numeric"
                     value={maxSalary?.toString() || ""}
                     onChangeText={(text) => setMaxSalary(text ? Number(text) : null)}
@@ -501,7 +503,7 @@ const FilterScreen = ({ route }: any) => {
                     data={getEnumOptions(SalaryUnit)}
                     labelField="value"
                     valueField="value"
-                    placeholder="Chọn đơn vị"
+                    placeholder={t('filter.selectUnit')}
                     value={selectSalaryUnity}
                     onChange={(item) => setSalaryUnit(item.value)}
                     style={styles.dropdown}
@@ -515,7 +517,7 @@ const FilterScreen = ({ route }: any) => {
 
           {/* Apply Button */}
           <TouchableOpacity style={styles.applyBtn} onPress={() => handleSearch()}>
-            <Text style={styles.applyText}>Áp dụng</Text>
+            <Text style={styles.applyText}>{t('filter.apply')}</Text>
           </TouchableOpacity>
 
           {/* ✅ Location Sheet */}
@@ -535,19 +537,19 @@ const FilterScreen = ({ route }: any) => {
               enableDynamicSizing={false}
             >
               <View style={styles.sheetHeader}>
-                <Text style={styles.sheetTitle}>Chọn địa điểm</Text>
+                <Text style={styles.sheetTitle}>{t('filter.selectLocation')}</Text>
                 <TouchableOpacity onPress={() => {
                   setQuery("")
                   setSelectedLocations([])
                 }}>
-                  <Text style={{ color: colors.primary.start, fontSize: 18 }}>Xóa tất cả</Text>
+                  <Text style={{ color: colors.primary.start, fontSize: 18 }}>{t('filter.clearAll')}</Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.searchBox}>
                 <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 10 }} />
                 <TextInput
-                  placeholder="Tìm kiếm..."
+                  placeholder={t('common.search')}
                   placeholderTextColor={colors.text.tertiary}
                   value={query}
                   onChangeText={setQuery}
@@ -596,7 +598,7 @@ const FilterScreen = ({ route }: any) => {
                 style={styles.saveBtn}
                 onPress={() => locationSheetRef.current?.dismiss()} // ✅ dismiss() để đóng
               >
-                <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
+                <Text style={{ color: "white", fontWeight: "600" }}>{t('common.save')}</Text>
               </TouchableOpacity>
             </BottomSheetModal>
           </KeyboardAvoidingView>
@@ -616,19 +618,19 @@ const FilterScreen = ({ route }: any) => {
               enableDynamicSizing={false}
             >
               <View style={styles.sheetHeader}>
-                <Text style={styles.sheetTitle}>Chọn danh mục</Text>
+                <Text style={styles.sheetTitle}>{t('filter.selectCategory')}</Text>
                 <TouchableOpacity onPress={() => {
                   setQuery("")
                   setSelectedIndustry([])
                 }}>
-                  <Text style={{ color: colors.primary.start, fontSize: 18 }}>Xóa tất cả</Text>
+                  <Text style={{ color: colors.primary.start, fontSize: 18 }}>{t('filter.clearAll')}</Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.searchBox}>
                 <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 10 }} />
                 <TextInput
-                  placeholder="Tìm kiếm..."
+                  placeholder={t('common.search')}
                   placeholderTextColor={colors.text.tertiary}
                   value={query}
                   onChangeText={setQuery}
@@ -668,7 +670,7 @@ const FilterScreen = ({ route }: any) => {
                 }}
                 ListEmptyComponent={() => (
                   <View style={styles.emptyBox}>
-                    <Text style={styles.emptyText}>Không tìm thấy kết quả</Text>
+                    <Text style={styles.emptyText}>{t('filter.noResults')}</Text>
                   </View>
                 )}
                 contentContainerStyle={{ flexGrow: 100, paddingBottom: 80 }}
@@ -682,7 +684,7 @@ const FilterScreen = ({ route }: any) => {
                   industrySheetRef.current?.dismiss()
                 }} // ✅ dismiss() để đóng
               >
-                <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
+                <Text style={{ color: "white", fontWeight: "600" }}>{t('common.save')}</Text>
               </TouchableOpacity>
             </BottomSheetModal>
           </KeyboardAvoidingView>

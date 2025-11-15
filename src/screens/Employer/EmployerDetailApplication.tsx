@@ -24,6 +24,7 @@ import {
   updateApplicationStatus,
 } from "../../services/applicationService";
 import { Dropdown } from "react-native-element-dropdown";
+import { useI18n } from "../../hooks/useI18n";
 
 type EmployeeDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -33,6 +34,7 @@ type EmployeeDetailNavigationProp = NativeStackNavigationProp<
 const EmployerDetailApplication = ({ route }: any) => {
   const navigation = useNavigation<EmployeeDetailNavigationProp>();
   const { applicationId } = route.params as { applicationId: number };
+  const { t } = useI18n();
 
   const [application, setApplication] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -77,7 +79,7 @@ const EmployerDetailApplication = ({ route }: any) => {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" color={colors.primary.start} />
-        <Text style={styles.loadingText}>Đang tải đơn ứng tuyển...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -89,7 +91,7 @@ const EmployerDetailApplication = ({ route }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#000000ff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Đơn ứng tuyển</Text>
+        <Text style={styles.headerTitle}>{t('application.viewApplication')}</Text>
         <View />
       </View>
 
@@ -98,22 +100,22 @@ const EmployerDetailApplication = ({ route }: any) => {
         contentContainerStyle={{ padding: spacing.md }}
         nestedScrollEnabled={true}
       >
-        {/* 🧾 Job Info */}
+        {/* 🪧 Job Info */}
         <View style={styles.section}>
-          <Text style={styles.label}>Công việc</Text>
+          <Text style={styles.label}>{t('job.jobTitle')}</Text>
           <Text style={styles.jobTitle}>
-            {application?.job?.jobTitle || "Không rõ"}
+            {application?.job?.jobTitle || t('job.jobTitle')}
           </Text>
         </View>
 
         {/* 🔄 Dropdown đổi trạng thái */}
         <View style={styles.section}>
-          <Text style={styles.label}>Trạng thái hồ sơ</Text>
+          <Text style={styles.label}>{t('application.applicationStatus')}</Text>
           <Dropdown
             data={getEnumOptions(ApplicationStatus)}
             labelField="label"
             valueField="value"
-            placeholder="Chọn trạng thái..."
+            placeholder={t('application.applicationStatus')}
             value={status}
             onChange={(item) => handleChangeStatus(item.value)}
             style={styles.dropdown}
@@ -122,18 +124,18 @@ const EmployerDetailApplication = ({ route }: any) => {
             disable={updating}
           />
           {updating && (
-            <Text style={styles.updatingText}>Đang cập nhật trạng thái...</Text>
+            <Text style={styles.updatingText}>{t('common.loading')}</Text>
           )}
         </View>
 
         {/* 📝 Cover Letter */}
         <View style={styles.section}>
-          <Text style={styles.label}>Thư xin việc</Text>
+          <Text style={styles.label}>{t('profile.cv')}</Text>
           <TextInput
             style={styles.textArea}
             multiline
             numberOfLines={6}
-            placeholder="Ứng viên không gửi thư xin việc."
+            placeholder={t('profile.cv')}
             value={application?.coverLetter || ""}
             editable={false} // 👈 nếu bạn muốn chỉ xem chứ không sửa thì để false
             scrollEnabled
@@ -143,7 +145,7 @@ const EmployerDetailApplication = ({ route }: any) => {
 
         {/* 📎 CV đính kèm */}
         <View style={styles.section}>
-          <Text style={styles.label}>Tệp đính kèm (CV)</Text>
+          <Text style={styles.label}>{t('profile.uploadCV')}</Text>
           <View style={styles.previewContainer}>
             <CVPreview url={application?.cvUrl} />
           </View>

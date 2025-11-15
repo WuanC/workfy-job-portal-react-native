@@ -13,6 +13,7 @@ import {
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { colors } from "../../theme/colors"
+import { useI18n } from "../../hooks/useI18n"
 import BottomSheet, { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from "@gorhom/bottom-sheet"
 import Slider from "@react-native-community/slider"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
@@ -20,6 +21,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler"
 
 const CandidateFilter = () => {
   const navigation = useNavigation()
+  const { t } = useI18n()
   const toggleSelect = (
     id: string,
     selected: string[],
@@ -143,16 +145,16 @@ const CandidateFilter = () => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.cancel}>Hủy</Text>
+            <Text style={styles.cancel}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Bộ lọc tìm kiếm</Text>
+          <Text style={styles.title}>{t('common.filter')}</Text>
           <TouchableOpacity onPress={resetFilters}>
-            <Text style={styles.reset}>Đặt lại</Text>
+            <Text style={styles.reset}>{t('common.reset')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Ngày lọc */}
-        <Text style={styles.sectionTitle}>Tìm kiếm theo</Text>
+        <Text style={styles.sectionTitle}>{t('common.search')}</Text>
         <View style={styles.row}>
           {dateFilter.map((item) => (
             <TouchableOpacity
@@ -176,7 +178,7 @@ const CandidateFilter = () => {
         </View>
 
         {/* Location */}
-        <Text style={styles.sectionTitle}>Nhập tỉnh, thành phố</Text>
+        <Text style={styles.sectionTitle}>{t('job.location')}</Text>
         <TouchableOpacity
           style={styles.inputBox}
           onPress={() => locationSheetRef.current?.expand()}
@@ -189,7 +191,7 @@ const CandidateFilter = () => {
         </TouchableOpacity>
 
         {/* Industry */}
-        <Text style={styles.sectionTitle}>Danh mục công việc</Text>
+        <Text style={styles.sectionTitle}>{t('job.industry')}</Text>
         <TouchableOpacity
           style={styles.inputBox}
           onPress={() => jobSheetRef.current?.expand()}
@@ -201,7 +203,7 @@ const CandidateFilter = () => {
         </TouchableOpacity>
 
         {/* Rank */}
-        <Text style={styles.sectionTitle}>Cấp bậc</Text>
+        <Text style={styles.sectionTitle}>{t('job.jobLevel')}</Text>
         <View style={styles.rowWrap}>
           {rank.map((item) => (
             <TouchableOpacity
@@ -225,7 +227,7 @@ const CandidateFilter = () => {
         </View>
 
         {/* Experience */}
-        <Text style={styles.sectionTitle}>Kinh nghiệm</Text>
+        <Text style={styles.sectionTitle}>{t('job.experience')}</Text>
         <View style={styles.rowWrap}>
           {experience.map((item) => (
             <TouchableOpacity
@@ -251,7 +253,7 @@ const CandidateFilter = () => {
         </View>
 
         {/* Salary */}
-        <Text style={styles.sectionTitle}>Mức lương</Text>
+        <Text style={styles.sectionTitle}>{t('job.salary')}</Text>
         <View style={styles.salaryContainer}>
           <View style={styles.salaryLabels}>
             <Text style={styles.salaryLabel}>đ 0M</Text>
@@ -270,7 +272,7 @@ const CandidateFilter = () => {
         </View>
 
         {/* Education */}
-        <Text style={styles.sectionTitle}>Học vấn</Text>
+        <Text style={styles.sectionTitle}>{t('job.education')}</Text>
         <View style={styles.rowWrap}>
           {education.map((item) => (
             <TouchableOpacity
@@ -298,7 +300,7 @@ const CandidateFilter = () => {
         </View>
 
         {/* Job type */}
-        <Text style={styles.sectionTitle}>Loại công việc</Text>
+        <Text style={styles.sectionTitle}>{t('job.jobType')}</Text>
         <View style={styles.rowWrap}>
           {jobTypes.map((item) => (
             <TouchableOpacity
@@ -324,7 +326,7 @@ const CandidateFilter = () => {
 
       {/* Apply button */}
       <TouchableOpacity style={styles.applyBtn}>
-        <Text style={styles.applyText}>Áp dụng</Text>
+        <Text style={styles.applyText}>{t('common.apply')}</Text>
       </TouchableOpacity>
 
       {/* Bottom Sheet Location */}
@@ -345,15 +347,15 @@ const CandidateFilter = () => {
       >
         <BottomSheetView style={styles.sheetContent}>
           <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Chọn danh mục</Text>
+            <Text style={styles.sheetTitle}>{t('common.filter')}</Text>
             <TouchableOpacity onPress={() => setSelectedLocations([])}>
-              <Text style={{ color: colors.primary.start }}>Xóa tất cả</Text>
+              <Text style={{ color: colors.primary.start }}>{t('common.reset')}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.searchBox}>
             <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 8 }} />
             <TextInput
-              placeholder="Tìm kiếm..."
+              placeholder={t('search.searchPlaceholder')}
               placeholderTextColor={colors.text.tertiary}
               value={query}
               onChangeText={setQuery}
@@ -388,7 +390,7 @@ const CandidateFilter = () => {
             style={styles.saveBtn}
             onPress={() => console.log("Đã chọn:", selectedLocations)}
           >
-            <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
+            <Text style={{ color: "white", fontWeight: "600" }}>{t('common.save')}</Text>
           </TouchableOpacity>
         </BottomSheetView>
       </BottomSheet>
@@ -404,15 +406,15 @@ const CandidateFilter = () => {
       >
         <BottomSheetView style={styles.sheetContent}>
           <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Chọn danh mục</Text>
+            <Text style={styles.sheetTitle}>{t('common.filter')}</Text>
             <TouchableOpacity onPress={() => setSelectedJobs([])}>
-              <Text style={{ color: colors.primary.start }}>Xóa tất cả</Text>
+              <Text style={{ color: colors.primary.start }}>{t('common.reset')}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.searchBox}>
             <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 8 }} />
             <TextInput
-              placeholder="Tìm kiếm..."
+              placeholder={t('search.searchPlaceholder')}
               placeholderTextColor={colors.text.tertiary}
               value={query}
               onChangeText={setQuery}
@@ -447,7 +449,7 @@ const CandidateFilter = () => {
             style={styles.saveBtn}
             onPress={() => console.log("Đã chọn:", setSelectedJobs)}
           >
-            <Text style={{ color: "white", fontWeight: "600" }}>Lưu</Text>
+            <Text style={{ color: "white", fontWeight: "600" }}>{t('common.save')}</Text>
           </TouchableOpacity>
         </BottomSheetView>
       </BottomSheet>

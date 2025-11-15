@@ -17,6 +17,7 @@ import { getPostById, getRelatedPosts, Post } from "../services/postService";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
+import { useI18n } from "../hooks/useI18n";
 
 type Heading = {
     id: string;
@@ -31,6 +32,7 @@ type DetailBlogNavigationProp = NativeStackNavigationProp<
 
 const ArticleDetailScreen = ({ route }: any) => {
     const navigation = useNavigation<DetailBlogNavigationProp>();
+    const { t } = useI18n();
     const { id } = route.params as { id: number };
 
     const [post, setPost] = useState<Post | null>(null);
@@ -123,7 +125,7 @@ const ArticleDetailScreen = ({ route }: any) => {
                         setLoading(true);
                     }}
                 >
-                    <Text style={{ color: "#fff", fontWeight: "600" }}>Thử lại</Text>
+                    <Text style={{ color: "#fff", fontWeight: "600" }}>{t('common.retry')}</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -141,7 +143,7 @@ const ArticleDetailScreen = ({ route }: any) => {
                     <Ionicons name="arrow-back" size={24} color="#1e293b" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle} numberOfLines={1}>
-                    {post?.title ?? "Bài viết"}
+                    {post?.title ?? t('article.article')}
                 </Text>
                 <View style={{ width: 40 }} />
             </View>
@@ -157,7 +159,7 @@ const ArticleDetailScreen = ({ route }: any) => {
                 <View style={styles.authorRow}>
                     <View style={styles.authorContainer}>
                         <Ionicons name="person-circle-outline" size={20} color="#1e293b" />
-                        <Text style={styles.authorName}>{post?.authorName ?? "Ẩn danh"}</Text>
+                        <Text style={styles.authorName}>{post?.authorName ?? t('article.anonymous')}</Text>
                     </View>
                     <View style={styles.dateRow}>
                         <MaterialIcons name="calendar-today" size={14} color="#6b7280" />
@@ -168,7 +170,7 @@ const ArticleDetailScreen = ({ route }: any) => {
                 <View style={styles.readTime}>
                     <View style={styles.readTimeBadge}>
                         <Ionicons name="time-outline" size={14} color="#1e293b" />
-                        <Text style={styles.readText}>{post?.readingTime ?? 0} phút đọc</Text>
+                        <Text style={styles.readText}>{post?.readingTime ?? 0} {t('article.minutesRead')}</Text>
                     </View>
                 </View>
             </View>
@@ -178,7 +180,7 @@ const ArticleDetailScreen = ({ route }: any) => {
                 <View style={styles.tocContainer}>
                     <View style={styles.tocHeader}>
                         <Ionicons name="list-outline" size={20} color="#1e293b" />
-                        <Text style={styles.tocTitle}>Mục lục</Text>
+                        <Text style={styles.tocTitle}>{t('article.tableOfContents')}</Text>
                     </View>
                     <View style={styles.tocContent}>
                         {headings.map((h) => (
@@ -275,7 +277,7 @@ const ArticleDetailScreen = ({ route }: any) => {
 
             {/* Related Articles */}
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Bài viết liên quan</Text>
+                <Text style={styles.sectionTitle}>{t('article.relatedArticles')}</Text>
                 <FlatList
                     data={careerAdvice}
                     keyExtractor={(item) => item.id.toString()}

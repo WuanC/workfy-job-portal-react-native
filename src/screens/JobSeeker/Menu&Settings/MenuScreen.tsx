@@ -20,12 +20,14 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native"
 import { useAuth } from "../../../context/AuthContext"
 import { colors } from "../../../theme/colors"
 import { getEmployerProfile } from "../../../services/authService"
+import { useI18n } from "../../../hooks/useI18n"
 import { getUserProfile, updateEmployeeAvatar } from "../../../services/employeeService"
 
 type MenuNavigationProp = NativeStackNavigationProp<RootStackParamList, "Setting">
 
 const MenuScreen = () => {
   const { logout } = useAuth()
+  const { t } = useI18n()
   const [profile, setProfile] = useState<any>(null)
   const navigation = useNavigation<MenuNavigationProp>()
   const [showMoreOptions, setShowMoreOptions] = useState(false)
@@ -34,7 +36,7 @@ const MenuScreen = () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
       const { ToastService } = require("../../../services/toastService");
-      ToastService.warning("Quyền truy cập bị từ chối", "Vui lòng cấp quyền truy cập ảnh.");
+      ToastService.warning(t('menu.permissionDenied'), t('menu.grantPermission'));
       return;
     }
 
@@ -57,11 +59,11 @@ const MenuScreen = () => {
           avatarUrl: updatedData.avatarUrl,
         }));
         const { ToastService } = require("../../../services/toastService");
-        ToastService.success("Thành công", "Cập nhật avatar thành công!");
+        ToastService.success(t('common.success'), t('menu.avatarUpdateSuccess'));
       } catch (error) {
         console.error(error);
         const { ToastService } = require("../../../services/toastService");
-        ToastService.error("Lỗi", "Cập nhật avatar thất bại.");
+        ToastService.error(t('common.error'), t('menu.updateFailed'));
       }
     });
   };
@@ -79,7 +81,7 @@ const MenuScreen = () => {
           setProfile(data);
         } catch (err) {
           const { ToastService } = require("../../../services/toastService");
-          ToastService.error("Lỗi", "Không thể tải thông tin bản thân.");
+          ToastService.error(t('common.error'), t('common.loadingError'));
         }
       };
       fetchCompany();
@@ -119,7 +121,7 @@ const MenuScreen = () => {
             <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
           </TouchableOpacity> */}
 
-          <Text style={styles.registrationDate}>Ngày đăng ký: {profile?.createdAt}</Text>
+          <Text style={styles.registrationDate}>{t('menu.registrationDate')}: {profile?.createdAt}</Text>
         </View>
 
         {/* === My CareerLink Section === */}
@@ -143,21 +145,21 @@ const MenuScreen = () => {
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Setting")}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="settings" size={20} color={colors.text.secondary} />
-              <Text style={styles.menuItemText}>Cài đặt</Text>
+              <Text style={styles.menuItemText}>{t('settings.settings')}</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="globe" size={20} color={colors.text.secondary} />
-              <Text style={styles.menuItemText}>Ngôn ngữ</Text>
+              <Text style={styles.menuItemText}>{t('settings.language')}</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} onPress={toggleMoreOptions}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="ellipsis-horizontal" size={20} color={colors.text.secondary} />
-              <Text style={styles.menuItemText}>Thêm</Text>
+              <Text style={styles.menuItemText}>{t('settings.more')}</Text>
             </View>
             <Ionicons
               name={showMoreOptions ? "chevron-up" : "chevron-down"}
@@ -168,7 +170,7 @@ const MenuScreen = () => {
 
           {showMoreOptions && (
             <View style={styles.moreOptions}>
-              {["Thoả thuận sử dụng", "Chính sách bảo mật", "Liên hệ", "Về chúng tôi"].map(
+              {[t('settings.terms'), t('settings.privacyPolicy'), t('settings.contact'), t('settings.about')].map(
                 (text, i) => (
                   <TouchableOpacity key={i} style={styles.moreOptionItem}>
                     <Text style={styles.moreOptionText}>{text}</Text>
@@ -187,11 +189,11 @@ const MenuScreen = () => {
             end={{ x: 1, y: 1 }}
             style={[styles.btn, { shadowColor: colors.error.start || "#f5576c" }]}
           >
-            <Text style={styles.btnText}>Đăng xuất</Text>
+            <Text style={styles.btnText}>{t('menu.logout')}</Text>
           </LinearGradient>
         </TouchableOpacity>
 
-        <Text style={styles.versionText}>Phiên bản 1.0.19</Text>
+        <Text style={styles.versionText}>{t('settings.version')} 1.0.19</Text>
       </ScrollView>
     </SafeAreaView>
   )

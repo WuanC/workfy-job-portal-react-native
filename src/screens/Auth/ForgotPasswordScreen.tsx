@@ -5,13 +5,14 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from '@expo/vector-icons';
+import { useI18n } from "../../hooks/useI18n";
 
 type MainNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
     "ResetPassword"
 >;
 const ForgotPasswordScreen = ({ route }: any) => {
-
+    const { t } = useI18n();
     const navigation = useNavigation<MainNavigationProp>();
     const { isEmployee } = route.params as { isEmployee: boolean };
     const [email, setEmail] = useState("");
@@ -21,14 +22,14 @@ const ForgotPasswordScreen = ({ route }: any) => {
         const { ToastService } = require("../../services/toastService");
         
         if (!email.trim()) {
-            ToastService.error("Lỗi", "Vui lòng nhập email");
+            ToastService.error(t('auth.missingInfo'), t('auth.enterEmail'));
             return;
         }
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
-            ToastService.error("Lỗi", "Email không đúng định dạng");
+            ToastService.error(t('auth.missingInfo'), t('auth.invalidEmail'));
             return;
         }
 
@@ -46,9 +47,9 @@ const ForgotPasswordScreen = ({ route }: any) => {
         } catch (error: any) {
             const status = error?.response?.status;
             const { ToastService } = require("../../services/toastService");
-            if (status === 400) ToastService.error("Lỗi", "Email không hợp lệ");
-            else if (status === 411) ToastService.error("Tài khoản bị khóa", "Tài khoản này đã bị khóa.");
-            else ToastService.error("Lỗi", "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
+            if (status === 400) ToastService.error(t('auth.missingInfo'), t('auth.invalidEmail'));
+            else if (status === 411) ToastService.error(t('auth.accountLocked'), t('auth.accountLockedMessage'));
+            else ToastService.error(t('auth.missingInfo'), t('auth.systemError'));
         } finally {
             setLoading(false);
         }
@@ -64,12 +65,12 @@ const ForgotPasswordScreen = ({ route }: any) => {
             </TouchableOpacity>
 
             <View style={styles.contentContainer}>
-                <Text style={styles.title}>Quên mật khẩu</Text>
-                <Text style={styles.label}>Nhập email của bạn để đặt lại mật khẩu</Text>
+                <Text style={styles.title}>{t('auth.forgotPassword')}</Text>
+                <Text style={styles.label}>{t('auth.forgotPasswordInstruction')}</Text>
 
                 <TextInput
                     style={styles.input}
-                    placeholder="Nhập email..."
+                    placeholder={t('auth.enterEmail')}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -77,7 +78,7 @@ const ForgotPasswordScreen = ({ route }: any) => {
                 />
 
                 <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Xác nhận</Text>}
+                    {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t('auth.confirm')}</Text>}
                 </TouchableOpacity>
             </View>
         </View>

@@ -26,6 +26,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { getEmployerJobOpenings } from "../../services/jobService";
 import RenderHTML from "react-native-render-html";
+import { useI18n } from "../../hooks/useI18n";
 
 type MyCompanyNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -34,6 +35,7 @@ type MyCompanyNavigationProp = NativeStackNavigationProp<
 
 const MyCompany = () => {
   const navigation = useNavigation<MyCompanyNavigationProp>();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<"about" | "jobs">("about");
 
   const [companyId, setCompanyId] = useState<number | null>(null);
@@ -255,7 +257,7 @@ const MyCompany = () => {
                 activeTab === "about" && styles.activeTabText,
               ]}
             >
-              About us
+              {t('company.aboutCompany')}
             </Text>
           </View>
         </TouchableOpacity>
@@ -276,7 +278,7 @@ const MyCompany = () => {
                 activeTab === "jobs" && styles.activeTabText,
               ]}
             >
-              Opening jobs
+              {t('job.jobTitle')}
             </Text>
           </View>
         </TouchableOpacity>
@@ -291,7 +293,7 @@ const MyCompany = () => {
           <Header />
           <View style={styles.contentContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
+              <Text style={styles.sectionTitle}>{t('company.aboutCompany')}</Text>
             </View>
             <Text style={styles.description}>
               {company?.aboutCompany ? (
@@ -306,13 +308,13 @@ const MyCompany = () => {
                   }}
                 />
               ) : (
-                <Text style={{ color: "#555" }}>Chưa có mô tả về công ty.</Text>
+                <Text style={{ color: "#555" }}>{t('company.aboutCompany')}</Text>
               )}
             </Text>
 
             {/* Liên hệ */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
+              <Text style={styles.sectionTitle}>{t('job.contactInfo')}</Text>
               <TouchableOpacity
                 style={styles.editSmallButton}
                 onPress={() => navigation.navigate("UpdateCompanyMedia")}
@@ -345,7 +347,7 @@ const MyCompany = () => {
                 ))
               ) : (
                 <Text style={{ color: "#555", marginVertical: 4 }}>
-                  Không có mạng xã hội
+                  {t('search.noResults')}
                 </Text>
               );
             })()}

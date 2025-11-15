@@ -3,9 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../theme";
+import { useI18n } from "../../hooks/useI18n";
 
 const JobSubmitSucessScreen = () => {
   const navigation = useNavigation();
+  const { t } = useI18n();
 
   return (
     <View style={styles.container}>
@@ -16,14 +18,14 @@ const JobSubmitSucessScreen = () => {
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>Nộp hồ sơ thành công!</Text>
+      <Text style={styles.title}>{t('application.submitSuccessTitle')}</Text>
       <Text style={styles.description}>
-        Nhà tuyển dụng đã nhận được hồ sơ của bạn. Hãy chờ phản hồi trong thời gian sớm nhất.
+        {t('application.submitSuccessMessage')}
       </Text>
 
       {/* Button */}
       <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-        <Text style={styles.buttonText}>Quay lại</Text>
+        <Text style={styles.buttonText}>{t('common.back')}</Text>
       </TouchableOpacity>
 
     </View>

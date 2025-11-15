@@ -20,9 +20,11 @@ import {
 import { colors, gradients } from "../../theme/colors";
 import { spacing, borderRadius, shadows } from "../../theme/spacing";
 import KeyboardAvoidingWrapper from "../../components/KeyboardAvoidingWrapper";
+import { useI18n } from "../../hooks/useI18n";
 
 const UpdateCompanyMedia = () => {
   const navigation = useNavigation();
+  const { t } = useI18n();
   const [websiteLinks, setWebsiteLinks] = useState<string[]>([""]);
   const [facebookUrl, setFacebookUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
@@ -96,7 +98,7 @@ const UpdateCompanyMedia = () => {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={22} color={colors.text.primary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Liên kết</Text>
+          <Text style={styles.headerTitle}>{t('job.contactInfo')}</Text>
           <View style={{ width: 40 }} />
         </View>
         <ScrollView
@@ -105,12 +107,12 @@ const UpdateCompanyMedia = () => {
         >
           {/* Website */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>🌐 Website công ty</Text>
+            <Text style={styles.cardTitle}>{t('company.companyWebsite')}</Text>
             {websiteLinks.map((link, index) => (
               <View key={index} style={styles.inputRow}>
                 <Ionicons name="globe-outline" size={18} color="#555" />
                 <TextInput
-                  placeholder="https://example.com"
+                  placeholder={t('company.companyWebsite')}
                   style={styles.input}
                   value={link}
                   autoCapitalize="none"
@@ -125,13 +127,13 @@ const UpdateCompanyMedia = () => {
             ))}
             <TouchableOpacity onPress={handleAddWebsite} style={styles.addBtn}>
               <Ionicons name="add-circle-outline" size={20} color={colors.primary.start} />
-              <Text style={styles.addText}>Thêm website</Text>
+              <Text style={styles.addText}>{t('company.companyWebsite')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Mạng xã hội */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>🔗 Liên kết mạng xã hội</Text>
+            <Text style={styles.cardTitle}>{t('job.contactInfo')}</Text>
             {[
               { label: "Facebook", icon: "logo-facebook", color: "#1877F2", value: facebookUrl, set: setFacebookUrl },
               { label: "Twitter", icon: "logo-twitter", color: "#1DA1F2", value: twitterUrl, set: setTwitterUrl },
@@ -170,7 +172,7 @@ const UpdateCompanyMedia = () => {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.saveText}>Lưu thay đổi</Text>
+                <Text style={styles.saveText}>{t('common.save')}</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>

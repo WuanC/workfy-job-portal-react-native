@@ -2,8 +2,10 @@ import React, { useRef, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { verifyEmployeeEmail, verifyEmployerEmail } from "../../services/authService";
 import { AntDesign } from '@expo/vector-icons';
+import { useI18n } from "../../hooks/useI18n";
 
 const ConfirmEmailScreen = ({ navigation, route }: any) => {
+  const { t } = useI18n();
   const { email, role } = route.params as { email: string; role: string };
   const [otp, setOtp] = useState(Array(8).fill(""));
   const inputs = useRef<Array<TextInput | null>>([]);
@@ -27,24 +29,24 @@ const ConfirmEmailScreen = ({ navigation, route }: any) => {
     // Alert replaced by toast
     const { ToastService } = require("../../services/toastService");
     if (code.length < 8) {
-      ToastService.error("Lỗi", "Vui lòng nhập đủ 8 chữ số OTP.");
+      ToastService.error(t('common.error'), t('auth.enter8DigitOTP'));
       return;
     }
 
     try {
       if (role === "employer") {
         const res = await verifyEmployerEmail({ email, code: otp.join("") });
-        ToastService.success("Thành công", res.message);
+        ToastService.success(t('common.success'), res.message);
         navigation.replace("EmployerLogin");
       }
       else if (role === "employee") {
         const res = await verifyEmployeeEmail({ email, code: otp.join("") });
-        ToastService.success("Thành công", res.message);
+        ToastService.success(t('common.success'), res.message);
         navigation.replace("Login");
       }
 
     } catch (err: any) {
-      ToastService.error("Lỗi", err.message || "Đã xảy ra lỗi");
+      ToastService.error(t('common.error'), err.message || t('auth.errorOccurred'));
     }
   };
 
@@ -62,9 +64,9 @@ const ConfirmEmailScreen = ({ navigation, route }: any) => {
 
       <View style={styles.contentContainer}>
         <View style={styles.card}>
-          <Text style={styles.title}>Xác nhận email</Text>
+          <Text style={styles.title}>{t('auth.confirmEmailTitle')}</Text>
           <Text style={styles.label}>
-            Chúng tôi đã gửi mã xác nhận gồm 8 chữ số đến email của bạn
+            {t('auth.confirmEmailDesc')}
           </Text>
 
           <View style={styles.otpContainer}>
@@ -87,7 +89,7 @@ const ConfirmEmailScreen = ({ navigation, route }: any) => {
           </View>
 
           <TouchableOpacity style={styles.button} onPress={handleConfirm}>
-            <Text style={styles.buttonText}>Xác nhận</Text>
+            <Text style={styles.buttonText}>{t('auth.confirm')}</Text>
           </TouchableOpacity>
         </View>
       </View>

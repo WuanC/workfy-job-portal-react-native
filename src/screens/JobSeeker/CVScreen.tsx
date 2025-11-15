@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
+import { useI18n } from "../../hooks/useI18n"
 
 const CVScreen = () => {
+  const { t } = useI18n();
   const [hasCV, setHasCV] = useState(true) // Set to true to see CV preview state
 
   const renderEmptyState = () => (
@@ -19,12 +21,12 @@ const CVScreen = () => {
           </View>
         </View>
 
-        <Text style={styles.emptyTitle}>Bạn chưa có CV</Text>
-        <Text style={styles.emptySubtitle}>Trải nghiệm tạo CV trên VietCV với nhiều mẫu CV đa dạng</Text>
+        <Text style={styles.emptyTitle}>{t('cv.noCV')}</Text>
+        <Text style={styles.emptySubtitle}>{t('cv.createCVDescription')}</Text>
 
         <TouchableOpacity style={styles.createButton} onPress={() => setHasCV(true)}>
           <Ionicons name="add" size={20} color="white" />
-          <Text style={styles.createButtonText}>Tạo CV mới</Text>
+          <Text style={styles.createButtonText}>{t('cv.createNewCV')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -45,39 +47,39 @@ const CVScreen = () => {
 
         <View style={styles.cvContent}>
           <View style={styles.cvSection}>
-            <Text style={styles.cvSectionLabel}>Giới thiệu</Text>
+            <Text style={styles.cvSectionLabel}>{t('cv.introduction')}</Text>
             <View style={styles.cvSectionBar} />
           </View>
 
           <View style={styles.cvSection}>
-            <Text style={styles.cvSectionLabel}>Kinh nghiệm làm việc</Text>
+            <Text style={styles.cvSectionLabel}>{t('cv.workExperience')}</Text>
             <View style={styles.cvSectionBar} />
           </View>
 
           <View style={styles.cvSection}>
-            <Text style={styles.cvSectionLabel}>Học vấn</Text>
+            <Text style={styles.cvSectionLabel}>{t('cv.education')}</Text>
             <View style={styles.cvSectionBar} />
           </View>
 
           <View style={styles.cvSection}>
-            <Text style={styles.cvSectionLabel}>Kỹ năng</Text>
+            <Text style={styles.cvSectionLabel}>{t('cv.skills')}</Text>
             <View style={styles.cvSectionBar} />
           </View>
 
           <View style={styles.cvSection}>
-            <Text style={styles.cvSectionLabel}>Sở thích</Text>
+            <Text style={styles.cvSectionLabel}>{t('cv.hobbies')}</Text>
             <View style={styles.cvSectionBar} />
           </View>
 
           <View style={styles.cvSection}>
-            <Text style={styles.cvSectionLabel}>Thông tin liên lạc</Text>
+            <Text style={styles.cvSectionLabel}>{t('cv.contactInfo')}</Text>
             <View style={styles.cvSectionBar} />
           </View>
         </View>
 
         <View style={styles.cvFooter}>
-          <Text style={styles.cvInfoTitle}>My CV</Text>
-          <Text style={styles.cvInfoDate}>Cập nhật lần cuối: Th09 24, 2025</Text>
+          <Text style={styles.cvInfoTitle}>{t('cv.myCV')}</Text>
+          <Text style={styles.cvInfoDate}>{t('cv.lastUpdated')}: Th09 24, 2025</Text>
         </View>
       </View>
     </View>
@@ -93,7 +95,7 @@ const CVScreen = () => {
             <Ionicons name="person" size={24} color="#666" />
           </View>
           <View>
-            <Text style={styles.welcomeText}>Chào mừng tới VietCV</Text>
+            <Text style={styles.welcomeText}>{t('cv.welcome')}</Text>
             <Text style={styles.userName}>Wuan C</Text>
           </View>
         </View>

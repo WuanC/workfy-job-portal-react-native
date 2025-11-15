@@ -22,12 +22,14 @@ import { validateField } from "../../utilities/validation";
 import { JobLocation } from "../../types/type";
 import KeyboardAvoidingWrapper from "../../components/KeyboardAvoidingWrapper";
 import { colors } from "../../theme";
+import { useI18n } from "../../hooks/useI18n";
 
 const UpdateJobScreen = ({ route }: any) => {
 
   const { id } = route.params as { id: number };
 
   const navigation = useNavigation();
+  const { t } = useI18n();
   const richRefs = {
     aboutCompany: useRef<RichEditor>(null),
     description: useRef<RichEditor>(null),
@@ -115,62 +117,62 @@ const UpdateJobScreen = ({ route }: any) => {
       // ======== 1️⃣ VALIDATE CÁC TRƯỜNG BẮT BUỘC ========
       if (!companyName.trim()) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập tên công ty");
+        ToastService.warning(t('common.error'), t('validation.companyNameRequired'));
         return;
       }
       if (!companySize) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng chọn quy mô công ty");
+        ToastService.warning(t('common.error'), t('validation.companySizeRequired'));
         return;
       }
       if (!aboutCompany.trim()) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập mô tả công ty");
+        ToastService.warning(t('common.error'), t('validation.aboutCompanyRequired'));
         return;
       }
       if (!jobDistrictdId) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập tên district");
+        ToastService.warning(t('common.error'), t('validation.districtRequired'));
         return;
       }
       if (!jobTitle.trim()) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập tên công việc");
+        ToastService.warning(t('common.error'), t('validation.jobTitleRequired'));
         return;
       }
       if (!salaryType) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng chọn loại lương");
+        ToastService.warning(t('common.error'), t('validation.salaryTypeRequired'));
         return;
       }
       if (salaryType === "RANGE" && (!minSalary || !maxSalary || minSalary >= maxSalary)) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Sai định dạng", "Vui lòng nhập mức lương hợp lệ (Min < Max)");
+        ToastService.warning(t('common.error'), t('validation.salaryRangeInvalid'));
         return;
       }
       if (benefits.length <= 0) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Sai định dạng", "Phúc lợi không được để trống");
+        ToastService.warning(t('common.error'), t('validation.benefitsRequired'));
         return;
       }
       if (salaryType === "GREATER_THAN" && !minSalary) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập mức lương tối thiểu");
+        ToastService.warning(t('common.error'), t('validation.minSalaryRequired'));
         return;
       }
       if (!jobDescription.trim()) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập mô tả công việc");
+        ToastService.warning(t('common.error'), t('validation.jobDescriptionRequired'));
         return;
       }
       if (!requirement.trim()) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập yêu cầu công việc");
+        ToastService.warning(t('common.error'), t('validation.requirementRequired'));
         return;
       }
       if (!contactName.trim() || !contactPhone.trim()) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Thiếu thông tin", "Vui lòng nhập người liên hệ và số điện thoại");
+        ToastService.warning(t('common.error'), t('validation.contactRequired'));
         return;
       }
 
@@ -178,7 +180,7 @@ const UpdateJobScreen = ({ route }: any) => {
       const phoneErr = validateField(contactPhone || "", "phone");
       if (phoneErr) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.warning("Sai định dạng", phoneErr);
+        ToastService.warning(t('common.error'), phoneErr);
         return;
       }
       // ======== 2️⃣ TẠO DỮ LIỆU JOBREQUEST ========
@@ -227,7 +229,7 @@ const UpdateJobScreen = ({ route }: any) => {
       const res = await updateJob(id, jobData);
       if (res.status === 200) {
         const { ToastService } = require("../../services/toastService");
-        ToastService.success("Thành công", "Cập nhật thành công!");
+        ToastService.success(t('common.success'), t('messages.updateSuccess'));
         setTimeout(() => navigation.goBack(), 900);
       } else {
         const { ToastService } = require("../../services/toastService");
@@ -402,33 +404,33 @@ const UpdateJobScreen = ({ route }: any) => {
         {/* ---------- HEADER ---------- */}
         <View style={styles.header}>
           <Ionicons name="arrow-back" size={24} color="#000000ff" onPress={() => navigation.goBack()} />
-          <Text style={styles.headerTitle}>Sửa tin tuyển dụng</Text>
+          <Text style={styles.headerTitle}>{t('job.postJob')}</Text>
           <View style={{ width: 24 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* ---------- THÔNG TIN CÔNG TY ---------- */}
           <View style={styles.card}>
-            <Text style={styles.title}>Thông tin công ty</Text>
+            <Text style={styles.title}>{t('postJob.companyInfo')}</Text>
 
             <Text style={styles.label}>
-              Tên công ty<Text style={styles.required}>*</Text>
+              {t('postJob.companyName')}<Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="VD: NPT Software"
+              placeholder={t('postJob.companyName')}
               value={companyName}
               onChangeText={setCompanyName}
             />
 
             <Text style={styles.label}>
-              Số nhân viên<Text style={styles.required}>*</Text>
+              {t('postJob.companySize')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={getEnumOptions(LevelCompanySize)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn số nhân viên"
+              placeholder={t('postJob.companySize')}
               value={companySize}
               onChange={(item) => setCompanySize(item.value)}
               style={styles.dropdown}
@@ -436,16 +438,16 @@ const UpdateJobScreen = ({ route }: any) => {
               selectedTextStyle={styles.selectedText}
             />
 
-            <Text style={styles.label}>Website công ty</Text>
+            <Text style={styles.label}>{t('postJob.companyWebsite')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="VD: https://nptsoftware.vn"
+              placeholder={t('postJob.companyWebsite')}
               value={companyWebSite}
               onChangeText={setCompanyWebSite}
             />
 
             <Text style={styles.label}>
-              Sơ lược công ty<Text style={styles.required}>*</Text>
+              {t('postJob.aboutCompany')}<Text style={styles.required}>*</Text>
             </Text>
             <View style={styles.editorWrapper}>
               <RichToolbar
@@ -473,7 +475,7 @@ const UpdateJobScreen = ({ route }: any) => {
               <RichEditor
                 ref={richRefs.aboutCompany}
                 style={styles.editor}
-                placeholder="Nhập yêu cầu công việc..."
+                placeholder={t('postJob.aboutCompany')}
                 initialHeight={180}
                 editorInitializedCallback={() => handleEditorReady("aboutCompany")}
                 onChange={(html) => setAboutCompany(html)}
@@ -482,26 +484,26 @@ const UpdateJobScreen = ({ route }: any) => {
           </View>
           {/* ---------- THÔNG TIN CÔNG VIỆC ---------- */}
           <View style={styles.card}>
-            <Text style={styles.title}>Thông tin công việc</Text>
+            <Text style={styles.title}>{t('postJob.jobInfo')}</Text>
 
             <Text style={styles.label}>
-              Tên công việc<Text style={styles.required}>*</Text>
+              {t('postJob.jobTitle')}<Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="VD: Lập trình viên React Native"
+              placeholder={t('postJob.jobTitle')}
               value={jobTitle}
               onChangeText={setJobTitle}
             />
 
             <Text style={styles.label}>
-              Địa điểm<Text style={styles.required}>*</Text>
+              {t('postJob.location')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={listProvinces}
               labelField="name"
               valueField="id"
-              placeholder="Chọn Tỉnh / Thành phố"
+              placeholder={t('postJob.selectProvince')}
               value={jobProvincedId}
               onChange={(item) => {
                 setJobProvinceId(item.id)
@@ -516,7 +518,7 @@ const UpdateJobScreen = ({ route }: any) => {
               data={listJobDistricts}
               labelField="name"
               valueField="id"
-              placeholder="Chọn Quận / Huyện"
+              placeholder={t('postJob.selectDistrict')}
               value={jobDistrictdId}
               onChange={(item) => {
                 console.log(item.id)
@@ -530,13 +532,13 @@ const UpdateJobScreen = ({ route }: any) => {
             {/* --- Số nhà / Địa chỉ chi tiết --- */}
             <TextInput
               style={styles.input}
-              placeholder="VD: 123 Nguyễn Trãi, Phường 5"
+              placeholder={t('postJob.detailAddress')}
               value={jobDetailAddress}
               onChangeText={setJobDetailAddress}
             />
 
             <Text style={styles.label}>
-              Lương<Text style={styles.required}>*</Text>
+              {t('postJob.salary')}<Text style={styles.required}>*</Text>
             </Text>
 
             {/* --- Dropdown chọn loại lương --- */}
@@ -544,7 +546,7 @@ const UpdateJobScreen = ({ route }: any) => {
               data={getEnumOptions(SalaryType)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn mức lương"
+              placeholder={t('postJob.selectSalary')}
               value={salaryType}
               onChange={(item) => {
                 console.log(typeof salaryType, salaryType);
@@ -562,7 +564,7 @@ const UpdateJobScreen = ({ route }: any) => {
               <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="Nhập mức lương tối thiểu"
+                  placeholder={t('postJob.minSalary')}
                   keyboardType="numeric"
                   value={minSalary?.toString() ?? ""}   // number -> string
                   onChangeText={(text) => {
@@ -588,7 +590,7 @@ const UpdateJobScreen = ({ route }: any) => {
               <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="Min"
+                  placeholder={t('postJob.minSalary')}
                   keyboardType="numeric"
                   value={minSalary?.toString() ?? ""}   // number -> string
                   onChangeText={(text) => {
@@ -597,7 +599,7 @@ const UpdateJobScreen = ({ route }: any) => {
                 />
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="Max"
+                  placeholder={t('postJob.maxSalary')}
                   keyboardType="numeric"
                   value={maxSalary?.toString() ?? ""}   // number -> string
                   onChangeText={(text) => {
@@ -618,7 +620,7 @@ const UpdateJobScreen = ({ route }: any) => {
               </View>
             )}
 
-            <Text style={styles.label}>Mô tả công việc</Text>
+            <Text style={styles.label}>{t('postJob.jobDescription')}</Text>
             <View style={styles.editorWrapper}>
               <RichToolbar
                 editor={richRefs.jobDescription}
@@ -645,14 +647,14 @@ const UpdateJobScreen = ({ route }: any) => {
               <RichEditor
                 ref={richRefs.jobDescription}
                 style={styles.editor}
-                placeholder="Nhập yêu cầu công việc..."
+                placeholder={t('postJob.jobDescription')}
                 initialHeight={180}
                 editorInitializedCallback={() => handleEditorReady("jobDescription")}
                 onChange={(html) => setJobDescription(html)}
               />
             </View>
 
-            <Text style={styles.label}>Yêu cầu công việc</Text>
+            <Text style={styles.label}>{t('postJob.requirement')}</Text>
 
             <View style={styles.editorWrapper}>
               <RichToolbar
@@ -680,7 +682,7 @@ const UpdateJobScreen = ({ route }: any) => {
               <RichEditor
                 ref={richRefs.requirement}
                 style={styles.editor}
-                placeholder="Nhập yêu cầu công việc..."
+                placeholder={t('postJob.requirement')}
                 initialHeight={180}
                 editorInitializedCallback={() => handleEditorReady("requirement")}
                 onChange={(html) => setRequirement(html)}
@@ -712,14 +714,14 @@ const UpdateJobScreen = ({ route }: any) => {
           />
         </View> */}
             <Text style={styles.label}>
-              Phúc lợi<Text style={styles.required}>*</Text>
+              {t('postJob.benefits')}<Text style={styles.required}>*</Text>
             </Text>
 
             <MultiSelect
               data={getEnumOptions(BenefitType)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn phúc lợi"
+              placeholder={t('postJob.benefits')}
               value={benefits.map((b) => b.type)}
               onChange={(selectedValues) => {
                 const selectedBenefits = selectedValues.map((val) => {
@@ -733,7 +735,7 @@ const UpdateJobScreen = ({ route }: any) => {
               selectedTextStyle={styles.selectedText}
               activeColor="#f0f0f0"
               search
-              searchPlaceholder="Tìm phúc lợi..."
+              searchPlaceholder={t('postJob.searchBenefits')}
               renderSelectedItem={(item, unSelect) => (
                 <View style={styles.selectedItem}>
                   <Text style={styles.selectedItemText}>{item.label}</Text>
@@ -748,36 +750,39 @@ const UpdateJobScreen = ({ route }: any) => {
               )}
             />
 
-            {benefits.map((benefit, index) => (
-              <View key={benefit.type} style={styles.benefitItem}>
-                <Text style={styles.benefitLabel}>
-                  {BenefitType[benefit.type as keyof typeof BenefitType]}
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Nhập mô tả phúc lợi..."
-                  value={benefit.description}
-                  onChangeText={(text) => {
-                    const updated = [...benefits];
-                    updated[index].description = text;
-                    setBenefits(updated);
-                  }}
-                />
-              </View>
-            ))}
+            {benefits.map((benefit, index) => {
+              const labelFn = BenefitType[benefit.type as keyof typeof BenefitType];
+              return (
+                <View key={benefit.type} style={styles.benefitItem}>
+                  <Text style={styles.benefitLabel}>
+                    {labelFn ? labelFn() : benefit.type}
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t('postJob.benefitDescription')}
+                    value={benefit.description}
+                    onChangeText={(text) => {
+                      const updated = [...benefits];
+                      updated[index].description = text;
+                      setBenefits(updated);
+                    }}
+                  />
+                </View>
+              );
+            })}
           </View>
           {/* ---------- CHI TIẾT CÔNG VIỆC ---------- */}
           <View style={styles.card}>
-            <Text style={styles.title}>Chi tiết công việc</Text>
+            <Text style={styles.title}>{t('postJob.jobDetails')}</Text>
 
             <Text style={styles.label}>
-              Trình độ học vấn<Text style={styles.required}>*</Text>
+              {t('postJob.education')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={getEnumOptions(EducationLevel)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn trình độ học vấn"
+              placeholder={t('postJob.education')}
               value={education}
               onChange={(item) => setEducation(item.value)}
               style={styles.dropdown}
@@ -786,13 +791,13 @@ const UpdateJobScreen = ({ route }: any) => {
             />
 
             <Text style={styles.label}>
-              Mức kinh nghiệm<Text style={styles.required}>*</Text>
+              {t('postJob.experience')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={getEnumOptions(ExperienceLevel)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn kinh nghiệm làm việc"
+              placeholder={t('postJob.experience')}
               value={experience}
               onChange={(item) => setExperience(item.value)}
               style={styles.dropdown}
@@ -801,13 +806,13 @@ const UpdateJobScreen = ({ route }: any) => {
             />
 
             <Text style={styles.label}>
-              Cấp bậc<Text style={styles.required}>*</Text>
+              {t('postJob.jobLevel')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={getEnumOptions(JobLevel)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn cấp bậc"
+              placeholder={t('postJob.jobLevel')}
               value={jobLevel}
               onChange={(item) => setJobLevel(item.value)}
               style={styles.dropdown}
@@ -816,13 +821,13 @@ const UpdateJobScreen = ({ route }: any) => {
             />
 
             <Text style={styles.label}>
-              Loại công việc<Text style={styles.required}>*</Text>
+              {t('postJob.jobType')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={getEnumOptions(JobType)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn loại công việc"
+              placeholder={t('postJob.jobType')}
               value={jobType}
               onChange={(item) => setJobType(item.value)}
               style={styles.dropdown}
@@ -831,13 +836,13 @@ const UpdateJobScreen = ({ route }: any) => {
             />
 
             <Text style={styles.label}>
-              Giới tính<Text style={styles.required}>*</Text>
+              {t('postJob.gender')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={getEnumOptions(JobGender)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn giới tính"
+              placeholder={t('postJob.gender')}
               value={jobGender}
               onChange={(item) => setJobGender(item.value)}
               style={styles.dropdown}
@@ -846,16 +851,16 @@ const UpdateJobScreen = ({ route }: any) => {
             />
 
 
-            <Text style={styles.label}>Mã việc làm</Text>
+            <Text style={styles.label}>{t('postJob.jobCode')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="VD: RN-2025-01"
+              placeholder={t('postJob.jobCode')}
               value={jobCode}
               onChangeText={(text) => setJobCode(text)}
             />
 
             <Text style={styles.label}>
-              Ngành nghề<Text style={styles.required}>*</Text>
+              {t('postJob.industry')}<Text style={styles.required}>*</Text>
             </Text>
 
             {/** Duyệt qua danh sách ngành nghề đã chọn **/}
@@ -875,7 +880,7 @@ const UpdateJobScreen = ({ route }: any) => {
                     data={industries}
                     labelField="name"
                     valueField="id"
-                    placeholder="Vui lòng chọn"
+                    placeholder={t('common.select')}
                     value={selected}
                     onChange={(item) => {
                       const updated = [...selectIndustryList];
@@ -905,25 +910,25 @@ const UpdateJobScreen = ({ route }: any) => {
               onPress={() => setSelectIndustryList([...selectIndustryList, null])}
               style={{ marginHorizontal: 16, marginTop: 8 }}
             >
-              <Text style={{ color: "#1a73e8", fontWeight: "500" }}>+ Thêm danh mục</Text>
+              <Text style={{ color: "#1a73e8", fontWeight: "500" }}>+ {t('postJob.addCategory')}</Text>
             </TouchableOpacity>
 
 
-            <Text style={styles.label}>Từ khóa</Text>
+            <Text style={styles.label}>{t('postJob.keywords')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="VD: React Native, Frontend, Mobile App..."
+              placeholder={t('postJob.keywords')}
             />
 
             <Text style={styles.label}>
-              Tuổi<Text style={styles.required}>*</Text>
+              {t('postJob.age')}<Text style={styles.required}>*</Text>
             </Text>
             {/* --- Dropdown chọn loại tuổi --- */}
             <Dropdown
               data={getEnumOptions(AgeType)}
               labelField="label"
               valueField="value"
-              placeholder="Chọn điều kiện độ tuổi"
+              placeholder={t('postJob.age')}
               value={ageType}
               onChange={(item) => setAgeType(item.value)}
               style={styles.dropdown}
@@ -935,7 +940,7 @@ const UpdateJobScreen = ({ route }: any) => {
             {ageType === "ABOVE" && (
               <TextInput
                 style={styles.input}
-                placeholder="Nhập độ tuổi tối thiểu"
+                placeholder={t('postJob.minAge')}
                 keyboardType="numeric"
                 value={minAge?.toString() ?? ""}   // number -> string
                 onChangeText={(text) => {
@@ -948,7 +953,7 @@ const UpdateJobScreen = ({ route }: any) => {
             {ageType === "BELOW" && (
               <TextInput
                 style={styles.input}
-                placeholder="Nhập độ tuổi tối đa"
+                placeholder={t('postJob.maxAge')}
                 keyboardType="numeric"
                 value={maxAge?.toString() ?? ""}   // number -> string
                 onChangeText={(text) => {
@@ -962,7 +967,7 @@ const UpdateJobScreen = ({ route }: any) => {
               <View style={{ flexDirection: "row", gap: 8, marginHorizontal: 16 }}>
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="Từ tuổi"
+                  placeholder={t('postJob.minAge')}
                   keyboardType="numeric"
                   value={minAge?.toString() ?? ""}   // number -> string
                   onChangeText={(text) => {
@@ -971,7 +976,7 @@ const UpdateJobScreen = ({ route }: any) => {
                 />
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="Đến tuổi"
+                  placeholder={t('postJob.maxAge')}
                   keyboardType="numeric"
                   value={maxAge?.toString() ?? ""}   // number -> string
                   onChangeText={(text) => {
@@ -983,37 +988,37 @@ const UpdateJobScreen = ({ route }: any) => {
           </View>
           {/* ---------- THÔNG TIN LIÊN HỆ ---------- */}
           <View style={styles.card}>
-            <Text style={styles.title}>Thông tin liên hệ</Text>
+            <Text style={styles.title}>{t('postJob.contactInfo')}</Text>
 
             <Text style={styles.label}>
-              Người liên hệ<Text style={styles.required}>*</Text>
+              {t('postJob.contactPerson')}<Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="VD: Lê Hữu Nam"
+              placeholder={t('postJob.contactPerson')}
               value={contactName}
               onChangeText={setContactName}
             />
 
             <Text style={styles.label}>
-              Điện thoại liên lạc<Text style={styles.required}>*</Text>
+              {t('postJob.contactPhone')}<Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="VD: 0905 123 456"
+              placeholder={t('postJob.contactPhone')}
               keyboardType="phone-pad"
               value={contactPhone}
               onChangeText={setContactPhone}
             />
 
             <Text style={styles.label}>
-              Địa điểm<Text style={styles.required}>*</Text>
+              {t('postJob.location')}<Text style={styles.required}>*</Text>
             </Text>
             <Dropdown
               data={listProvinces}
               labelField="name"
               valueField="id"
-              placeholder="Chọn Tỉnh / Thành phố"
+              placeholder={t('postJob.selectProvince')}
               value={contactProvinceId}
               onChange={(item) => {
                 setContactProvinceId(item.id)
@@ -1029,7 +1034,7 @@ const UpdateJobScreen = ({ route }: any) => {
               }
               labelField="name"
               valueField="id"
-              placeholder="Chọn Quận / Huyện"
+              placeholder={t('postJob.selectDistrict')}
               value={contactDistrictdId}
               onChange={(item) => setContactDistrictId(item.id)}
               style={styles.dropdown}
@@ -1040,12 +1045,12 @@ const UpdateJobScreen = ({ route }: any) => {
             {/* --- Số nhà / Địa chỉ chi tiết --- */}
             <TextInput
               style={styles.input}
-              placeholder="VD: 123 Nguyễn Trãi, Phường 5"
+              placeholder={t('postJob.detailAddress')}
               value={contactDetailAddress}
               onChangeText={setContactDetailAddress}
             />
 
-            <Text style={styles.label}>Mô tả</Text>
+            <Text style={styles.label}>{t('postJob.description')}</Text>
             <View style={styles.editorWrapper}>
               <RichToolbar
                 editor={richRefs.description}
@@ -1072,7 +1077,7 @@ const UpdateJobScreen = ({ route }: any) => {
               <RichEditor
                 ref={richRefs.description}
                 style={styles.editor}
-                placeholder="Nhập yêu cầu công việc..."
+                placeholder={t('postJob.description')}
                 initialHeight={180}
                 editorInitializedCallback={() => handleEditorReady("description")}
                 onChange={(html) => {
@@ -1083,7 +1088,7 @@ const UpdateJobScreen = ({ route }: any) => {
             </View>
 
             <Text style={styles.label}>
-              Ngày hết hạn<Text style={styles.required}>*</Text>
+              {t('postJob.expiryDate')}<Text style={styles.required}>*</Text>
             </Text>
             <View style={[styles.input, { justifyContent: "center" }]}>
               <Text>{formatDate(expiryDate)}</Text>
@@ -1095,7 +1100,7 @@ const UpdateJobScreen = ({ route }: any) => {
         </ScrollView>
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-            <Text style={styles.submitText}>Cập nhật công việc</Text>
+            <Text style={styles.submitText}>{t('postJob.updateJob')}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -18,6 +18,7 @@ import { closeJob, deleteJob, getMyJobs } from "../../services/jobService";
 import { EmployerJobCard } from "../../components/Employer/EmployerJobCard";
 import { colors, gradients } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
+import { useI18n } from "../../hooks/useI18n";
 
 type EmployerJobNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -26,6 +27,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
 
  const EmployerJobScreen = () =>  {
   const navigation = useNavigation<EmployerJobNavigationProp>();
+  const { t } = useI18n();
 
   const [selectedId, setSelectedId] = useState<number>(-1);
   const [isSelectedClosed, setIsSelectedClosed] = useState<boolean>(false)
@@ -120,7 +122,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary.start} />
-        <Text style={{ color: "#777", marginTop: 8 }}>Đang tải dữ liệu...</Text>
+        <Text style={{ color: "#777", marginTop: 8 }}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -129,7 +131,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Công việc của tôi</Text>
+        <Text style={styles.headerTitle}>{t('job.jobTitle')}</Text>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => navigation.navigate("PostJob")}
@@ -194,7 +196,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
           onPress={() => setShowActionMenu(false)}
         >
           <View style={styles.menuBox}>
-            <Text style={styles.menuTitle}>Thao tác</Text>
+            <Text style={styles.menuTitle}>{t('common.edit')}</Text>
 
             <TouchableOpacity
               style={styles.menuItem}
@@ -208,7 +210,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
                 size={18}
                 color={colors.primary.start}
               />
-              <Text style={styles.menuText}>Xem ứng viên</Text>
+              <Text style={styles.menuText}>{t('application.myApplications')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -223,7 +225,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
                 size={18}
                 color={colors.primary.start}
               />
-              <Text style={styles.menuText}>Sửa thông tin</Text>
+              <Text style={styles.menuText}>{t('common.edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -239,7 +241,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
                 color="#ff8800"
               />
               <Text style={[styles.menuText, { color: "#ff8800" }]}>
-                Đóng công việc
+                {t('common.cancel')}
               </Text>
             </TouchableOpacity>
 
@@ -252,7 +254,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
             >
               <Ionicons name="trash-outline" size={18} color="#ff3b30" />
               <Text style={[styles.menuText, { color: "#ff3b30" }]}>
-                Xóa công việc
+                {t('common.delete')}
               </Text>
             </TouchableOpacity>
           </View>

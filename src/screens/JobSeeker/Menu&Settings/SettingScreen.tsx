@@ -12,6 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../../types/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useI18n } from "../../../hooks/useI18n";
+import LanguageSwitcher from "../../../components/LanguageSwitcher";
 type MenuNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "ChangePassword",
@@ -19,6 +21,7 @@ type MenuNavigationProp = NativeStackNavigationProp<
 >;
 const SettingScreen = () => {
   const navigation = useNavigation<MenuNavigationProp>();
+  const { t } = useI18n();
 
   return (
     <View style={styles.container}>
@@ -41,38 +44,41 @@ const SettingScreen = () => {
         </TouchableOpacity>
 
         {/* title */}
-        <Text style={styles.headerTitle}>Cài đặt</Text>
+        <Text style={styles.headerTitle}>{t('settings.settings')}</Text>
 
         {/* right placeholder (giữ chỗ để title luôn center) */}
         <View style={styles.side} />
       </View>
 
       <ScrollView contentContainerStyle={styles.contentContainer}>
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Nhóm: Tài khoản */}
-        <Text style={styles.sectionTitle}>Tài khoản</Text>
+        <Text style={styles.sectionTitle}>{t('profile.personalInfo')}</Text>
         <View style={styles.card}>
           <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("ChangePassword")}>
             <Ionicons name="key-outline" size={20} color="#333" style={styles.icon} />
-            <Text style={styles.itemText}>Đổi mật khẩu</Text>
+            <Text style={styles.itemText}>{t('auth.resetPassword')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("ChangeEmail")}>
             <Ionicons name="mail-outline" size={20} color="#333" style={styles.icon} />
-            <Text style={styles.itemText}>Đổi email đăng nhập</Text>
+            <Text style={styles.itemText}>{t('auth.email')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.item, styles.itemLast]}>
             <Ionicons name="remove-circle-outline" size={20} color="#333" style={styles.icon} />
-            <Text style={styles.itemText}>Xoá tài khoản</Text>
+            <Text style={styles.itemText}>{t('common.delete')} {t('profile.profile')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Nhóm: Thông báo */}
-        <Text style={styles.sectionTitle}>Thông báo</Text>
+        <Text style={styles.sectionTitle}>{t('settings.notifications')}</Text>
         <View style={styles.card}>
           <TouchableOpacity style={[styles.item, styles.itemLast]}>
             <Ionicons name="mail-outline" size={20} color="#333" style={styles.icon} />
-            <Text style={styles.itemText}>Cài đặt thông báo email</Text>
+            <Text style={styles.itemText}>{t('settings.notifications')} {t('auth.email')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

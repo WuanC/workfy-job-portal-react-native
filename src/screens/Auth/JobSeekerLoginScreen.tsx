@@ -9,6 +9,7 @@ import {
 import { ToastService } from "../../services/toastService";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { LOGO_IMG } from "../../utilities/constant";
+import { useI18n } from "../../hooks/useI18n";
 import Checkbox from "expo-checkbox";
 import { useState } from "react";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -24,6 +25,7 @@ type MainNavigationProp = NativeStackNavigationProp<
 >;
 
 const JobSeekerLoginScreen = () => {
+  const { t } = useI18n();
   const { loginEmployeeAuth } = useAuth();
   const [isChecked, setChecked] = useState(false);
   const [email, setEmail] = useState('');
@@ -33,7 +35,7 @@ const JobSeekerLoginScreen = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      ToastService.warning('Thiếu thông tin', 'Vui lòng nhập email và mật khẩu');
+      ToastService.warning(t('auth.missingInfo'), t('auth.enterEmailPassword'));
       return;
     }
 
@@ -42,10 +44,10 @@ const JobSeekerLoginScreen = () => {
       await loginEmployeeAuth(email, password);
       // await loginEmployee(email, password);
       console.log("Login successful");
-      ToastService.success('Đăng nhập thành công', 'Chào mừng bạn quay lại!');
+      ToastService.success(t('auth.loginSuccess'), t('auth.welcomeBack'));
       navigation.replace("MainApp");
     } catch (error: any) {
-      ToastService.error('Đăng nhập thất bại', error.message || 'Email hoặc mật khẩu không đúng');
+      ToastService.error(t('auth.loginFailed'), error.message || t('auth.invalidCredentials'));
       console.error(error);
     } finally {
       setLoading(false);
@@ -55,13 +57,13 @@ const JobSeekerLoginScreen = () => {
   return (
     <View style={styles.container}>
       <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-      <Text style={styles.title}>Đăng nhập</Text>
+      <Text style={styles.title}>{t('auth.login')}</Text>
 
       {/* Email input */}
       <View style={styles.inputContainer}>
         <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
         <TextInput
-          placeholder="Nhập email của bạn"
+          placeholder={t('auth.enterEmail')}
           style={styles.input}
           value={email}
           onChangeText={setEmail}
@@ -74,7 +76,7 @@ const JobSeekerLoginScreen = () => {
       <View style={styles.inputContainer}>
         <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
         <TextInput
-          placeholder="Nhập mật khẩu"
+          placeholder={t('auth.enterPassword')}
           secureTextEntry={true}
           style={styles.input}
           value={password}
@@ -93,10 +95,10 @@ const JobSeekerLoginScreen = () => {
             color={isChecked ? "#2563EB" : undefined}
             style={styles.checkbox}
           />
-          <Text style={styles.remember}>Ghi nhớ đăng nhập</Text>
+          <Text style={styles.remember}>{t('auth.rememberMe')}</Text>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: true })}>
-          <Text style={styles.forgot}>Quên mật khẩu?</Text>
+          <Text style={styles.forgot}>{t('auth.forgotPassword')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -107,39 +109,39 @@ const JobSeekerLoginScreen = () => {
         disabled={loading}
       >
         <Text style={styles.buttonText}>
-          {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+          {loading ? t('auth.loggingIn') : t('auth.login')}
         </Text>
       </TouchableOpacity>
 
       {/* Divider */}
       <View style={styles.divider}>
         <View style={styles.line} />
-        <Text style={styles.or}>hoặc</Text>
+        <Text style={styles.or}>{t('auth.or')}</Text>
         <View style={styles.line} />
       </View>
 
       {/* Social Login */}
       <TouchableOpacity style={styles.socialButton}>
         <Ionicons name="logo-google" size={24} color="#DB4437" />
-        <Text style={styles.socialText}>Đăng nhập bằng Google</Text>
+        <Text style={styles.socialText}>{t('auth.loginWithGoogle')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.socialButton}>
         <Ionicons name="logo-linkedin" size={24} color="#0077B5" />
-        <Text style={styles.socialText}>Đăng nhập bằng LinkedIn</Text>
+        <Text style={styles.socialText}>{t('auth.loginWithLinkedIn')}</Text>
       </TouchableOpacity>
 
       {/* 🆕 Signup and Employer login */}
       <View style={styles.bottomLinks}>
         <TouchableOpacity onPress={() => navigation.navigate("Register")}>
           <Text style={styles.linkText}>
-            Chưa có tài khoản? <Text style={styles.linkHighlight}>Đăng ký ngay</Text>
+            {t('auth.noAccount')} <Text style={styles.linkHighlight}>{t('auth.registerNow')}</Text>
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate("EmployerLogin")}>
           <Text style={styles.linkText}>
-            Bạn là nhà tuyển dụng? <Text style={styles.linkHighlight}>Đăng nhập tại đây</Text>
+            {t('auth.areEmployer')} <Text style={styles.linkHighlight}>{t('auth.loginHere')}</Text>
           </Text>
         </TouchableOpacity>
       </View>

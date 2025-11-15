@@ -24,6 +24,7 @@ import { getPopularIndustries, getTopAttractiveJobs } from "../../services/jobSe
 import { colors } from "../../theme/colors"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { getTopHiringEmployers } from "../../services/employerService"
+import { useI18n } from "../../hooks/useI18n"
 
 type ExploreNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -31,6 +32,7 @@ type ExploreNavigationProp = NativeStackNavigationProp<
 >
 
 const ExploreScreen = () => {
+    const { t } = useI18n()
     const [searchValue, setSearchValue] = useState("")
     const [industries, setIndustries] = useState<any[]>([])
     const [careerAdvice, setCareerAdvice] = useState<any[]>([])
@@ -88,7 +90,7 @@ const ExploreScreen = () => {
         <TouchableOpacity key={category.id}>
             <View style={[styles.categoryCard, { backgroundColor: category.color }]}>
                 <Text style={styles.categoryTitle}>{category.name}</Text>
-                <Text style={styles.categoryCount}>{category.jobCount} việc làm</Text>
+                <Text style={styles.categoryCount}>{category.jobCount} {t('job.hiringJobs')}</Text>
             </View>
         </TouchableOpacity>
     );
@@ -118,7 +120,7 @@ const ExploreScreen = () => {
                 <Text numberOfLines={2} style={styles.companyName}>
                     {company.companyName}
                 </Text>
-                <Text style={styles.companyJobCount}>Đang tuyển {company.numberOfHiringJobs} công việc</Text>
+                <Text style={styles.companyJobCount}>{t('job.hiring')} {company.numberOfHiringJobs} {t('job.jobsCount')}</Text>
                 <View style={styles.companyLocation}>
                     <Ionicons name="location-outline" size={14} color="#666" />
                     <Text style={styles.locationText}>{company.province.name}</Text>
@@ -160,8 +162,8 @@ const ExploreScreen = () => {
                         />
                         <Text style={styles.headerTitle}>Workify Job Portal</Text>
                         <Text style={styles.headerSubtitle}>
-                            Ứng Dụng Tuyển Dụng dành cho{" "}
-                            <Text style={styles.highlightText}>Mọi Người</Text>
+                            {t('common.appName')} {" "}
+                            <Text style={styles.highlightText}></Text>
                         </Text>
                     </View>
 
@@ -172,11 +174,11 @@ const ExploreScreen = () => {
                 {/* Job Categories */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Công việc hấp dẫn</Text>
+                        <Text style={styles.sectionTitle}>{t('explore.attractiveJobs')}</Text>
                         <TouchableOpacity
                             onPress={() => navigation.navigate("SearchMain", { initialTab: "industries" })}
                         >
-                            <Text style={styles.seeAllText}>Xem tất cả</Text>
+                            <Text style={styles.seeAllText}>{t('explore.seeAll')}</Text>
                         </TouchableOpacity>
                     </View>
                     {renderJobCategoriesGrid()}
@@ -184,13 +186,13 @@ const ExploreScreen = () => {
 
                 {/* Featured Jobs */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Gợi ý việc làm</Text>
+                    <Text style={styles.sectionTitle}>{t('explore.recommendedJobs')}</Text>
                     <FeaturedJobsSection featuredJobs={topAttractiveJobs} />
                 </View>
 
                 {/* Top Companies */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Nhà tuyển dụng hàng đầu</Text>
+                    <Text style={styles.sectionTitle}>{t('job.topCompanies')}</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         {topCompanies.map(renderCompany)}
                     </ScrollView>
@@ -199,9 +201,9 @@ const ExploreScreen = () => {
                 {/* Career Advice */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Cẩm nang tìm việc</Text>
+                        <Text style={styles.sectionTitle}>{t('job.careerAdvice')}</Text>
                         <TouchableOpacity onPress={() => navigation.navigate("Blog")}>
-                            <Text style={styles.seeAllText}>Xem tất cả</Text>
+                            <Text style={styles.seeAllText}>{t('explore.seeAll')}</Text>
                         </TouchableOpacity>
                     </View>
                     <FlatList

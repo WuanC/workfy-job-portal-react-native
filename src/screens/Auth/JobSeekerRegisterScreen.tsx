@@ -18,8 +18,10 @@ import Checkbox from "expo-checkbox";
 import { useState } from "react";
 import { registerEmployee } from "../../services/authService";
 import { validateField } from "../../utilities/validation";
+import { useI18n } from "../../hooks/useI18n";
 
 const JobSeekerRegisterScreen = ({ navigation }: any) => {
+    const { t } = useI18n();
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -31,30 +33,30 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
         const { ToastService } = require("../../services/toastService");
 
         if (!fullName || !email || !password || !confirmPassword) {
-            ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+            ToastService.error(t('common.error'), t('auth.enterAllFields'));
             return;
         }
 
         const emailError = validateField(email, "email");
         if (emailError) {
-            ToastService.error("Lỗi", emailError);
+            ToastService.error(t('common.error'), emailError);
             return;
         }
 
         const passwordError = validateField(password, "password");
         if (passwordError) {
-            ToastService.error("Lỗi", passwordError);
+            ToastService.error(t('common.error'), passwordError);
             return;
         }
 
         if (password !== confirmPassword) {
-            ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
+            ToastService.error(t('common.error'), t('auth.passwordMismatch'));
             return;
         }
 
         if (!isChecked) {
             const { ToastService } = require("../../services/toastService");
-            ToastService.info("Thông báo", "Bạn cần đồng ý với điều khoản trước khi đăng ký.");
+            ToastService.info(t('notification.notifications'), t('auth.agreeTermsRequired'));
             return;
         }
 
@@ -62,11 +64,11 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
             setLoading(true);
             const res = await registerEmployee({ fullName, email, password, confirmPassword });
             const { ToastService } = require("../../services/toastService");
-            ToastService.success("Thành công", res.message || "Đăng ký thành công!");
+            ToastService.success(t('common.success'), res.message || t('auth.registerSuccess'));
             navigation.replace("ConfirmEmail", { email: email, role: "employee" });
         } catch (err: any) {
             const { ToastService } = require("../../services/toastService");
-            ToastService.error("Đăng ký thất bại", err.message || "Đã xảy ra lỗi");
+            ToastService.error(t('auth.registerError'), err.message || t('auth.errorOccurred'));
         } finally {
             setLoading(false);
         }
@@ -80,13 +82,13 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={styles.container}>
                     <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-                    <Text style={styles.title}>Đăng ký tài khoản</Text>
+                    <Text style={styles.title}>{t('auth.registerAccount')}</Text>
 
                     {/* Fullname input */}
                     <View style={styles.inputContainer}>
                         <Ionicons name="person-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Nhập họ và tên"
+                            placeholder={t('auth.enterFullName')}
                             value={fullName}
                             onChangeText={setFullName}
                             style={styles.input}
@@ -97,7 +99,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="mail-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Nhập email của bạn"
+                            placeholder={t('auth.enterEmail')}
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
@@ -110,7 +112,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Nhập mật khẩu"
+                            placeholder={t('auth.enterPassword')}
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
@@ -123,7 +125,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Xác nhận mật khẩu"
+                            placeholder={t('auth.confirmPassword')}
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
@@ -141,15 +143,15 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                             style={styles.checkbox}
                         />
                         <Text style={styles.agreeText}>
-                            Tôi đồng ý với{" "}
-                            <Text style={styles.link}>Điều khoản & Điều kiện</Text>
+                            {t('auth.agreeTerms')}{" "}
+                            <Text style={styles.link}>{t('auth.termsConditions')}</Text>
                         </Text>
                     </View>
 
                     {/* Sign up button */}
                     <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
                         <Text style={styles.buttonText}>
-                            {loading ? "Đang đăng ký..." : "Đăng ký ngay"}
+                            {loading ? t('auth.registering') : t('auth.registerNow')}
                         </Text>
                     </TouchableOpacity>
 
@@ -157,8 +159,8 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.bottomLinks}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
                             <Text style={styles.linkText}>
-                                Đã có tài khoản?{" "}
-                                <Text style={styles.linkHighlight}>Đăng nhập</Text>
+                                {t('auth.haveAccount')}{" "}
+                                <Text style={styles.linkHighlight}>{t('auth.login')}</Text>
                             </Text>
                         </TouchableOpacity>
                     </View>

@@ -9,9 +9,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useI18n } from "../../../hooks/useI18n";
 
 const ChangeEmailScreen = () => {
     const navigation = useNavigation();
+    const { t } = useI18n();
 
     const [password, setPassword] = useState("");
     const [newEmail, setNewEmail] = useState("");
@@ -30,21 +32,21 @@ const ChangeEmailScreen = () => {
                     <Ionicons name="chevron-back" size={22} color="#111" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>Đổi Email</Text>
+                <Text style={styles.headerTitle}>{t('menu.changeEmail')}</Text>
 
                 <View style={styles.side} />
             </View>
 
             <View style={styles.content}>
                 {/* Mật khẩu */}
-                <Text style={styles.label}>Mật khẩu</Text>
+                <Text style={styles.label}>{t('menu.password')}</Text>
                 <View style={styles.inputWrapper}>
                     <TextInput
                         style={styles.input}
                         secureTextEntry={!showPassword}
                         value={password}
                         onChangeText={setPassword}
-                        placeholder="Nhập mật khẩu"
+                        placeholder={t('menu.enterPassword')}
                     />
                     <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
@@ -59,32 +61,32 @@ const ChangeEmailScreen = () => {
                 </View>
 
                 {/* Email mới */}
-                <Text style={styles.label}>Email mới</Text>
+                <Text style={styles.label}>{t('menu.newEmail')}</Text>
                 <View style={styles.inputWrapper}>
                     <TextInput
                         style={styles.input}
                         value={newEmail}
                         onChangeText={setNewEmail}
-                        placeholder="Nhập email mới"
+                        placeholder={t('menu.enterNewEmail')}
                         keyboardType="email-address"
                     />
                 </View>
 
                 {/* Nhập lại email */}
-                <Text style={styles.label}>Nhập lại email</Text>
+                <Text style={styles.label}>{t('menu.reenterEmail')}</Text>
                 <View style={styles.inputWrapper}>
                     <TextInput
                         style={styles.input}
                         value={confirmEmail}
                         onChangeText={setConfirmEmail}
-                        placeholder="Nhập lại email"
+                        placeholder={t('menu.reenterNewEmail')}
                         keyboardType="email-address"
                     />
                 </View>
 
                 {/* Nút đổi email */}
                 <TouchableOpacity style={styles.submitBtn}>
-                    <Text style={styles.submitText}>Đổi Email</Text>
+                    <Text style={styles.submitText}>{t('menu.changeEmail')}</Text>
                 </TouchableOpacity>
             </View>
         </View>

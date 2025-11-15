@@ -1,0 +1,3 @@
+# Screenshots folder
+# Appium tests sẽ lưu screenshots vào đây khi test fail hoặc khi gọi takeScreenshot()
+*.png

@@ -16,6 +16,7 @@ import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import { loginEmployer } from "../../services/authService";
+import { useI18n } from "../../hooks/useI18n";
 
 type MainNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -24,6 +25,7 @@ type MainNavigationProp = NativeStackNavigationProp<
 >;
 
 const EmployerLoginScreen = () => {
+    const { t } = useI18n();
     const { loginEmployerAuth } = useAuth();
     const [isChecked, setChecked] = useState(false);
     const [email, setEmail] = useState('');
@@ -34,7 +36,7 @@ const EmployerLoginScreen = () => {
     const handleLogin = async () => {
         if (!email || !password) {
             const { ToastService } = require("../../services/toastService");
-            ToastService.error('Lỗi', 'Vui lòng nhập email và mật khẩu');
+            ToastService.error(t('auth.missingInfo'), t('auth.enterEmailPassword'));
             return;
         }
         try {
@@ -46,7 +48,7 @@ const EmployerLoginScreen = () => {
         }
         catch (error: any) {
             const { ToastService } = require("../../services/toastService");
-            ToastService.error('Lỗi', error.message || 'Đăng nhập thất bại');
+            ToastService.error(t('auth.loginFailed'), error.message || t('auth.invalidCredentials'));
             console.error(error);
         } finally {
             //setLoading(false);
@@ -57,13 +59,13 @@ const EmployerLoginScreen = () => {
     return (
         <View style={styles.container}>
             <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-            <Text style={styles.title}>Đăng nhập doanh nghiệp</Text>
+            <Text style={styles.title}>{t('auth.employerLogin')}</Text>
 
             {/* Email input */}
             <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
                 <TextInput
-                    placeholder="Nhập email của bạn"
+                    placeholder={t('auth.enterEmail')}
                     style={styles.input}
                     value={email}
                     onChangeText={setEmail}
@@ -76,7 +78,7 @@ const EmployerLoginScreen = () => {
             <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
                 <TextInput
-                    placeholder="Nhập mật khẩu"
+                    placeholder={t('auth.enterPassword')}
                     secureTextEntry={true}
                     style={styles.input}
                     value={password}
@@ -91,7 +93,7 @@ const EmployerLoginScreen = () => {
                 <View style={styles.rememberContainer}>
                 </View>
                 <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: false })}>
-                    <Text style={styles.forgot}>Quên mật khẩu?</Text>
+                    <Text style={styles.forgot}>{t('auth.forgotPassword')}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -102,14 +104,14 @@ const EmployerLoginScreen = () => {
                 disabled={loading}
             >
                 <Text style={styles.buttonText}>
-                    {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                    {loading ? t('auth.loggingIn') : t('auth.login')}
                 </Text>
             </TouchableOpacity>
 
             {/* Divider */}
             <View style={styles.divider}>
                 <View style={styles.line} />
-                <Text style={styles.or}>hoặc</Text>
+                <Text style={styles.or}>{t('auth.or')}</Text>
                 <View style={styles.line} />
             </View>
 
@@ -128,13 +130,13 @@ const EmployerLoginScreen = () => {
             <View style={styles.bottomLinks}>
                 <TouchableOpacity onPress={() => navigation.navigate("EmployerRegister")}>
                     <Text style={styles.linkText}>
-                        Chưa có tài khoản? <Text style={styles.linkHighlight}>Đăng ký ngay</Text>
+                        {t('auth.noAccount')} <Text style={styles.linkHighlight}>{t('auth.registerNow')}</Text>
                     </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => navigation.navigate("Login")}>
                     <Text style={styles.linkText}>
-                        Bạn là ứng viên? <Text style={styles.linkHighlight}>Đăng nhập tại đây</Text>
+                        {t('auth.areCandidate')} <Text style={styles.linkHighlight}>{t('auth.loginHere')}</Text>
                     </Text>
                 </TouchableOpacity>
             </View>

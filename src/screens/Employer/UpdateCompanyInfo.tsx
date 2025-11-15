@@ -20,10 +20,12 @@ import { getEnumOptions, LevelCompanySize } from "../../utilities/constant";
 import KeyboardAvoidingWrapper from "../../components/KeyboardAvoidingWrapper";
 import { colors } from "../../theme";
 import { validateField } from "../../utilities/validation";
+import { useI18n } from "../../hooks/useI18n";
 
 const UpdateCompanyInfo = ({ route }: any) => {
   const { id } = route.params as { id: number };
   const navigation = useNavigation();
+  const { t } = useI18n();
 
   const richAbout = useRef<RichEditor>(null);
 
@@ -186,32 +188,32 @@ const UpdateCompanyInfo = ({ route }: any) => {
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            Cập nhật thông tin công ty
+            {t('company.companyName')}
           </Text>
           <View style={{ width: 38 }} />
         </View>
 
         <ScrollView style={styles.container} scrollEnabled={scrollEnabled}>
-          <Text style={styles.title}>Thông tin công ty</Text>
+          <Text style={styles.title}>{t('company.companyName')}</Text>
 
           {/* Tên công ty */}
-          <Text style={styles.label}>Tên công ty *</Text>
+          <Text style={styles.label}>{t('company.companyName')} *</Text>
           <TextInput
             style={styles.input}
             value={companyName}
             onChangeText={setCompanyName}
-            placeholder="Nhập tên công ty"
+            placeholder={t('company.companyName')}
           />
 
           {/* Số nhân viên */}
           <Text style={styles.label}>
-            Số nhân viên<Text style={styles.required}>*</Text>
+            {t('company.companySize')}<Text style={styles.required}>*</Text>
           </Text>
           <Dropdown
             data={getEnumOptions(LevelCompanySize)}
             labelField="label"
             valueField="value"
-            placeholder="Chọn số nhân viên"
+            placeholder={t('company.companySize')}
             value={companySize}
             onChange={(item) => setCompanySize(item.value)}
             style={styles.dropdown}
@@ -222,7 +224,7 @@ const UpdateCompanyInfo = ({ route }: any) => {
           Sơ lược công ty<Text style={{ color: "red" }}> *</Text>
         </Text> */}
           <Text style={styles.label}>
-            Sơ lược công ty<Text style={styles.required}>*</Text>
+            {t('company.aboutCompany')}<Text style={styles.required}>*</Text>
           </Text>
 
           <View style={styles.editorWrapper}>
@@ -261,13 +263,13 @@ const UpdateCompanyInfo = ({ route }: any) => {
           </View>
           {/* Địa chỉ liên hệ */}
           <Text style={styles.label}>
-            Địa điểm<Text style={styles.required}>*</Text>
+            {t('job.location')}<Text style={styles.required}>*</Text>
           </Text>
           <Dropdown
             data={listProvinces}
             labelField="name"
             valueField="id"
-            placeholder="Chọn Tỉnh / Thành phố"
+            placeholder={t('postJob.selectProvince')}
             value={provinceId}
             onChange={(item) => {
               setProvinceId(item.id)
@@ -282,7 +284,7 @@ const UpdateCompanyInfo = ({ route }: any) => {
             data={listDistricts}
             labelField="name"
             valueField="id"
-            placeholder="Chọn Quận / Huyện"
+            placeholder={t('postJob.selectDistrict')}
             value={districtId}
             onChange={(item) => {
               console.log(item.id)
@@ -296,14 +298,14 @@ const UpdateCompanyInfo = ({ route }: any) => {
           {/* --- Số nhà / Địa chỉ chi tiết --- */}
           <TextInput
             style={styles.input}
-            placeholder="VD: 123 Nguyễn Trãi, Phường 5"
+            placeholder={t('postJob.detailAddress')}
             value={detailAddress}
             onChangeText={setDetailAddress}
           />
 
 
 
-          <Text style={styles.label}>Email liên hệ *</Text>
+          <Text style={styles.label}>{t('auth.email')} *</Text>
           <TextInput
             style={styles.input}
             value={email}
@@ -311,10 +313,10 @@ const UpdateCompanyInfo = ({ route }: any) => {
             onChangeText={setEmail}
           />
 
-          <Text style={styles.label}>Tên người liên hệ *</Text>
+          <Text style={styles.label}>{t('postJob.contactPerson')} *</Text>
           <TextInput style={styles.input} value={contactPerson} onChangeText={setContactPerson} />
 
-          <Text style={styles.label}>Điện thoại liên hệ</Text>
+          <Text style={styles.label}>{t('auth.phoneNumber')}</Text>
           <TextInput
             style={styles.input}
             value={contactPhone}
@@ -327,7 +329,7 @@ const UpdateCompanyInfo = ({ route }: any) => {
         </ScrollView>
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
-            <Text style={styles.updateText}>Cập nhật</Text>
+            <Text style={styles.updateText}>{t('common.save')}</Text>
           </TouchableOpacity>
         </View>
       </View>

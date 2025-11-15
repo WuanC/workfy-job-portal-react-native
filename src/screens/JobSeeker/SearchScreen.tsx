@@ -25,6 +25,7 @@ import {
   AdvancedJobQuery,
   getAdvancedJobs,
 } from "../../services/jobService";
+import { useI18n } from "../../hooks/useI18n";
 
 type FilterNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -34,6 +35,7 @@ type FilterNavigationProp = NativeStackNavigationProp<
 const SearchScreen = ({ route }: any) => {
   const initialTab = route?.params?.initialTab || "jobs";
   const navigation = useNavigation<FilterNavigationProp>();
+  const { t } = useI18n();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "industries">(initialTab);
   const [searchText, setSearchText] = useState("");
@@ -120,7 +122,7 @@ const SearchScreen = ({ route }: any) => {
       {/* 🔍 Thanh tìm kiếm */}
       <View style={styles.searchContainer}>
         <SearchBar
-          placeholder="Tìm kiếm công việc, công ty..."
+          placeholder={t('job.searchPlaceholder')}
           value={searchText}
           onChangeText={(text) => setSearchText(text)}
           onSubmit={() =>
@@ -148,7 +150,7 @@ const SearchScreen = ({ route }: any) => {
                 activeTab === tab && styles.activeTabText,
               ]}
             >
-              {tab === "jobs" ? "Công việc" : "Ngành nghề"}
+              {tab === "jobs" ? t('job.jobs') : t('job.industries')}
             </Text>
           </TouchableOpacity>
         ))}

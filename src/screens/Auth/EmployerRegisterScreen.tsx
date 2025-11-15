@@ -21,8 +21,10 @@ import { District, getDistrictsByProvince } from "../../services/districtService
 import { Dropdown } from "react-native-element-dropdown";
 import { getEnumOptions, LevelCompanySize, LOGO_IMG } from "../../utilities/constant";
 import { validateField } from "../../utilities/validation";
+import { useI18n } from "../../hooks/useI18n";
 
 const EmployerRegisterScreen = ({ navigation }: any) => {
+    const { t } = useI18n();
     const [listProvinces, setListProvinces] = useState<Province[]>([]);
     const [listDistricts, setListDistricts] = useState<District[]>([]);
     const [email, setEmail] = useState("");
@@ -44,7 +46,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 const list = await getAllProvince();
                 if (!cancelled) setListProvinces(list);
             } catch (err) {
-                console.error("Lỗi load tỉnh/thành:", err);
+                console.error("Error loading provinces:", err);
             }
         };
         load();
@@ -60,7 +62,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     const data = await getDistrictsByProvince(provinceId);
                     setListDistricts(data);
                 } catch (error) {
-                    console.error("Lỗi khi lấy quận/huyện:", error);
+                    console.error("Error loading districts:", error);
                     setListDistricts([]);
                 }
             })();
@@ -73,24 +75,24 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
         const { ToastService } = require("../../services/toastService");
 
         if (!email || !password || !confirmPassword || !companyName) {
-            ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin cần thiết.");
+            ToastService.error(t('auth.missingInfo'), t('auth.fillRequiredFields'));
             return;
         }
 
         const emailError = validateField(email, "email");
-        if (emailError) return ToastService.error("Lỗi", emailError);
+        if (emailError) return ToastService.error(t('auth.missingInfo'), emailError);
 
         const passwordError = validateField(password, "password");
-        if (passwordError) return ToastService.error("Lỗi", passwordError);
+        if (passwordError) return ToastService.error(t('auth.missingInfo'), passwordError);
 
         if (password !== confirmPassword) {
-            ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
+            ToastService.error(t('auth.missingInfo'), t('auth.passwordMismatch'));
             return;
         }
 
         if (phone) {
             const phoneError = validateField(phone, "phone");
-            if (phoneError) return ToastService.error("Lỗi", phoneError);
+            if (phoneError) return ToastService.error(t('auth.missingInfo'), phoneError);
         }
 
         try {
@@ -106,10 +108,10 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                 districtId: districtId ?? 0,
                 detailAddress: address || undefined,
             });
-            ToastService.success("Thành công", "Đăng ký nhà tuyển dụng thành công!");
+            ToastService.success(t('auth.registerSuccess'), t('auth.employerRegisterSuccess'));
             navigation.replace("ConfirmEmail", { email, role: "employer" });
         } catch (err: any) {
-            ToastService.error("Đăng ký thất bại", err.message || "Vui lòng thử lại.");
+            ToastService.error(t('auth.registerFailed'), err.message || t('auth.tryAgain'));
         } finally {
             setLoading(false);
         }
@@ -123,13 +125,13 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <ScrollView contentContainerStyle={styles.container}>
                     <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-                    <Text style={styles.title}>Đăng ký doanh nghiệp</Text>
+                    <Text style={styles.title}>{t('auth.employerRegister')}</Text>
 
                     {/* Email */}
                     <View style={styles.inputContainer}>
                         <Ionicons name="mail-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Email công ty"
+                            placeholder={t('auth.companyEmail')}
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
@@ -142,7 +144,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Nhập mật khẩu"
+                            placeholder={t('auth.enterPassword')}
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
@@ -155,7 +157,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Xác nhận mật khẩu"
+                            placeholder={t('auth.confirmPassword')}
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
@@ -168,7 +170,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="business-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Tên công ty"
+                            placeholder={t('auth.companyName')}
                             value={companyName}
                             onChangeText={setCompanyName}
                             style={styles.input}
@@ -182,7 +184,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                             data={getEnumOptions(LevelCompanySize)}
                             labelField="label"
                             valueField="value"
-                            placeholder="Quy mô công ty"
+                            placeholder={t('auth.companySize')}
                             value={companySize}
                             onChange={(item) => setCompanySize(item.value)}
                             style={styles.dropdown}
@@ -195,7 +197,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="person-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Người liên hệ"
+                            placeholder={t('auth.contactPerson')}
                             value={contactPerson}
                             onChangeText={setContactPerson}
                             style={styles.input}
@@ -206,7 +208,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="call-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Số điện thoại"
+                            placeholder={t('auth.phoneNumber')}
                             keyboardType="phone-pad"
                             value={phone}
                             onChangeText={setPhone}
@@ -221,7 +223,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                             data={listProvinces}
                             labelField="name"
                             valueField="id"
-                            placeholder="Chọn Tỉnh/Thành phố"
+                            placeholder={t('auth.selectProvince')}
                             value={provinceId}
                             onChange={(item) => setProvinceId(item.id)}
                             style={styles.dropdown}
@@ -237,7 +239,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                             data={listDistricts}
                             labelField="name"
                             valueField="id"
-                            placeholder="Chọn Quận/Huyện"
+                            placeholder={t('auth.selectDistrict')}
                             value={districtId}
                             onChange={(item) => setDistrictId(item.id)}
                             style={styles.dropdown}
@@ -250,7 +252,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                     <View style={styles.inputContainer}>
                         <Ionicons name="home-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
-                            placeholder="Số nhà, Phường/Xã"
+                            placeholder={t('auth.detailAddress')}
                             value={address}
                             onChangeText={setAddress}
                             style={styles.input}
@@ -263,15 +265,15 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         disabled={loading}
                     >
                         <Text style={styles.buttonText}>
-                            {loading ? "Đang đăng ký..." : "Đăng ký ngay"}
+                            {loading ? t('auth.registering') : t('auth.registerNow')}
                         </Text>
                     </TouchableOpacity>
 
                     <View style={styles.bottomLinks}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
                             <Text style={styles.linkText}>
-                                Đã có tài khoản?{" "}
-                                <Text style={styles.linkHighlight}>Đăng nhập</Text>
+                                {t('auth.haveAccount')}{" "}
+                                <Text style={styles.linkHighlight}>{t('auth.login')}</Text>
                             </Text>
                         </TouchableOpacity>
                     </View>

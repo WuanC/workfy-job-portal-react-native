@@ -26,6 +26,7 @@ import {
 } from "../services/notificationService";
 import { useWebSocketNotifications } from "../hooks/useWebSocketNotifications";
 import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../hooks/useI18n";
 
 type NotificationNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -36,6 +37,7 @@ const NotificationScreen = () => {
   const navigation = useNavigation<NotificationNavigationProp>();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const pageSize = 10;
 
   // 🔹 Query để lấy danh sách thông báo với infinite scroll
@@ -198,7 +200,7 @@ const NotificationScreen = () => {
             </Text>
             {isUnread && (
               <View style={styles.unreadBadge}>
-                <Text style={styles.unreadBadgeText}>Mới</Text>
+                <Text style={styles.unreadBadgeText}>{t('notification.new')}</Text>
               </View>
             )}
           </View>
@@ -221,10 +223,10 @@ const NotificationScreen = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return "Vừa xong";
-    if (diffMins < 60) return `${diffMins} phút trước`;
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    if (diffDays < 7) return `${diffDays} ngày trước`;
+    if (diffMins < 1) return t('notification.justNow');
+    if (diffMins < 60) return t('notification.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('notification.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('notification.daysAgo', { count: diffDays });
     return date.toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
@@ -237,7 +239,7 @@ const NotificationScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Thông báo</Text>
+        <Text style={styles.headerTitle}>{t('notification.notifications')}</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={[
@@ -266,7 +268,7 @@ const NotificationScreen = () => {
                   styles.markAllReadText,
                   unreadCount === 0 && styles.markAllReadTextInactive
                 ]}>
-                  Đọc tất cả
+                  {t('notification.readAll')}
                 </Text>
               </>
             )}
@@ -279,7 +281,7 @@ const NotificationScreen = () => {
         <View style={styles.connectionStatus}>
           <Ionicons name="warning-outline" size={16} color={colors.warning.start} />
           <Text style={styles.connectionStatusText}>
-            {connectionError ? `Lỗi: ${connectionError}` : "Đang kết nối WebSocket..."}
+            {connectionError ? t('notification.connectionError', { error: connectionError }) : t('notification.connecting')}
           </Text>
         </View>
       )}
@@ -288,7 +290,7 @@ const NotificationScreen = () => {
       {isLoading && notifications.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary.start} />
-          <Text style={styles.loadingText}>Đang tải thông báo...</Text>
+          <Text style={styles.loadingText}>{t('notification.loading')}</Text>
         </View>
       ) : notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -297,9 +299,9 @@ const NotificationScreen = () => {
             size={64}
             color={colors.text.tertiary}
           />
-          <Text style={styles.emptyText}>Chưa có thông báo nào</Text>
+          <Text style={styles.emptyText}>{t('notification.emptyTitle')}</Text>
           <Text style={styles.emptySubtext}>
-            Thông báo mới sẽ xuất hiện ở đây
+            {t('notification.emptySubtitle')}
           </Text>
         </View>
       ) : (

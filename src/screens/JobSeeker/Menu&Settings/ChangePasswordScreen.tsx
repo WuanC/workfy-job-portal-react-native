@@ -15,11 +15,13 @@ import { updateUserPassword } from "../../../services/employeeService";
 import { useAuth } from "../../../context/AuthContext";
 import { RootStackParamList } from "../../../types/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useI18n } from "../../../hooks/useI18n";
 import { colors } from "../../../theme";
 type MenuNavigationProp = NativeStackNavigationProp<RootStackParamList, "ChangePassword">;
 const ChangePasswordScreen = () => {
   const navigation = useNavigation<MenuNavigationProp>();
   const { logout } = useAuth()
+  const { t } = useI18n()
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,22 +39,22 @@ const ChangePasswordScreen = () => {
     const { ToastService } = require("../../../services/toastService");
     
     if (!oldPassword || !newPassword || !confirmPassword) {
-      ToastService.warning("Thiếu thông tin", "Vui lòng nhập đầy đủ các trường");
+      ToastService.warning(t('common.error'), t('menu.fillAllFields'));
       return;
     }
     const curPasswordError = validateField(oldPassword, "password");
     if (curPasswordError) {
-      ToastService.error("Mật khẩu không hợp lệ", curPasswordError);
+      ToastService.error(t('menu.invalidPassword'), curPasswordError);
       return;
     }
     const passwordError = validateField(newPassword, "password");
     if (passwordError) {
-      ToastService.error("Mật khẩu không hợp lệ", passwordError);
+      ToastService.error(t('menu.invalidPassword'), passwordError);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp");
+      ToastService.error(t('common.error'), t('menu.passwordMismatch'));
       return;
     }
 
@@ -65,7 +67,7 @@ const ChangePasswordScreen = () => {
 
       if (res.status === 200) {
         const { ToastService } = require("../../../services/toastService");
-        ToastService.success("Thành công", "Cập nhật mật khẩu thành công");
+        ToastService.success(t('common.success'), t('menu.passwordUpdateSuccess'));
         // emulate user clicking OK — wait a moment then logout
         setTimeout(() => handleLogout(), 1200);
       }
@@ -75,13 +77,13 @@ const ChangePasswordScreen = () => {
 
       const { ToastService } = require("../../../services/toastService");
       if (status === 400) {
-        ToastService.error("Lỗi", "Dữ liệu không hợp lệ hoặc mật khẩu mới sai định dạng");
+        ToastService.error(t('common.error'), t('menu.invalidData'));
       } else if (status === 401) {
-        ToastService.error("Lỗi", "Token không hợp lệ, vui lòng đăng nhập lại");
+        ToastService.error(t('common.error'), t('menu.invalidToken'));
       } else if (status === 411) {
-        ToastService.error("Lỗi", "Mật khẩu hiện tại không khớp");
+        ToastService.error(t('common.error'), t('menu.incorrectPassword'));
       } else {
-        ToastService.error("Lỗi", message);
+        ToastService.error(t('common.error'), message);
       }
     } finally {
       setLoading(false);
@@ -99,20 +101,20 @@ const ChangePasswordScreen = () => {
           <Ionicons name="arrow-back" size={22} color="#333" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Đổi mật khẩu</Text>
+        <Text style={styles.headerTitle}>{t('menu.changePassword')}</Text>
         <View style={styles.side} />
       </View>
 
       <View style={styles.content}>
         {/* Mật khẩu cũ */}
-        <Text style={styles.label}>Mật khẩu hiện tại</Text>
+        <Text style={styles.label}>{t('menu.currentPassword')}</Text>
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.input}
             secureTextEntry={!showOld}
             value={oldPassword}
             onChangeText={setOldPassword}
-            placeholder="Nhập mật khẩu"
+            placeholder={t('menu.enterPassword')}
           />
           <TouchableOpacity
             onPress={() => setShowOld(!showOld)}
@@ -126,18 +128,18 @@ const ChangePasswordScreen = () => {
           </TouchableOpacity>
         </View>
         <TouchableOpacity>
-          <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+          <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
         </TouchableOpacity>
 
         {/* Mật khẩu mới */}
-        <Text style={styles.label}>Mật khẩu mới</Text>
+        <Text style={styles.label}>{t('menu.newPassword')}</Text>
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.input}
             secureTextEntry={!showNew}
             value={newPassword}
             onChangeText={setNewPassword}
-            placeholder="Nhập mật khẩu mới"
+            placeholder={t('menu.newPassword')}
           />
           <TouchableOpacity
             onPress={() => setShowNew(!showNew)}
@@ -152,14 +154,14 @@ const ChangePasswordScreen = () => {
         </View>
 
         {/* Xác nhận mật khẩu */}
-        <Text style={styles.label}>Xác nhận mật khẩu</Text>
+        <Text style={styles.label}>{t('menu.confirmPassword')}</Text>
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.input}
             secureTextEntry={!showConfirm}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            placeholder="Nhập lại mật khẩu mới"
+            placeholder={t('menu.confirmPassword')}
           />
           <TouchableOpacity
             onPress={() => setShowConfirm(!showConfirm)}
@@ -182,7 +184,7 @@ const ChangePasswordScreen = () => {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitText}>Đổi mật khẩu</Text>
+            <Text style={styles.submitText}>{t('menu.changePassword')}</Text>
           )}
         </TouchableOpacity>
       </View>

@@ -12,6 +12,7 @@ import {
 import { resetEmployeePassword, resetEmployerPassword } from "../../services/authService";
 import { AntDesign } from '@expo/vector-icons';
 import { RootStackParamList } from "../../types/navigation";
+import { useI18n } from "../../hooks/useI18n";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 type MainNavigationProp = NativeStackNavigationProp<
@@ -19,6 +20,7 @@ type MainNavigationProp = NativeStackNavigationProp<
     "Login" | "EmployerLogin"
 >;
 const ResetPasswordScreen = ({ route }: any) => {
+    const { t } = useI18n();
     const navigation = useNavigation<MainNavigationProp>();
     const { isEmployee } = route.params as { isEmployee: boolean };
     const { email } = route.params as { email: string };
@@ -30,34 +32,34 @@ const ResetPasswordScreen = ({ route }: any) => {
         const { ToastService } = require("../../services/toastService");
 
         if (!code || !newPassword) {
-            ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin");
+            ToastService.error(t('common.error'), t('auth.enterAllInfo'));
             return;
         }
 
         // Validate OTP code
         if (code.length !== 8 || !/^\d+$/.test(code)) {
-            ToastService.error("Lỗi", "Mã OTP phải gồm 8 chữ số");
+            ToastService.error(t('common.error'), t('auth.otpMust8Digits'));
             return;
         }
 
         // Validate password
         if (newPassword.length < 6) {
-            ToastService.error("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
+            ToastService.error(t('common.error'), t('auth.passwordMin6'));
             return;
         }
 
         if (!/[A-Z]/.test(newPassword)) {
-            ToastService.error("Lỗi", "Mật khẩu phải chứa ít nhất 1 chữ hoa");
+            ToastService.error(t('common.error'), t('auth.passwordNeedUppercase'));
             return;
         }
 
         if (!/[a-z]/.test(newPassword)) {
-            ToastService.error("Lỗi", "Mật khẩu phải chứa ít nhất 1 chữ thường");
+            ToastService.error(t('common.error'), t('auth.passwordNeedLowercase'));
             return;
         }
 
         if (!/[0-9]/.test(newPassword)) {
-            ToastService.error("Lỗi", "Mật khẩu phải chứa ít nhất 1 số");
+            ToastService.error(t('common.error'), t('auth.passwordNeedNumber'));
             return;
         }
 
@@ -65,17 +67,17 @@ const ResetPasswordScreen = ({ route }: any) => {
         try {
             if (isEmployee) {
                 const res = await resetEmployeePassword(email, code, newPassword);
-                ToastService.success("Thành công", "Đổi mật khẩu thành công");
+                ToastService.success(t('common.success'), t('auth.passwordChangeSuccess'));
                 navigation.navigate("Login");
             }
             else {
                 const res = await resetEmployerPassword(email, code, newPassword);
-                ToastService.success("Thành công", "Đổi mật khẩu thành công");
+                ToastService.success(t('common.success'), t('auth.passwordChangeSuccess'));
                 navigation.navigate("EmployerLogin");
             }
         } catch (error: any) {
 
-            ToastService.error("Lỗi", error.message || "Đã xảy ra lỗi");
+            ToastService.error(t('common.error'), error.message || t('auth.errorOccurred'));
         } finally {
             setLoading(false);
         }
@@ -95,12 +97,12 @@ const ResetPasswordScreen = ({ route }: any) => {
 
             <View style={styles.contentContainer}>
                 <View style={styles.card}>
-                    <Text style={styles.title}>Đặt lại mật khẩu</Text>
-                    <Text style={styles.label}>Nhập mã OTP và mật khẩu mới của bạn</Text>
+                    <Text style={styles.title}>{t('auth.resetPasswordTitle')}</Text>
+                    <Text style={styles.label}>{t('auth.resetPasswordDesc')}</Text>
 
                     <TextInput
                         style={styles.input}
-                        placeholder="Mã OTP"
+                        placeholder={t('auth.otpCode')}
                         placeholderTextColor="#999"
                         value={code}
                         onChangeText={setCode}
@@ -109,7 +111,7 @@ const ResetPasswordScreen = ({ route }: any) => {
 
                     <TextInput
                         style={styles.input}
-                        placeholder="Mật khẩu mới"
+                        placeholder={t('auth.newPassword')}
                         placeholderTextColor="#999"
                         value={newPassword}
                         onChangeText={setNewPassword}
@@ -122,7 +124,7 @@ const ResetPasswordScreen = ({ route }: any) => {
                         disabled={loading}
                     >
                         <Text style={styles.buttonText}>
-                            {loading ? "Đang xử lý..." : "Xác nhận"}
+                            {loading ? t('auth.processing') : t('auth.confirm')}
                         </Text>
                     </TouchableOpacity>
                 </View>

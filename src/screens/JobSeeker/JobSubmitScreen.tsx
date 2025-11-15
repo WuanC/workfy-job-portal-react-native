@@ -26,6 +26,7 @@ import {
 import { RootStackParamList } from "../../types/navigation";
 import { colors, gradients } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
+import { useI18n } from "../../hooks/useI18n";
 // Using plain TextInput for cover letter instead of rich text editor
 
 type JobSubmitSuccessNavigationProp = NativeStackNavigationProp<
@@ -36,6 +37,7 @@ type JobSubmitSuccessNavigationProp = NativeStackNavigationProp<
 const JobSubmitScreen = ({ route }: any) => {
   const { jobId, jobName } = route.params as { jobId: number; jobName: string };
   const navigation = useNavigation<JobSubmitSuccessNavigationProp>();
+  const { t } = useI18n();
   // cover letter is a plain textarea (TextInput)
   const [profile, setProfile] = useState<any>(null);
   const [latestJob, setLatestJob] = useState<any>(null);
@@ -58,7 +60,7 @@ const JobSubmitScreen = ({ route }: any) => {
         setProfile(data);
         setPhoneNumber(data.phoneNumber || "");
       } catch {
-        ToastService.error("Lỗi", "Không thể tải thông tin bản thân.");
+        ToastService.error(t('common.error'), t('application.loadProfileError'));
       }
     };
 
@@ -99,9 +101,9 @@ const JobSubmitScreen = ({ route }: any) => {
       setCvFileUri(file.uri);
       setUseLink(false);
       setFile(file);
-      ToastService.success("Tải CV thành công", "CV đã được tải lên");
+      ToastService.success(t('common.success'), t('application.cvUploaded'));
     } catch (err: any) {
-      ToastService.error("Lỗi tải CV", err.message || "Không thể tải CV.");
+      ToastService.error(t('common.error'), err.message || t('application.cvUploadError'));
     }
   };
 
@@ -159,14 +161,14 @@ const JobSubmitScreen = ({ route }: any) => {
           cvFile
         );
       }
-      ToastService.success("Ứng tuyển thành công", "Đơn ứng tuyển đã được gửi!");
+      ToastService.success(t('common.success'), t('application.submitSuccess'));
       setLoading(false);
       navigation.replace("JobSubmitSuccess");
     } catch (error: any) {
       setCvFileUri("")
       setFile(null)
       console.error("Lỗi ứng tuyển:", error);
-      ToastService.error("Lỗi ứng tuyển", "Không thể gửi ứng tuyển, thử lại sau.");
+      ToastService.error(t('common.error'), t('application.submitError'));
     } finally {
       setLoading(false);
     }
@@ -327,7 +329,7 @@ const JobSubmitScreen = ({ route }: any) => {
               {loading && (
                 <ActivityIndicator size="small" color="#fff" style={{ marginRight: 10 }} />
               )}
-              <Text style={styles.submitText}>{loading ? "Đang gửi..." : "Nộp đơn ngay"}</Text>
+              <Text style={styles.submitText}>{loading ? t('application.submitting') : t('application.submitNow')}</Text>
             </View>
           </LinearGradient>
         </TouchableOpacity>

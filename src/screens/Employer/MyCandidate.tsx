@@ -12,12 +12,14 @@ import EmployeeCard from "../../components/Employer/EmployeeCard";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+import { useI18n } from "../../hooks/useI18n";
 type MyCandidateNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "EmployerSearchFilter"
 >;
 const MyCandidate = () => {
   const navigation = useNavigation<MyCandidateNavigationProp>();
+  const { t } = useI18n();
   const [employees, setEmployees] = useState([
     {
       id: "1",
@@ -58,7 +60,7 @@ const MyCandidate = () => {
     <View style={styles.container}>
       {/* Search bar */}
       <SearchBar
-        placeholder="Nhập từ khóa"
+        placeholder={t('search.searchPlaceholder')}
         value=""
         onChangeText={() => {}}
         onSubmit={() => {}}
@@ -68,10 +70,10 @@ const MyCandidate = () => {
       <View style={styles.tabContainer}>
         <View style={styles.tabRow}>
           <TouchableOpacity style={styles.activeTab}>
-            <Text style={styles.activeTabText}>Hồ sơ</Text>
+            <Text style={styles.activeTabText}>{t('profile.profile')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.inactiveTab}>
-            <Text style={styles.inactiveTabText}>Ngành nghề</Text>
+            <Text style={styles.inactiveTabText}>{t('job.industry')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -83,9 +85,9 @@ const MyCandidate = () => {
       {/* Header */}
       <View style={styles.headerRow}>
         <Text style={styles.countText}>
-          Tìm thấy: {employees.length.toLocaleString()} hồ sơ
+          {t('search.showingResults', { count: employees.length })}
         </Text>
-        <Text style={styles.notifyText}>Tạo thông báo</Text>
+        <Text style={styles.notifyText}>{t('notification.notifications')}</Text>
       </View>
 
       {/* Danh sách ứng viên */}

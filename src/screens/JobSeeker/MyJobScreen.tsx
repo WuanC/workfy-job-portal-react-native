@@ -13,6 +13,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { getMyApplications } from "../../services/applicationService";
 import { formatDate } from "../../utilities/constant";
 import { getSavedJobs } from "../../services/saveJobService";
+import { useI18n } from "../../hooks/useI18n";
 
 type JobDetailNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -20,7 +21,8 @@ type JobDetailNavigationProp = NativeStackNavigationProp<
 >;
 
 const MyJobScreen = () => {
-    const [activeTab, setActiveTab] = useState("Việc đã ứng tuyển");
+    const { t } = useI18n();
+    const [activeTab, setActiveTab] = useState("appliedJobs");
     const [isModalVisible, setModalVisible] = useState(false);
 
     const toggleModal = () => {
@@ -166,17 +168,17 @@ const MyJobScreen = () => {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Việc của tôi</Text>
+                <Text style={styles.headerTitle}>{t('job.myJobs')}</Text>
             </View>
 
             {/* Tabs */}
             <View style={styles.tabContainer}>
-                {["Việc đã ứng tuyển", "Việc đã lưu"].map((tab) => (
-                    <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tab}>
-                        <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-                            {tab}
+                {[{key: "appliedJobs", label: t('job.appliedJobs')}, {key: "savedJobs", label: t('job.savedJobs')}].map((tab) => (
+                    <TouchableOpacity key={tab.key} onPress={() => setActiveTab(tab.key)} style={styles.tab}>
+                        <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
+                            {tab.label}
                         </Text>
-                        {activeTab === tab && <View style={styles.activeLine} />}
+                        {activeTab === tab.key && <View style={styles.activeLine} />}
                     </TouchableOpacity>
                 ))}
             </View>
@@ -198,7 +200,7 @@ const MyJobScreen = () => {
                                 onPressEllipsis={toggleModal}
                             />
                         )}
-                        ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
+                        ListEmptyComponent={<Text style={styles.emptyText}>{t('job.noJobNotifications')}</Text>}
 
                     />
 
@@ -206,7 +208,7 @@ const MyJobScreen = () => {
                     <View style={styles.bottomContainer}>
                         <TouchableOpacity style={styles.bottomButton}>
                             <Ionicons name="notifications-outline" size={20} color="#fff" style={{ marginRight: 6 }} />
-                            <Text style={styles.bottomButtonText}>Tạo thông báo việc làm</Text>
+                            <Text style={styles.bottomButtonText}>{t('job.createJobNotification')}</Text>
                         </TouchableOpacity>
                     </View>
                     <Modal
@@ -239,7 +241,7 @@ const MyJobScreen = () => {
                     </Modal>
                 </View>
             )}
-            {activeTab === "Việc đã ứng tuyển" && (
+            {activeTab === "appliedJobs" && (
                 <View style={styles.content}>
                     <FlatList
                         style={styles.content}
@@ -261,7 +263,7 @@ const MyJobScreen = () => {
                             </View>
 
                         )}
-                        ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa ứng tuyển công việc nào.</Text>}
+                        ListEmptyComponent={<Text style={styles.emptyText}>{t('job.noAppliedJobs')}</Text>}
                         onEndReached={handleApplicationLoadMore}
                         onEndReachedThreshold={0.2}
                         ListFooterComponent={
@@ -278,7 +280,7 @@ const MyJobScreen = () => {
 
                 </View>
             )}
-            {activeTab === "Việc đã lưu" && (
+            {activeTab === "savedJobs" && (
                 <View style={styles.content}>
                     <FlatList
                         style={styles.content}
@@ -305,7 +307,7 @@ const MyJobScreen = () => {
                                 applied={true}
                             />
                         )}
-                        ListEmptyComponent={<Text style={styles.emptyText}>Bạn chưa lưu công việc nào.</Text>}
+                        ListEmptyComponent={<Text style={styles.emptyText}>{t('job.noSavedJobs')}</Text>}
                         onEndReached={handleSaveJobLoadMore}
                         onEndReachedThreshold={0.2}
                         ListFooterComponent={

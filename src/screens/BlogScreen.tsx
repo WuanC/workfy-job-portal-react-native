@@ -15,6 +15,7 @@ import { getAllCategories, getPublicPosts, Category, Post } from "../services/po
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useNavigation } from "@react-navigation/native";
+import { useI18n } from "../hooks/useI18n";
 
 type ExploreNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -23,6 +24,7 @@ type ExploreNavigationProp = NativeStackNavigationProp<
 
 export default function BlogScreen() {
     const navigation = useNavigation<ExploreNavigationProp>();
+    const { t } = useI18n();
     const [posts, setPosts] = useState<Post[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -43,7 +45,7 @@ export default function BlogScreen() {
             const data = await getAllCategories();
             setCategories(data);
         } catch (error) {
-            console.log("Không thể lấy danh mục:", error);
+            console.log(t('blog.categoryLoadError'), error);
         }
     };
 
@@ -62,7 +64,7 @@ export default function BlogScreen() {
                 }
             }
         } catch (error) {
-            console.log("Không thể lấy bài viết:", error);
+            console.log(t('blog.postsLoadError'), error);
         } finally {
             setIsLoading(false);
             setRefreshing(false);
@@ -109,7 +111,7 @@ export default function BlogScreen() {
                     <Ionicons name="arrow-back" size={22} color="#1f2937" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>Danh sách bài viết</Text>
+                <Text style={styles.headerTitle}>{t('blog.articleList')}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -124,7 +126,7 @@ export default function BlogScreen() {
                         <View style={styles.filterIconContainer}>
                             <Ionicons name="filter-outline" size={18} color="#1f2937" />
                         </View>
-                        <Text style={styles.filterTitle}>Bộ lọc</Text>
+                        <Text style={styles.filterTitle}>{t('common.filter')}</Text>
                     </View>
 
                     <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -145,7 +147,7 @@ export default function BlogScreen() {
 
                 {filterExpanded && (
                     <View style={styles.dropdown}>
-                        <Text style={styles.dropdownLabel}>Danh mục</Text>
+                        <Text style={styles.dropdownLabel}>{t('blog.categories')}</Text>
                         {categories.map((item) => {
                             const isSelected = selectedCategories.includes(item.title);
                             return (
@@ -188,7 +190,7 @@ export default function BlogScreen() {
                                 style={styles.clearButton}
                                 onPress={clearFilters}
                             >
-                                <Text style={styles.clearButtonText}>Xóa bộ lọc</Text>
+                                <Text style={styles.clearButtonText}>{t('blog.clearFilter')}</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -248,7 +250,7 @@ export default function BlogScreen() {
                                         style={{ marginLeft: 12 }}
                                     />
                                     <Text style={styles.readTime}>
-                                        {item.readingTime} phút
+                                        {item.readingTime} {t('blog.minutes')}
                                     </Text>
                                 </View>
                             </View>

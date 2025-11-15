@@ -28,6 +28,7 @@ import {
 import RenderHTML, { MixedStyleDeclaration } from "react-native-render-html";
 import { colors } from "../../theme/colors";
 import { checkJobSaved, toggleSaveJob } from "../../services/saveJobService";
+import { useI18n } from "../../hooks/useI18n";
 
 type JobSubmitNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -46,6 +47,7 @@ const JobDetailScreen = ({ route }: any) => {
   const { id } = route.params as { id: number };
   const navigation = useNavigation<JobSubmitNavigationProp>();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const { t } = useI18n();
   const { width } = useWindowDimensions();
 
   const [job, setJob] = useState<any>(null);
@@ -112,7 +114,7 @@ const JobDetailScreen = ({ route }: any) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary.start} />
-        <Text style={styles.loadingText}>Đang tải tin tuyển dụng...</Text>
+        <Text style={styles.loadingText}>{t('job.loadingJob')}</Text>
       </View>
     );
   }
@@ -122,12 +124,12 @@ const JobDetailScreen = ({ route }: any) => {
     return (
       <View style={styles.loadingContainer}>
         <Ionicons name="alert-circle" size={48} color={colors.error.start} />
-        <Text style={styles.errorText}>Không tìm thấy công việc</Text>
+        <Text style={styles.errorText}>{t('job.notFound')}</Text>
         <TouchableOpacity
           style={styles.backErrorBtn}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backErrorText}>Quay lại</Text>
+          <Text style={styles.backErrorText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -219,13 +221,13 @@ const JobDetailScreen = ({ route }: any) => {
               <InfoBox
                 icon="location"
                 gradient={["#667eea", "#764ba2"]}
-                label="Địa điểm"
+                label={t('job.location')}
                 value={`${job.jobLocations[0]?.district?.name || ""}, ${job.jobLocations[0]?.province?.name || ""}`}
               />
               <InfoBox
                 icon="cash"
                 gradient={["#f2994a", "#f2c94c"]}
-                label="Mức lương"
+                label={t('job.salary')}
                 value={
                   job.salaryType === "RANGE"
                     ? `${(job.minSalary || 0).toLocaleString()} - ${(job.maxSalary || 0).toLocaleString()} ${job.salaryUnit || ""}`
@@ -241,27 +243,27 @@ const JobDetailScreen = ({ route }: any) => {
               <InfoBox
                 icon="briefcase"
                 gradient={["#11998e", "#38ef7d"]}
-                label="Kinh nghiệm"
+                label={t('job.experience')}
                 value={getExperienceLevelLabel(job.experienceLevel)}
               />
               <InfoBox
                 icon="calendar"
                 gradient={["#4facfe", "#00f2fe"]}
-                label="Hạn nộp"
+                label={t('job.deadline')}
                 value={job.expirationDate}
               />
             </View>
           </View>
 
           {/* Mô tả */}
-          <Section title="Mô tả công việc">
+          <Section title={t('job.jobDescription')}>
             <RenderHTML
               contentWidth={width - 40}
               source={{ html: job.jobDescription || "<p>Chưa có mô tả.</p>" }}
               tagsStyles={htmlStyles}
             />
           </Section>
-          <Section title="Phúc lợi">
+          <Section title={t('job.benefits')}>
             {job.jobBenefits?.length > 0 ? (
               job.jobBenefits.map((b: Benefit, i: number) => (
                 <View key={i} style={styles.benefitItem}>
@@ -270,11 +272,11 @@ const JobDetailScreen = ({ route }: any) => {
                 </View>
               ))
             ) : (
-              <Text style={styles.emptyText}>Chưa cập nhật phúc lợi</Text>
+              <Text style={styles.emptyText}>{t('job.noBenefits')}</Text>
             )}
           </Section>
           {/* Yêu cầu */}
-          <Section title="Yêu cầu công việc">
+          <Section title={t('job.requirements')}>
             <RenderHTML
               contentWidth={width - 40}
               source={{ html: job.requirement || "<p>Chưa có yêu cầu.</p>" }}
@@ -283,15 +285,15 @@ const JobDetailScreen = ({ route }: any) => {
           </Section>
 
           {/* Chi tiết */}
-          <Section title="Chi tiết tuyển dụng">
+          <Section title={t('job.recruitmentDetails')}>
             <View style={styles.detailGrid}>
-              <DetailBox label="Loại công việc" value={getJobTypeLabel(job.jobType)} />
-              <DetailBox label="Giới tính" value={getJobGenderLabel(job.gender)} />
-              <DetailBox label="Cấp bậc" value={getJobLevelLabel(job.jobLevel)} />
-              <DetailBox label="Học vấn" value={getEducationLevelLabel(job.educationLevel)} />
+              <DetailBox label={t('job.jobType')} value={getJobTypeLabel(job.jobType)} />
+              <DetailBox label={t('job.gender')} value={getJobGenderLabel(job.gender)} />
+              <DetailBox label={t('job.jobLevel')} value={getJobLevelLabel(job.jobLevel)} />
+              <DetailBox label={t('job.educationLevel')} value={getEducationLevelLabel(job.educationLevel)} />
             </View>
             <View style={styles.detailBoxFull}>
-              <Text style={styles.detailLabel}>Ngành nghề</Text>
+              <Text style={styles.detailLabel}>{t('job.industry')}</Text>
               <Text style={styles.detailValue}>
                 {job.industries?.length > 0
                   ? job.industries.map((i: any) => i.name).join(", ")
@@ -303,7 +305,7 @@ const JobDetailScreen = ({ route }: any) => {
           {/* Phúc lợi */}
 
           {/* Thông tin liên hệ*/}
-          <Section title="Thông tin liên hệ">
+          <Section title={t('job.contactInfo')}>
             <RenderHTML
               contentWidth={width - 40}
               source={{ html: job.description || "<p>Chưa có yêu cầu.</p>" }}
@@ -311,7 +313,7 @@ const JobDetailScreen = ({ route }: any) => {
             />
           </Section>
           {/* Về công ty */}
-          <Section title="Về công ty">
+          <Section title={t('company.aboutCompany')}>
             <TouchableOpacity
               style={styles.companyCard}
               onPress={() => navigation.navigate("CompanyDetail", { id: job.author.id })}
@@ -346,7 +348,7 @@ const JobDetailScreen = ({ route }: any) => {
           </Section>
 
           {/* Từ khóa */}
-          <Section title="Từ khóa gợi ý">
+          <Section title={t('job.keywords')}>
             <View style={styles.keywordContainer}>
               {keywords.map((kw, i) => (
                 <TouchableOpacity key={i} style={styles.keywordTag}>
@@ -380,7 +382,7 @@ const JobDetailScreen = ({ route }: any) => {
               end={{ x: 1, y: 1 }}
               style={styles.applyGradient}
             >
-              <Text style={styles.applyText}>Nộp đơn ngay</Text>
+              <Text style={styles.applyText}>{t('job.applyNow')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

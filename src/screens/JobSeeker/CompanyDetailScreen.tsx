@@ -22,9 +22,11 @@ import RenderHTML from "react-native-render-html";
 import { getEmployerJobOpenings } from "../../services/jobService";
 import { colors } from "../../theme/colors";
 import { spacing, borderRadius, shadows } from "../../theme/spacing";
+import { useI18n } from "../../hooks/useI18n";
 
 const CompanyDetailScreen = ({ route }: any) => {
   const navigation = useNavigation();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<"about" | "jobs">("about");
   const { id } = route.params as { id: number };
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ const CompanyDetailScreen = ({ route }: any) => {
       setPageNumber(page);
     } catch (err) {
       const { ToastService } = require("../../services/toastService");
-      ToastService.error("Lỗi", "Không thể tải danh sách công việc.");
+      ToastService.error(t('common.error'), t('company.loadJobsError'));
     } finally {
       if (page === 1) setLoading(false);
       setLoadingMore(false);
@@ -111,7 +113,7 @@ const CompanyDetailScreen = ({ route }: any) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0066ff" />
-        <Text style={{ marginTop: 10, color: "#333" }}>Đang tải dữ liệu...</Text>
+        <Text style={{ marginTop: 10, color: "#333" }}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -175,7 +177,7 @@ const CompanyDetailScreen = ({ route }: any) => {
                 activeTab === "about" && styles.activeTabText,
               ]}
             >
-              About us
+              {t('company.aboutUs')}
             </Text>
           </View>
         </TouchableOpacity>
@@ -196,7 +198,7 @@ const CompanyDetailScreen = ({ route }: any) => {
                 activeTab === "jobs" && styles.activeTabText,
               ]}
             >
-              Opening jobs
+              {t('company.openingJobs')}
             </Text>
           </View>
         </TouchableOpacity>
@@ -219,7 +221,7 @@ const CompanyDetailScreen = ({ route }: any) => {
           <Header />
           <View style={styles.contentContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Giới thiệu công ty</Text>
+              <Text style={styles.sectionTitle}>{t('company.aboutCompany')}</Text>
             </View>
             <Text style={styles.description}>
               {company?.aboutCompany ? (
@@ -234,13 +236,13 @@ const CompanyDetailScreen = ({ route }: any) => {
                   }}
                 />
               ) : (
-                <Text style={{ color: "#555" }}>Chưa có mô tả về công ty.</Text>
+                <Text style={{ color: "#555" }}>{t('company.noDescription')}</Text>
               )}
             </Text>
 
             {/* Liên hệ */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Phương tiện & Liên hệ</Text>
+              <Text style={styles.sectionTitle}>{t('company.mediaAndContact')}</Text>
             </View>
 
             {/* Website + Mạng xã hội */}

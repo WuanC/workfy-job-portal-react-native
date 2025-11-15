@@ -17,6 +17,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { validateField } from "../../utilities/validation";
+import { useI18n } from "../../hooks/useI18n";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 type EmployerSettingNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -26,6 +28,7 @@ type EmployerSettingNavigationProp = NativeStackNavigationProp<
 const EmployerSettingScreen = () => {
   const navigation = useNavigation<EmployerSettingNavigationProp>();
   const { logout } = useAuth();
+  const { t } = useI18n();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -40,35 +43,35 @@ const EmployerSettingScreen = () => {
   const handleChangePassword = async () => {
     const { ToastService } = require("../../services/toastService");
     if (!currentPassword || !newPassword || !confirmPassword) {
-      ToastService.error("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+      ToastService.error(t('common.error'), t('validation.required', { field: t('auth.password') }));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      ToastService.error("Lỗi", "Mật khẩu xác nhận không khớp.");
+      ToastService.error(t('common.error'), t('validation.passwordMismatch'));
       return;
     }
     const curPwdError = validateField(currentPassword, "password");
     if (curPwdError) {
-      ToastService.error("Lỗi", curPwdError);
+      ToastService.error(t('common.error'), curPwdError);
       return;
     }
     // Validate password complexity
     const pwdError = validateField(newPassword, "password");
     if (pwdError) {
-      ToastService.error("Lỗi", pwdError);
+      ToastService.error(t('common.error'), pwdError);
       return;
     }
 
     setLoading(true);
     try {
       const res = await updateEmployerPassword(currentPassword, newPassword);
-      ToastService.success("✅ Thành công", res.message || "Cập nhật mật khẩu thành công.");
+      ToastService.success(t('common.success'), res.message || t('messages.updateSuccess'));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      ToastService.error("❌ Lỗi", err.message || "Cập nhật mật khẩu thất bại.");
+      ToastService.error(t('common.error'), err.message || t('messages.updateError'));
     } finally {
       setLoading(false);
     }
@@ -78,7 +81,7 @@ const EmployerSettingScreen = () => {
     <View style={styles.container}>
       {/* 🔹 Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Cài đặt</Text>
+        <Text style={styles.headerTitle}>{t('settings.settings')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -86,16 +89,21 @@ const EmployerSettingScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: spacing.md, paddingBottom: 50 }}
       >
+        {/* Language Switcher - Chuyển đổi ngôn ngữ */}
+        <View style={styles.languageSection}>
+          <LanguageSwitcher />
+        </View>
+
         {/* Mật khẩu */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Đổi mật khẩu</Text>
+          <Text style={styles.sectionTitle}>{t('auth.resetPassword')}</Text>
           <Text style={styles.sectionDesc}>
-            Nhập mật khẩu hiện tại và mật khẩu mới của bạn.
+            {t('auth.password')}
           </Text>
 
           <TextInput
             style={styles.input}
-            placeholder="Mật khẩu hiện tại"
+            placeholder={t('auth.password')}
             placeholderTextColor="#aaa"
             secureTextEntry
             value={currentPassword}
@@ -103,7 +111,7 @@ const EmployerSettingScreen = () => {
           />
           <TextInput
             style={styles.input}
-            placeholder="Mật khẩu mới"
+            placeholder={t('auth.password')}
             placeholderTextColor="#aaa"
             secureTextEntry
             value={newPassword}
@@ -111,7 +119,7 @@ const EmployerSettingScreen = () => {
           />
           <TextInput
             style={styles.input}
-            placeholder="Xác nhận mật khẩu mới"
+            placeholder={t('auth.confirmPassword')}
             placeholderTextColor="#aaa"
             secureTextEntry
             value={confirmPassword}
@@ -134,7 +142,7 @@ const EmployerSettingScreen = () => {
               style={styles.btn}
             >
               <Text style={styles.btnText}>
-                {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                {loading ? t('common.loading') : t('auth.resetPassword')}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -142,9 +150,9 @@ const EmployerSettingScreen = () => {
 
         {/* Đăng xuất */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Đăng xuất</Text>
+          <Text style={styles.sectionTitle}>{t('auth.logout')}</Text>
           <Text style={styles.sectionDesc}>
-            Thoát khỏi tài khoản nhà tuyển dụng của bạn.
+            {t('auth.employer')}
           </Text>
 
           <TouchableOpacity onPress={handleLogout} activeOpacity={0.8}>
@@ -154,7 +162,7 @@ const EmployerSettingScreen = () => {
               end={{ x: 1, y: 1 }}
               style={[styles.btn, { shadowColor: "#f5576c" }]}
             >
-              <Text style={styles.btnText}>Đăng xuất</Text>
+              <Text style={styles.btnText}>{t('auth.logout')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -242,5 +250,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     fontSize: 15,
+  },
+
+  // LANGUAGE SECTION
+  languageSection: {
+    marginBottom: spacing.md,
   },
 });

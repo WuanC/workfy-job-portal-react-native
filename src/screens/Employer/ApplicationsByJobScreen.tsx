@@ -23,6 +23,7 @@ import { RootStackParamList } from "../../types/navigation";
 import { Dropdown } from "react-native-element-dropdown";
 import { colors, gradients } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
+import { useI18n } from "../../hooks/useI18n";
 
 type EmployerJobNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -32,6 +33,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
 const ApplicationsByJobScreen = ({ route }: any) => {
   const { jobId } = route.params as { jobId: number };
   const navigation = useNavigation<EmployerJobNavigationProp>();
+  const { t } = useI18n();
 
   const [applications, setApplications] = useState<any[]>([]);
   const [applicationPageNumber, setApplicationPageNumber] = useState(1);
@@ -120,13 +122,13 @@ const ApplicationsByJobScreen = ({ route }: any) => {
 
           <View style={styles.info}>
             <Text style={styles.name}>
-              {item.fullName || item.applicant?.fullName || "(Chưa có tên)"}
+              {item.fullName || item.applicant?.fullName || t('profile.profile')}
             </Text>
             <Text style={styles.meta}>
-              {item.email || item.applicant?.email || "(Không có email)"}
+              {item.email || item.applicant?.email || t('auth.email')}
             </Text>
             <Text style={styles.meta}>
-              Ứng tuyển: {formatDate(item.createdAt)}
+              {t('application.applicationDate')}: {formatDate(item.createdAt)}
             </Text>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
@@ -143,7 +145,7 @@ const ApplicationsByJobScreen = ({ route }: any) => {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" color={colors.primary.start} />
-        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+        <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -155,7 +157,7 @@ const ApplicationsByJobScreen = ({ route }: any) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#000000ff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Danh sách ứng viên</Text>
+        <Text style={styles.headerTitle}>{t('application.myApplications')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -165,7 +167,7 @@ const ApplicationsByJobScreen = ({ route }: any) => {
           data={getEnumOptions(ApplicationStatus)}
           labelField="label"
           valueField="value"
-          placeholder="Tất cả"
+          placeholder={t('common.filter')}
           value={searchStatus}
           onChange={(item) => setSearchStatus(item.value)}
           style={styles.dropdown}
@@ -192,7 +194,7 @@ const ApplicationsByJobScreen = ({ route }: any) => {
         ListEmptyComponent={() => (
           <View style={styles.empty}>
             <Ionicons name="people-outline" size={40} color="#ccc" />
-            <Text style={styles.emptyText}>Không có ứng viên</Text>
+            <Text style={styles.emptyText}>{t('search.noResults')}</Text>
           </View>
         )}
       />

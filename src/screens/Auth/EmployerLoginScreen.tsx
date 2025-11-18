@@ -17,6 +17,9 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import { loginEmployer } from "../../services/authService";
 import { useI18n } from "../../hooks/useI18n";
+import { validateField } from "../../utilities/validation";
+import { ToastService } from "../../services/toastService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type MainNavigationProp = NativeStackNavigationProp<
     RootStackParamList,
@@ -39,9 +42,14 @@ const EmployerLoginScreen = () => {
             ToastService.error(t('auth.missingInfo'), t('auth.enterEmailPassword'));
             return;
         }
-        try {
-            await loginEmployerAuth(email, password);
+        const emailError = validateField(email, "email");
+        if (emailError) return ToastService.error(t('auth.missingInfo'), emailError);
 
+        const passwordError = validateField(password, "password");
+        if (passwordError) return ToastService.error(t('auth.missingInfo'), passwordError);
+        try {
+            await AsyncStorage.setItem("isEmployer", "true");
+            await loginEmployerAuth(email, password);
             navigation.replace("MainAppEmployer");
 
 
@@ -49,7 +57,7 @@ const EmployerLoginScreen = () => {
         catch (error: any) {
             const { ToastService } = require("../../services/toastService");
             ToastService.error(t('auth.loginFailed'), error.message || t('auth.invalidCredentials'));
-            console.error(error);
+            console.log(error);
         } finally {
             //setLoading(false);
         }
@@ -57,7 +65,7 @@ const EmployerLoginScreen = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={styles.container} >
             <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
             <Text style={styles.title}>{t('auth.employerLogin')}</Text>
 
@@ -65,6 +73,8 @@ const EmployerLoginScreen = () => {
             <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
                 <TextInput
+                    testID="emailInput"
+                    accessibilityLabel="emailInput"
                     placeholder={t('auth.enterEmail')}
                     style={styles.input}
                     value={email}
@@ -78,6 +88,8 @@ const EmployerLoginScreen = () => {
             <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
                 <TextInput
+                    testID="passwordInput"
+                    accessibilityLabel="passwordInput"
                     placeholder={t('auth.enterPassword')}
                     secureTextEntry={true}
                     style={styles.input}
@@ -92,7 +104,8 @@ const EmployerLoginScreen = () => {
             <View style={styles.row}>
                 <View style={styles.rememberContainer}>
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: false })}>
+                <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: false })}
+                >
                     <Text style={styles.forgot}>{t('auth.forgotPassword')}</Text>
                 </TouchableOpacity>
             </View>
@@ -102,6 +115,8 @@ const EmployerLoginScreen = () => {
                 style={styles.button}
                 onPress={handleLogin}
                 disabled={loading}
+                testID="loginBtn"
+                accessibilityLabel="loginBtn"
             >
                 <Text style={styles.buttonText}>
                     {loading ? t('auth.loggingIn') : t('auth.login')}

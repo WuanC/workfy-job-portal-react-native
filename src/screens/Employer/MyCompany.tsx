@@ -361,7 +361,7 @@ const MyCompany = () => {
           renderItem={({ item }) => (
             <JobCard
               id={item.id}
-              logo_path={item.avatarUrl}
+              logo_path={item.author.avatarUrl}
               job_title={item.jobTitle}
               company_name={item.companyName}
               job_location={item.jobLocations[0].province.name}

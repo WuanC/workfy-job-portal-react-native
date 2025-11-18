@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (role === "employee") {
                     console.log("employee")
                     const user = await getProfile();
-                                        console.log("employee2")
+                    console.log("employee2")
                     setUser({ ...user, role });
                 }
                 else if (role === "employer") {
@@ -71,7 +71,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * 🔐 Đăng nhập EMPLOYEE
      */
     const loginEmployeeAuth = async (email: string, password: string) => {
+
         setLoading(true);
+
         try {
             const res = await loginUser({ email, password });
             const { accessToken, refreshToken } = res;
@@ -92,7 +94,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      * 🔐 Đăng nhập EMPLOYER
      */
     const loginEmployerAuth = async (email: string, password: string) => {
+
         setLoading(true);
+
         try {
             const res = await loginEmployer({ email, password });
             const { accessToken, refreshToken } = res;
@@ -102,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await AsyncStorage.setItem("role", "employer");
             await loadUser();
         } catch (err) {
-            console.error("Employer login failed:", err);
+            console.log("Employer login failed:", err);
             throw err;
         } finally {
             setLoading(false);

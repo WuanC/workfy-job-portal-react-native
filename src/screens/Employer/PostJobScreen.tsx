@@ -29,7 +29,7 @@ import { useI18n } from "../../hooks/useI18n";
 
 const PostJobScreen = () => {
   const navigation = useNavigation();
-  const { t } = useI18n();
+  const { t, isEnglish } = useI18n();
   //--RichEditor
   const richRefs = {
     aboutCompany: useRef<RichEditor>(null),
@@ -841,7 +841,7 @@ const PostJobScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Dropdown
                     data={industries}
-                    labelField="name"
+                    labelField={isEnglish ? "engName" : "name"}
                     valueField="id"
                     placeholder={t('common.select')}
                     value={selected}

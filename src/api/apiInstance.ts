@@ -14,7 +14,7 @@ import { Platform } from "react-native";
  * ===============================
  */
 const apiInstance: AxiosInstance = axios.create({
-  baseURL: "http://192.168.0.102:8080/workify/api/v1",
+  baseURL: "http://10.67.34.217:8080/workify/api/v1",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

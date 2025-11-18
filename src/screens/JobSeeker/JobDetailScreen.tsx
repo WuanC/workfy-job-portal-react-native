@@ -47,7 +47,7 @@ const JobDetailScreen = ({ route }: any) => {
   const { id } = route.params as { id: number };
   const navigation = useNavigation<JobSubmitNavigationProp>();
   const scrollY = useRef(new Animated.Value(0)).current;
-  const { t } = useI18n();
+  const { t, isEnglish } = useI18n();
   const { width } = useWindowDimensions();
 
   const [job, setJob] = useState<any>(null);
@@ -296,8 +296,8 @@ const JobDetailScreen = ({ route }: any) => {
               <Text style={styles.detailLabel}>{t('job.industry')}</Text>
               <Text style={styles.detailValue}>
                 {job.industries?.length > 0
-                  ? job.industries.map((i: any) => i.name).join(", ")
-                  : "Không xác định"}
+                  ? job.industries.map((i: any) => isEnglish ? i.engName : i.name).join(", ")
+                  : isEnglish ? "Not specified" : "Không xác định"}
               </Text>
             </View>
           </Section>
@@ -348,7 +348,7 @@ const JobDetailScreen = ({ route }: any) => {
           </Section>
 
           {/* Từ khóa */}
-          <Section title={t('job.keywords')}>
+          {/* <Section title={t('job.keywords')}>
             <View style={styles.keywordContainer}>
               {keywords.map((kw, i) => (
                 <TouchableOpacity key={i} style={styles.keywordTag}>
@@ -356,7 +356,7 @@ const JobDetailScreen = ({ route }: any) => {
                 </TouchableOpacity>
               ))}
             </View>
-          </Section>
+          </Section> */}
         </Animated.ScrollView>
 
         {/* Bottom Bar */}

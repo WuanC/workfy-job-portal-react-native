@@ -29,6 +29,7 @@
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
+    "employerRegister": "Employer Register",
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -37,6 +38,10 @@
     "loginSuccess": "Login successful!",
     "loginError": "Invalid email or password",
     "registerSuccess": "Registration successful!",
+    "employerRegisterSuccess": "Employer registration successful!",
+    "registerFailed": "Registration failed",
+    "tryAgain": "Please try again",
+    "fillRequiredFields": "Please fill in all required fields",
     "jobSeeker": "Job Seeker",
     "employer": "Employer",
     "fullName": "Full Name",
@@ -160,6 +165,7 @@
     "notFound": "Job not found",
     "requirements": "Job Requirements",
     "recruitmentDetails": "Recruitment Details",
+    "educationLevel": "Education Level",
     "gender": "Gender",
     "keywords": "Suggested Keywords",
     "noBenefits": "Benefits not yet updated",
@@ -293,7 +299,8 @@
     "clearFilter": "Clear Filter",
     "categoryLoadError": "Cannot load categories",
     "postsLoadError": "Cannot load posts",
-    "minutes": "minutes"
+    "minutes": "minutes",
+    "searchPlaceholder": "Search articles..."
   },
   "search": {
     "searchJobs": "Search Jobs",
@@ -457,8 +464,8 @@
       "COMPETITIVE": "Competitive"
     },
     "salaryUnit": {
-      "VND": "Vietnamese Dong",
-      "USD": "US Dollar"
+      "VND": "VND",
+      "USD": "USD"
     },
     "educationLevel": {
       "HIGH_SCHOOL": "High School",

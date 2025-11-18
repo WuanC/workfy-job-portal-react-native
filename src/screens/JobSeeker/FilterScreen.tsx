@@ -45,7 +45,7 @@ type FilterNavigationProp = NativeStackNavigationProp<
 const FilterScreen = ({ route }: any) => {
   const navigation = useNavigation<FilterNavigationProp>()
   const { currentFilter, onApply } = route.params;
-  const { t } = useI18n();
+  const { t, isEnglish } = useI18n();
   useEffect(() => {
     if (currentFilter) {
       setSelectedSort(currentFilter.sort || "");
@@ -189,7 +189,7 @@ const FilterScreen = ({ route }: any) => {
     selectedIndustry.length > 0
       ? listIndustries
         .filter((i) => selectedIndustry.includes(i.id))
-        .map((i) => i.name)
+        .map((i) => isEnglish ? i.engName : i.name)
         .join(", ")
       : t('filter.selectIndustry');
 
@@ -642,7 +642,7 @@ const FilterScreen = ({ route }: any) => {
 
               <BottomSheetFlatList
                 data={listIndustries.filter((p) =>
-                  p.name.toLowerCase().includes(query.toLowerCase())
+                  (isEnglish ? p.engName : p.name).toLowerCase().includes(query.toLowerCase())
                 )}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => {
@@ -664,7 +664,7 @@ const FilterScreen = ({ route }: any) => {
                         color={isSelected ? colors.primary.start : colors.text.secondary}
                         style={{ marginRight: 10 }}
                       />
-                      <Text>{item.name}</Text>
+                      <Text>{isEnglish ? item.engName : item.name}</Text>
                     </TouchableOpacity>
                   );
                 }}

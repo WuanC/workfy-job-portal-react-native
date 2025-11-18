@@ -129,13 +129,8 @@ const JobCard: React.FC<IJobCardProps> = ({
                   <Text numberOfLines={2} style={styles.jobTitle}>
                     {job_title}
                   </Text>
-                  {!isEmployer && (
+                  {(!isEmployer && heartApply) && (
                     <Pressable
-                      onPress={() => {
-                        handleHeartPress();
-                        // handleToggleSave(id);
-                        // setheartApply(!heartApply);
-                      }}
                     >
                       <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                         <Ionicons

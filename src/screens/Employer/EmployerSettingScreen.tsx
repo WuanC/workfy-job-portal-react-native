@@ -78,7 +78,7 @@ const EmployerSettingScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="test" accessibilityLabel="test">
       {/* 🔹 Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('settings.settings')}</Text>
@@ -97,11 +97,10 @@ const EmployerSettingScreen = () => {
         {/* Mật khẩu */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>{t('auth.resetPassword')}</Text>
-          <Text style={styles.sectionDesc}>
-            {t('auth.password')}
-          </Text>
 
           <TextInput
+            testID="currentPasswordInput"
+            accessibilityLabel="currentPasswordInput"
             style={styles.input}
             placeholder={t('auth.password')}
             placeholderTextColor="#aaa"
@@ -110,6 +109,8 @@ const EmployerSettingScreen = () => {
             onChangeText={setCurrentPassword}
           />
           <TextInput
+            testID="newPasswordInput"
+            accessibilityLabel="newPasswordInput"
             style={styles.input}
             placeholder={t('auth.password')}
             placeholderTextColor="#aaa"
@@ -118,6 +119,8 @@ const EmployerSettingScreen = () => {
             onChangeText={setNewPassword}
           />
           <TextInput
+            testID="confirmPasswordInput"
+            accessibilityLabel="confirmPasswordInput"
             style={styles.input}
             placeholder={t('auth.confirmPassword')}
             placeholderTextColor="#aaa"
@@ -127,6 +130,8 @@ const EmployerSettingScreen = () => {
           />
 
           <TouchableOpacity
+            testID="changePasswordBtn"
+            accessibilityLabel="changePasswordBtn"
             onPress={handleChangePassword}
             disabled={loading}
             activeOpacity={0.8}

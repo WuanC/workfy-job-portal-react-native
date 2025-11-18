@@ -1,8 +1,8 @@
 import { AdvancedJobQuery } from "../services/jobService";
 
 export type RootStackParamList = {
-  JobDetail: {id: number}
-  JobSubmit: {jobId: number, jobName: string}
+  JobDetail: { id: number }
+  JobSubmit: { jobId: number, jobName: string }
   JobSubmitSuccess: undefined
   MainApp: undefined
   MainAppEmployer: undefined
@@ -12,7 +12,7 @@ export type RootStackParamList = {
     onApply?: (filter: any) => void;
   };
   Chat: undefined
-  CompanyDetail: {id: number}
+  CompanyDetail: { id: number }
   //Settings
   Setting: undefined
   ChangePassword: undefined
@@ -20,18 +20,19 @@ export type RootStackParamList = {
 
   //Employer
   PostJob: undefined
+  PostJob2: undefined
   UpdateJob: { id: number }
   EmployerSearchFilter: undefined
   UpdateCompanyInfo: { id: number }
   UpdateCompanyMedia: undefined
 
   //Auth
-  ConfirmEmail: {email: string, role: string}
+  ConfirmEmail: { email: string, role: string }
   Login: undefined
   Register: undefined
   EmployerLogin: undefined
   EmployerRegister: undefined
-  ForgotPassword: {isEmployee: boolean}
+  ForgotPassword: { isEmployee: boolean }
   ResetPassword: { email: string; isEmployee: boolean }
 
   Blog: undefined
@@ -42,9 +43,9 @@ export type RootStackParamList = {
 
 
   //Application
-  EmployeeDetailApplication: {applicationId: number; status: string; coverLetter: string; jobTitle: string; cvUrl: string}
-  EmployerDetailApplication: {applicationId: number}
-  ApplicationsByJob: { jobId: number;}
+  EmployeeDetailApplication: { applicationId: number; status: string; coverLetter: string; jobTitle: string; cvUrl: string }
+  EmployerDetailApplication: { applicationId: number }
+  ApplicationsByJob: { jobId: number; }
 };
 // type JobDetailNavigationProp = NativeStackNavigationProp<
 //   RootStackParamList,

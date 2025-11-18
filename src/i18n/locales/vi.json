@@ -29,13 +29,20 @@
     "register": "Đăng ký",
     "logout": "Đăng xuất",
     "email": "Email",
+    "employerRegister": "Đăng ký nhà tuyển dụng",
+
     "password": "Mật khẩu",
+
     "confirmPassword": "Xác nhận mật khẩu",
     "forgotPassword": "Quên mật khẩu?",
     "resetPassword": "Đặt lại mật khẩu",
     "loginSuccess": "Đăng nhập thành công!",
     "loginError": "Sai email hoặc mật khẩu",
     "registerSuccess": "Đăng ký thành công!",
+    "employerRegisterSuccess": "Đăng ký nhà tuyển dụng thành công!",
+    "registerFailed": "Đăng ký thất bại",
+    "tryAgain": "Vui lòng thử lại",
+    "fillRequiredFields": "Vui lòng điền đầy đủ thông tin bắt buộc",
     "jobSeeker": "Người tìm việc",
     "employer": "Nhà tuyển dụng",
     "fullName": "Họ và tên",
@@ -160,6 +167,7 @@
     "requirements": "Yêu cầu công việc",
     "recruitmentDetails": "Chi tiết tuyển dụng",
     "gender": "Giới tính",
+    "educationLevel": "Cấp bậc",
     "keywords": "Từ khóa gợi ý",
     "noBenefits": "Chưa cập nhật phúc lợi",
     "myJobs": "Việc của tôi",
@@ -292,7 +300,8 @@
     "clearFilter": "Xóa bộ lọc",
     "categoryLoadError": "Không thể lấy danh mục",
     "postsLoadError": "Không thể lấy bài viết",
-    "minutes": "phút"
+    "minutes": "phút",
+    "searchPlaceholder": "Tìm kiếm bài viết..."
   },
   "search": {
     "searchJobs": "Tìm kiếm công việc",
@@ -456,8 +465,8 @@
       "COMPETITIVE": "Cạnh tranh"
     },
     "salaryUnit": {
-      "VND": "Việt Nam Đồng",
-      "USD": "Đô la Mỹ"
+      "VND": "VND",
+      "USD": "USD"
     },
     "educationLevel": {
       "HIGH_SCHOOL": "THPT",

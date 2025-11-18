@@ -22,10 +22,10 @@ import { useI18n } from "../../hooks/useI18n";
 
 type EmployerJobNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "PostJob" | "UpdateJob"
+  "PostJob" | "UpdateJob" | "PostJob2" 
 >;
 
- const EmployerJobScreen = () =>  {
+const EmployerJobScreen = () => {
   const navigation = useNavigation<EmployerJobNavigationProp>();
   const { t } = useI18n();
 
@@ -101,7 +101,7 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
   };
 
   const handleCloseJob = async (id: number, isClosed: boolean) => {
-    if(isClosed) return;
+    if (isClosed) return;
     try {
       const res = await closeJob(id);
       if (res.status === 200) {
@@ -128,11 +128,15 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container}
+      testID="homeScreen"
+      accessibilityLabel="homeScreen">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t('job.jobTitle')}</Text>
         <TouchableOpacity
+          testID="addBtn"
+          accessibilityLabel="addBtn"
           style={styles.addBtn}
           onPress={() => navigation.navigate("PostJob")}
         >
@@ -155,14 +159,15 @@ type EmployerJobNavigationProp = NativeStackNavigationProp<
             title={item.jobTitle}
             expireationDate={item.expirationDate}
             applications={item.numberOfApplications}
+            companyLogo={item.author.avatarUrl}
             salaryRange={
               item.salaryType === "RANGE"
                 ? `${item.minSalary} - ${item.maxSalary} ${item.salaryUnit}`
                 : item.salaryType === "NEGOTIABLE"
-                ? "Thỏa thuận"
-                : item.salaryType === "GREATER_THAN"
-                ? ` Trên ${item.minSalary} ${item.salaryUnit}`
-                : "Không rõ"
+                  ? "Thỏa thuận"
+                  : item.salaryType === "GREATER_THAN"
+                    ? ` Trên ${item.minSalary} ${item.salaryUnit}`
+                    : "Không rõ"
             }
             onOptionsPress={() => {
               setIsSelectedClosed(item.status == "CLOSED")

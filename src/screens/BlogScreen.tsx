@@ -9,6 +9,7 @@ import {
     StyleSheet,
     SafeAreaView,
     RefreshControl,
+    TextInput,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { getAllCategories, getPublicPosts, Category, Post } from "../services/postService";
@@ -29,6 +30,7 @@ export default function BlogScreen() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [filterExpanded, setFilterExpanded] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const [page, setPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -92,13 +94,17 @@ export default function BlogScreen() {
 
     const clearFilters = () => {
         setSelectedCategories([]);
+        setSearchQuery("");
         fetchPosts(1, true);
     };
 
-    const filteredPosts =
-        selectedCategories.length === 0
-            ? posts
-            : posts.filter((p) => selectedCategories.includes(p.category.title));
+    const filteredPosts = posts.filter((p) => {
+        const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category.title);
+        const matchSearch = searchQuery === "" || 
+            p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.authorName.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchCategory && matchSearch;
+    });
 
     return (
         <SafeAreaView style={styles.container}>
@@ -113,6 +119,26 @@ export default function BlogScreen() {
 
                 <Text style={styles.headerTitle}>{t('blog.articleList')}</Text>
                 <View style={{ width: 40 }} />
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <View style={styles.searchInputWrapper}>
+                    <Ionicons name="search" size={20} color="#6b7280" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder={t('blog.searchPlaceholder') || "Tìm kiếm bài viết..."}
+                        placeholderTextColor="#9ca3af"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        returnKeyType="search"
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery("")}>
+                            <Ionicons name="close-circle" size={20} color="#6b7280" />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
 
             {/* Filter Section */}
@@ -185,7 +211,7 @@ export default function BlogScreen() {
                             );
                         })}
 
-                        {selectedCategories.length > 0 && (
+                        {(selectedCategories.length > 0 || searchQuery.length > 0) && (
                             <TouchableOpacity
                                 style={styles.clearButton}
                                 onPress={clearFilters}
@@ -298,6 +324,30 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: "700",
+        color: "#0f172a",
+    },
+
+    searchContainer: {
+        backgroundColor: "#ffffff",
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderColor: "#e5e7eb",
+    },
+    searchInputWrapper: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#f3f4f6",
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        height: 44,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 15,
         color: "#0f172a",
     },
 

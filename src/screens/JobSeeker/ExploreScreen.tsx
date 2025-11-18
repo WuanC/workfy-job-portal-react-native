@@ -32,7 +32,7 @@ type ExploreNavigationProp = NativeStackNavigationProp<
 >
 
 const ExploreScreen = () => {
-    const { t } = useI18n()
+    const { t, isEnglish } = useI18n()
     const [searchValue, setSearchValue] = useState("")
     const [industries, setIndustries] = useState<any[]>([])
     const [careerAdvice, setCareerAdvice] = useState<any[]>([])
@@ -89,7 +89,7 @@ const ExploreScreen = () => {
     const renderJobCategory = (category: any) => (
         <TouchableOpacity key={category.id}>
             <View style={[styles.categoryCard, { backgroundColor: category.color }]}>
-                <Text style={styles.categoryTitle}>{category.name}</Text>
+                <Text style={styles.categoryTitle}>{isEnglish ? category.engName : category.name}</Text>
                 <Text style={styles.categoryCount}>{category.jobCount} {t('job.hiringJobs')}</Text>
             </View>
         </TouchableOpacity>

@@ -17,6 +17,8 @@ import { RootStackParamList } from "../../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import { loginEmployer } from "../../services/authService";
+import { validateField } from "../../utilities/validation";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type MainNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -38,8 +40,13 @@ const JobSeekerLoginScreen = () => {
       ToastService.warning(t('auth.missingInfo'), t('auth.enterEmailPassword'));
       return;
     }
+    const emailError = validateField(email, "email");
+    if (emailError) return ToastService.error(t('auth.missingInfo'), emailError);
 
+    const passwordError = validateField(password, "password");
+    if (passwordError) return ToastService.error(t('auth.missingInfo'), passwordError);
     try {
+      await AsyncStorage.setItem("isEmployer", "false");
       setLoading(true);
       await loginEmployeeAuth(email, password);
       // await loginEmployee(email, password);

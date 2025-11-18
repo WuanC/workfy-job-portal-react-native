@@ -113,32 +113,10 @@ const MenuScreen = () => {
             </View>
           </View>
 
-          {/* <TouchableOpacity style={styles.employersSection}>
-            <View>
-              <Text style={styles.employersLabel}>Nhà tuyển dụng đã xem</Text>
-              <Text style={styles.employersCount}>0</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
-          </TouchableOpacity> */}
 
           <Text style={styles.registrationDate}>{t('menu.registrationDate')}: {profile?.createdAt}</Text>
         </View>
 
-        {/* === My CareerLink Section === */}
-        {/* <View style={styles.section}>
-          <Text style={styles.sectionTitle}>My CareerLink</Text>
-          <View style={styles.menuGrid}>
-            <TouchableOpacity style={[styles.menuCard, { borderColor: colors.primary.light }]}>
-              <Ionicons name="document-text" size={24} color={colors.primary.start} />
-              <Text style={styles.menuText}>Hồ sơ của tôi</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.menuCard, { borderColor: colors.primary.light }]}>
-              <Ionicons name="mail" size={24} color={colors.primary.start} />
-              <Text style={styles.menuText}>Thư xin việc</Text>
-            </TouchableOpacity>
-          </View>
-        </View> */}
 
         {/* === Settings Section === */}
         <View style={styles.section}>
@@ -149,12 +127,12 @@ const MenuScreen = () => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
+          {/* <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuItemLeft}>
               <Ionicons name="globe" size={20} color={colors.text.secondary} />
               <Text style={styles.menuItemText}>{t('settings.language')}</Text>
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity style={styles.menuItem} onPress={toggleMoreOptions}>
             <View style={styles.menuItemLeft}>

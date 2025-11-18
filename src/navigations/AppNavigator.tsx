@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -59,6 +59,8 @@ import EmployeeDetailApplication from "../screens/JobSeeker/EmployeeDetailApplic
 import NotificationScreen from "../screens/NotificationScreen";
 import ApplicationsByJobScreen from "../screens/Employer/ApplicationsByJobScreen";
 import EmployerDetailApplication from "../screens/Employer/EmployerDetailApplication";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import PostJobScreen2 from "../screens/Employer/PostJobScreen2";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -134,6 +136,7 @@ const EmployerJobStackScreen = () => (
   <MenuStack.Navigator screenOptions={{ headerShown: false }}>
     <MenuStack.Screen name="EmployerJob" component={EmployerJobScreen} />
     <MenuStack.Screen name="PostJob" component={PostJobScreen} />
+    <MenuStack.Screen name="PostJob2" component={PostJobScreen2} />
     <MenuStack.Screen name="UpdateJob" component={UpdateJobScreen} />
     <MenuStack.Screen name="ApplicationsByJob" component={ApplicationsByJobScreen} />
     <MenuStack.Screen name="EmployerDetailApplication" component={EmployerDetailApplication} />
@@ -284,11 +287,19 @@ const MainAppEmployer = () => {
         },
       })}
     >
-      <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{ title: t('navigation.jobs') }} />
+      <Tab.Screen name="EmployerMyJobStack" component={EmployerJobStackScreen} options={{
+        title: t('navigation.jobs'),
+        tabBarAccessibilityLabel: 'jobTab',
+        tabBarLabel: 'Jobs',
+      }} />
       {/* <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: t('navigation.candidates') }} /> */}
       <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: t('navigation.notifications') }} />
       <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: t('navigation.company') }} />
-      <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{ title: t('navigation.settings') }} />
+      <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{
+        title: t('navigation.settings'), tabBarAccessibilityLabel: 'settingsTab',
+        tabBarLabel: 'Settings',
+      }
+      } />
 
     </Tab.Navigator>
   );
@@ -298,8 +309,27 @@ const MainAppEmployer = () => {
 const AppNavigator = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const { t } = useI18n();
-  
+  const [isEmployer, setIsEmployer] = useState<boolean | null>(null);
+
+  // Chỉ chạy 1 lần, không phụ thuộc loading
+  useEffect(() => {
+    AsyncStorage.getItem("isEmployer").then((value) => {
+      if (value === "true") setIsEmployer(true);
+      else setIsEmployer(false);
+    });
+  }, []);
+  useEffect(() => {
+    if (loading) {
+      AsyncStorage.getItem("isEmployer").then((value) => {
+        if (value === "true") setIsEmployer(true);
+        else setIsEmployer(false);
+      });
+    }
+
+  }, [loading]);
+
   if (loading) {
+
     return (
       <View
         style={{
@@ -328,17 +358,34 @@ const AppNavigator = () => {
               {/* Auth */}
               {/* Nếu chưa đăng nhập */}
               {!isAuthenticated ? (
-                <>
-                  <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
-                  <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
-                  <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
-                  <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
-                  <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
-                  <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
-                  <RootStack.Screen name="MainApp" component={MainAppEmployee} />
-                  <RootStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-                  <RootStack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-                </>
+                isEmployer === true ? (
+                  <>
+                    <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
+                    <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
+                    <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
+                    <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
+
+                    <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
+                    <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
+                    <RootStack.Screen name="MainApp" component={MainAppEmployee} />
+                    <RootStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                    <RootStack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+                  </>
+
+                ) : (
+                  <>
+                    {/* Giữ nguyên khi false hoặc null */}
+                    <RootStack.Screen name="Login" component={JobSeekerLoginScreen} />
+                    <RootStack.Screen name="EmployerRegister" component={EmployerRegisterScreen} />
+                    <RootStack.Screen name="Register" component={JobSeekerRegisterScreen} />
+                    <RootStack.Screen name="EmployerLogin" component={EmployerLoginScreen} />
+                    <RootStack.Screen name="ConfirmEmail" component={ConfirmEmailScreen} />
+                    <RootStack.Screen name="MainAppEmployer" component={MainAppEmployer} />
+                    <RootStack.Screen name="MainApp" component={MainAppEmployee} />
+                    <RootStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                    <RootStack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+                  </>
+                )
               ) : user?.role === "employer" ? (
                 // Nếu là nhà tuyển dụng
                 <>

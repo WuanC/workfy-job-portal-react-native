@@ -35,7 +35,7 @@ type FilterNavigationProp = NativeStackNavigationProp<
 const SearchScreen = ({ route }: any) => {
   const initialTab = route?.params?.initialTab || "jobs";
   const navigation = useNavigation<FilterNavigationProp>();
-  const { t } = useI18n();
+  const { t, isEnglish } = useI18n();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "industries">(initialTab);
   const [searchText, setSearchText] = useState("");
@@ -218,7 +218,7 @@ const SearchScreen = ({ route }: any) => {
           {categoryJobs.map((cat) => (
             <View key={cat.id} style={styles.category}>
               <Text style={styles.categoryTitle}>
-                {cat.name} ({cat.industries.length})
+                {isEnglish ? cat.engName : cat.name} ({cat.industries.length})
               </Text>
               {cat.industries.map((ind) => (
                 <TouchableOpacity
@@ -236,7 +236,7 @@ const SearchScreen = ({ route }: any) => {
                     color={colors.primary.start}
                     style={{ marginRight: 8 }}
                   />
-                  <Text style={styles.industryName}>{ind.name}</Text>
+                  <Text style={styles.industryName}>{isEnglish ? ind.engName : ind.name}</Text>
                   <Text style={styles.jobCount}>{ind.jobCount}</Text>
                 </TouchableOpacity>
               ))}

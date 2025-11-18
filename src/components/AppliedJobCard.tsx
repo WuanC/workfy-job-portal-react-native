@@ -4,6 +4,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 import { useNavigation } from "@react-navigation/native";
 import React, { useRef } from "react";
+import { getApplicationStatusLabel } from "../utilities/constant";
+import { useI18n } from "../hooks/useI18n";
 
 type JobDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -32,6 +34,7 @@ const AppliedJobCard = ({
   coverLetter,
 }: IAppliedJobCardProps) => {
   const navigation = useNavigation<JobDetailNavigationProp>();
+  const { t } = useI18n();
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -80,22 +83,31 @@ const AppliedJobCard = ({
             {/* STATUS đặt lên TRÊN */}
             <View style={[
               styles.statusBadge,
-              status === "APPROVED"
+              status === "OFFERED"
                 ? styles.approved
                 : status === "REJECTED"
                 ? styles.rejected
+                : status === "INTERVIEWED_PENDING"
+                ? styles.interviewed
+                : status === "INTERVIEW_SCHEDULING"
+                ? styles.scheduling
+                : status === "SCREENING_PENDING"
+                ? styles.screening
+                : status === "SCREENING"
+                ? styles.screening
+                : status === "VIEWED"
+                ? styles.viewed
                 : styles.pending
             ]}>
               <Text style={styles.statusText}>
-                {status === "APPROVED" ? "Đã duyệt" :
-                 status === "REJECTED" ? "Từ chối" : "Đang chờ"}
+                {getApplicationStatusLabel(status)}
               </Text>
             </View>
 
             {/* TIME nằm phía dưới */}
             <View style={styles.timeBadge}>
               <Ionicons name="time-outline" size={13} color="#999" />
-              <Text style={styles.time}>Ứng tuyển: {applied_time}</Text>
+              <Text style={styles.time}>{t('application.applicationDate')}: {applied_time}</Text>
             </View>
 
           </View>
@@ -150,6 +162,10 @@ const styles = StyleSheet.create({
   approved: { backgroundColor: "#4CAF50" },
   rejected: { backgroundColor: "#FF5252" },
   pending: { backgroundColor: "#FFB84C" },
+  interviewed: { backgroundColor: "#2196F3" },
+  scheduling: { backgroundColor: "#9C27B0" },
+  screening: { backgroundColor: "#FF9800" },
+  viewed: { backgroundColor: "#00BCD4" },
 
   timeBadge: {
     flexDirection: "row",

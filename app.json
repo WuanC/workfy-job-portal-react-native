@@ -50,6 +50,7 @@
           ]
         }
       ],
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.anonymous.workifyjobportalreactnative"
     },
     "web": {

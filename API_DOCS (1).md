@@ -7301,3 +7301,446 @@ Ghi chú chung:
     { "status": 200, "message": "Xóa vai trò thành công" }
     ```
   - Error 400/401/403/404
+
+## Chat & Messaging
+
+### Tổng quan
+
+Hệ thống chat cho phép nhà tuyển dụng (EMPLOYER) và người tìm việc (JOB_SEEKER) trao đổi tin nhắn liên quan đến đơn ứng tuyển. Mỗi application sẽ tự động tạo một conversation khi user apply job. 
+
+**Quy tắc:**
+- 1 application = 1 conversation (unique constraint)
+- Conversation được tạo tự động khi user apply job
+- Chỉ EMPLOYER có thể gửi tin nhắn đầu tiên
+- USER chỉ có thể gửi tin nhắn sau khi EMPLOYER đã gửi ít nhất 1 tin nhắn
+- Hỗ trợ WebSocket cho real-time messaging
+
+### WebSocket Configuration
+
+**Endpoint:** `/ws` (SockJS)
+
+**Connection:**
+```javascript
+const socket = new SockJS('http://localhost:8080/workify/ws');
+const stompClient = Stomp.over(socket);
+
+stompClient.connect({
+  Authorization: 'Bearer <accessToken>'
+}, onConnected, onError);
+```
+
+**Subscribe để nhận tin nhắn:**
+```javascript
+// Subscribe theo user ID (tự động route đến đúng user)
+stompClient.subscribe('/user/queue/messages', onMessageReceived);
+```
+
+**Gửi tin nhắn qua WebSocket:**
+```javascript
+stompClient.send('/app/chat.sendMessage', {}, JSON.stringify({
+  conversationId: 1,
+  content: "Xin chào!"
+}));
+```
+
+### REST APIs
+
+#### 1. Lấy danh sách conversations
+
+**GET** `/api/v1/conversations`
+
+**Authentication:** Required (JWT)
+
+**Roles:** JOB_SEEKER, EMPLOYER
+
+**Response:**
+```json
+{
+  "status": 200,
+  "message": "Conversations retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "jobId": 10,
+      "jobTitle": "Senior Java Developer",
+      "applicationId": 5,
+      "jobSeekerId": 2,
+      "jobSeekerName": "Nguyễn Văn A",
+      "jobSeekerAvatar": "https://example.com/avatar.jpg",
+      "employerId": 3,
+      "employerName": "Công ty ABC",
+      "employerAvatar": "https://example.com/company.jpg",
+      "lastMessage": "Cảm ơn bạn đã ứng tuyển!",
+      "lastMessageSenderId": 3,
+      "lastMessageSenderType": "EMPLOYER",
+      "hasEmployerMessage": true,
+      "createdAt": "2025-01-15T10:30:00",
+      "updatedAt": "2025-01-15T14:20:00"
+    }
+  ]
+}
+```
+
+**Error Responses:**
+- 401: Token không hợp lệ
+- 403: Không có quyền truy cập
+
+#### 2. Lấy conversation theo application ID
+
+**GET** `/api/v1/conversations/application/{applicationId}`
+
+**Authentication:** Required (JWT)
+
+**Roles:** JOB_SEEKER, EMPLOYER
+
+**Path Parameters:**
+- `applicationId` (Long, required): ID của application
+
+**Response:**
+```json
+{
+  "status": 200,
+  "message": "Conversation retrieved successfully",
+  "data": {
+    "id": 1,
+    "jobId": 10,
+    "jobTitle": "Senior Java Developer",
+    "applicationId": 5,
+    "jobSeekerId": 2,
+    "jobSeekerName": "Nguyễn Văn A",
+    "jobSeekerAvatar": "https://example.com/avatar.jpg",
+    "employerId": 3,
+    "employerName": "Công ty ABC",
+    "employerAvatar": "https://example.com/company.jpg",
+    "lastMessage": "Cảm ơn bạn đã ứng tuyển!",
+    "lastMessageSenderId": 3,
+    "lastMessageSenderType": "EMPLOYER",
+    "hasEmployerMessage": true,
+    "createdAt": "2025-01-15T10:30:00",
+    "updatedAt": "2025-01-15T14:20:00"
+  }
+}
+```
+
+**Error Responses:**
+- 400: Application ID không hợp lệ
+- 401: Token không hợp lệ
+- 403: Không có quyền truy cập conversation này
+- 404: Không tìm thấy application hoặc conversation
+
+#### 3. Lấy lịch sử tin nhắn
+
+**GET** `/api/v1/messages/{conversationId}`
+
+**Authentication:** Required (JWT)
+
+**Roles:** JOB_SEEKER, EMPLOYER
+
+**Path Parameters:**
+- `conversationId` (Long, required): ID của conversation
+
+**Response:**
+```json
+{
+  "status": 200,
+  "message": "Messages retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "conversationId": 1,
+      "senderId": 3,
+      "senderType": "EMPLOYER",
+      "senderName": "Công ty ABC",
+      "senderAvatar": "https://example.com/company.jpg",
+      "content": "Cảm ơn bạn đã ứng tuyển!",
+      "seen": true,
+      "createdAt": "2025-01-15T10:30:00"
+    },
+    {
+      "id": 2,
+      "conversationId": 1,
+      "senderId": 2,
+      "senderType": "USER",
+      "senderName": "Nguyễn Văn A",
+      "senderAvatar": "https://example.com/avatar.jpg",
+      "content": "Cảm ơn bạn! Tôi rất quan tâm đến vị trí này.",
+      "seen": true,
+      "createdAt": "2025-01-15T10:35:00"
+    }
+  ]
+}
+```
+
+**Error Responses:**
+- 400: Conversation ID không hợp lệ
+- 401: Token không hợp lệ
+- 403: Không phải thành viên của conversation này
+- 404: Không tìm thấy conversation
+
+#### 4. Gửi tin nhắn (REST API)
+
+**POST** `/api/v1/messages`
+
+**Authentication:** Required (JWT)
+
+**Roles:** JOB_SEEKER, EMPLOYER
+
+**Request Body:**
+```json
+{
+  "conversationId": 1,
+  "content": "Xin chào! Tôi muốn hỏi về vị trí này."
+}
+```
+
+**Validation:**
+- `conversationId`: Required, Long
+- `content`: Required, NotBlank
+
+**Response:**
+```json
+{
+  "status": 200,
+  "message": "Message sent successfully",
+  "data": {
+    "id": 3,
+    "conversationId": 1,
+    "senderId": 2,
+    "senderType": "USER",
+    "senderName": "Nguyễn Văn A",
+    "senderAvatar": "https://example.com/avatar.jpg",
+    "content": "Xin chào! Tôi muốn hỏi về vị trí này.",
+    "seen": false,
+    "createdAt": "2025-01-15T15:00:00"
+  }
+}
+```
+
+**Error Responses:**
+- 400: 
+  - Dữ liệu request không hợp lệ
+  - Conversation ID hoặc content thiếu
+- 401: Token không hợp lệ
+- 403: 
+  - Không phải thành viên của conversation
+  - USER chưa được phép gửi tin nhắn (chưa có tin nhắn từ EMPLOYER)
+- 404: Không tìm thấy conversation
+
+#### 5. Đánh dấu tin nhắn đã đọc
+
+**PUT** `/api/v1/messages/{conversationId}/seen`
+
+**Authentication:** Required (JWT)
+
+**Roles:** JOB_SEEKER, EMPLOYER
+
+**Path Parameters:**
+- `conversationId` (Long, required): ID của conversation
+
+**Response:**
+```json
+{
+  "status": 200,
+  "message": "Messages marked as seen"
+}
+```
+
+**Error Responses:**
+- 400: Conversation ID không hợp lệ
+- 401: Token không hợp lệ
+- 403: Không phải thành viên của conversation
+- 404: Không tìm thấy conversation
+
+### Data Models
+
+#### ConversationResponse
+```typescript
+interface ConversationResponse {
+  id: number;
+  jobId: number;
+  jobTitle: string;
+  applicationId: number;
+  jobSeekerId: number;
+  jobSeekerName: string;
+  jobSeekerAvatar: string | null;
+  employerId: number;
+  employerName: string;
+  employerAvatar: string | null;
+  lastMessage: string | null;
+  lastMessageSenderId: number | null;
+  lastMessageSenderType: "USER" | "EMPLOYER" | null;
+  hasEmployerMessage: boolean;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+```
+
+#### MessageResponse
+```typescript
+interface MessageResponse {
+  id: number;
+  conversationId: number;
+  senderId: number;
+  senderType: "USER" | "EMPLOYER";
+  senderName: string;
+  senderAvatar: string | null;
+  content: string;
+  seen: boolean;
+  createdAt: string; // ISO 8601
+}
+```
+
+#### SendMessageRequest
+```typescript
+interface SendMessageRequest {
+  conversationId: number;
+  content: string;
+}
+```
+
+### Flow tích hợp Front-end
+
+#### 1. Khi user apply job
+
+Sau khi gọi API apply job thành công, conversation đã được tạo tự động. Front-end có thể:
+
+**Option A: Lấy conversation ngay sau khi apply**
+```javascript
+// Sau khi apply job thành công
+const applicationResponse = await applyJob(jobId, applicationData);
+
+// Lấy conversation theo applicationId
+const conversation = await fetch(
+  `/api/v1/conversations/application/${applicationResponse.data.id}`,
+  {
+    headers: { Authorization: `Bearer ${token}` }
+  }
+).then(res => res.json());
+```
+
+**Option B: Lấy từ danh sách conversations**
+```javascript
+// Lấy danh sách conversations (sẽ có conversation mới)
+const conversations = await fetch('/api/v1/conversations', {
+  headers: { Authorization: `Bearer ${token}` }
+}).then(res => res.json());
+```
+
+#### 2. Setup WebSocket connection
+
+```javascript
+// Khởi tạo WebSocket
+const socket = new SockJS('http://localhost:8080/workify/ws');
+const stompClient = Stomp.over(socket);
+
+// Connect với JWT token
+stompClient.connect(
+  {
+    Authorization: `Bearer ${accessToken}`
+  },
+  () => {
+    console.log('WebSocket connected');
+    
+    // Subscribe để nhận tin nhắn
+    // Backend sẽ tự động route đến đúng user dựa trên JWT
+    stompClient.subscribe('/user/queue/messages', (message) => {
+      const messageData = JSON.parse(message.body);
+      // Xử lý tin nhắn mới
+      handleNewMessage(messageData);
+    });
+  },
+  (error) => {
+    console.error('WebSocket error:', error);
+  }
+);
+```
+
+#### 3. Gửi tin nhắn
+
+**Qua WebSocket (realtime):**
+```javascript
+function sendMessage(conversationId, content) {
+  stompClient.send('/app/chat.sendMessage', {}, JSON.stringify({
+    conversationId: conversationId,
+    content: content
+  }));
+}
+```
+
+**Qua REST API (fallback):**
+```javascript
+async function sendMessage(conversationId, content) {
+  const response = await fetch('/api/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      conversationId: conversationId,
+      content: content
+    })
+  });
+  return response.json();
+}
+```
+
+#### 4. Load lịch sử tin nhắn
+
+```javascript
+async function loadMessages(conversationId) {
+  const response = await fetch(`/api/v1/messages/${conversationId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await response.json();
+  return data.data; // Array of MessageResponse
+}
+```
+
+#### 5. Đánh dấu đã đọc
+
+```javascript
+async function markAsSeen(conversationId) {
+  await fetch(`/api/v1/messages/${conversationId}/seen`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+}
+```
+
+#### 6. Xử lý lỗi
+
+```javascript
+// Lỗi khi USER chưa được phép gửi tin nhắn
+if (error.status === 403 && error.message.includes('wait')) {
+  // Hiển thị thông báo: "Bạn chỉ có thể gửi tin nhắn sau khi nhà tuyển dụng đã gửi tin nhắn đầu tiên"
+}
+
+// Lỗi không phải thành viên
+if (error.status === 403 && error.message.includes('participant')) {
+  // Hiển thị: "Bạn không có quyền truy cập conversation này"
+}
+```
+
+### Best Practices
+
+1. **Reconnect WebSocket:** Implement auto-reconnect khi mất kết nối
+2. **Fallback to REST:** Nếu WebSocket fail, dùng REST API
+3. **Polling backup:** Có thể polling `/api/v1/messages/{conversationId}` định kỳ nếu WebSocket không available
+4. **Mark as seen:** Gọi API mark as seen khi user mở conversation
+5. **Error handling:** Xử lý các lỗi 403, 404 một cách user-friendly
+6. **Loading states:** Hiển thị loading khi gửi tin nhắn
+7. **Real-time sync:** Backend tự động broadcast tin nhắn qua WebSocket đến cả người gửi và người nhận sau khi lưu vào database. Front-end không cần optimistic update, chỉ cần subscribe `/user/queue/messages` và xử lý tin nhắn mới từ WebSocket
+
+### Notes
+
+- Conversation được tạo tự động khi user apply job, không cần gọi API tạo conversation riêng
+- 1 application = 1 conversation (unique constraint)
+- Chỉ EMPLOYER có thể gửi tin nhắn đầu tiên
+- USER phải đợi EMPLOYER gửi tin nhắn đầu tiên mới được phép gửi
+- WebSocket endpoint: `/ws` với SockJS
+- WebSocket destination prefix: `/app` cho gửi, `/user/queue` cho nhận
+- **WebSocket Broadcast:** Khi gửi tin nhắn (qua REST API hoặc WebSocket), backend tự động broadcast tin nhắn đến:
+  - Người nhận: Để hiển thị tin nhắn mới real-time
+  - Người gửi: Để đồng bộ multi-device (nếu user đăng nhập trên nhiều thiết bị)
+- Front-end chỉ cần subscribe `/user/queue/messages` và xử lý tất cả tin nhắn nhận được từ WebSocket

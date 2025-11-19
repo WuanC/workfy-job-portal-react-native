@@ -11,7 +11,7 @@ class CsvReporter extends WDIOReporter {
         // CSV Header
         fs.writeFileSync(
             this.outputFile,
-            "Test Name,Status,Start Time,End Time,Duration(ms),Error Message\n",
+            "Test Name,Status,Start Time,End Time,Duration(s),Error Message\n",
             'utf8'
         );
     }
@@ -40,16 +40,16 @@ class CsvReporter extends WDIOReporter {
         const endStr = new Date(end).toISOString();
 
         const status = test.state || "unknown";
-        const errorMessage = test.error 
-            ? `"${test.error.message.replace(/"/g, "'")}"` 
+        const errorMessage = test.error
+            ? `"${test.error.message.replace(/"/g, "'")}"`
             : "";
 
         const suiteName = test.parent || "Unknown Suite";
         if (!this.suites[suiteName]) this.suites[suiteName] = { passed: 0, failed: 0 };
-        if(status === 'passed') this.suites[suiteName].passed++;
-        if(status === 'failed') this.suites[suiteName].failed++;
+        if (status === 'passed') this.suites[suiteName].passed++;
+        if (status === 'failed') this.suites[suiteName].failed++;
 
-        const row = `${test.title},${status},${startStr},${endStr},${duration},${errorMessage}\n`;
+        const row = `${test.title},${status},${startStr},${endStr},${duration / 1000},${errorMessage}\n`;
         fs.appendFileSync(this.outputFile, row, 'utf8');
     }
 
@@ -64,6 +64,7 @@ class CsvReporter extends WDIOReporter {
         const summaryRow = `TOTAL,PASS/FAIL RATIO,,,${counts.passed}/${total} (${passRatio}%) / ${counts.failed}/${total} (${failRatio}%)\n\n`;
         fs.appendFileSync(this.outputFile, summaryRow, 'utf8');
     }
+
 }
 
 module.exports = CsvReporter;

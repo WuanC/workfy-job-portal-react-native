@@ -1,0 +1,179 @@
+{
+    "login": {
+        "emptyEmail": {
+            "email": "",
+            "password": "validpassword"
+        },
+        "emptyPassword": {
+            "email": "test@example.com",
+            "password": ""
+        },
+        "invalidEmail": {
+            "email": "invalidemail",
+            "password": "validpassword"
+        },
+        "shortPassword": {
+            "email": "test@example.com",
+            "password": "Aa1@"
+        },
+        "noSpecialCharPassword": {
+            "email": "test@example.com",
+            "password": "Aa12345678"
+        },
+        "noUppercasePassword": {
+            "email": "test@example.com",
+            "password": "aa12345678@"
+        },
+        "noNumberPassword": {
+            "email": "test@example.com",
+            "password": "Aaabcdefg@"
+        },
+        "incorrectPassword": {
+            "email": "employer@example.com",
+            "password": "Admin@123"
+        },
+        "validCredentials": {
+            "email": "employer@example.com",
+            "password": "Employer@123"
+        }
+    },
+    "changePassword": {
+        "emptyCurrent": {
+            "current": "",
+            "new": "newpassword123",
+            "confirm": "newpassword123"
+        },
+        "emptyNew": {
+            "current": "oldpassword123",
+            "new": "",
+            "confirm": "newpassword123"
+        },
+        "emptyConfirm": {
+            "current": "oldpassword123",
+            "new": "newpassword123",
+            "confirm": ""
+        },
+        "mismatch": {
+            "current": "oldpassword123",
+            "new": "newpassword123",
+            "confirm": "different123"
+        },
+        "shortPassword": {
+            "current": "oldpassword123",
+            "new": "Aa1@",
+            "confirm": "Aa1@"
+        },
+        "noSpecialChar": {
+            "current": "Aa12345678",
+            "new": "Aa12345678",
+            "confirm": "Aa12345678"
+        },
+        "noUppercase": {
+            "current": "oldpassword123",
+            "new": "aa12345678@",
+            "confirm": "aa12345678@"
+        },
+        "noNumber": {
+            "current": "Aaaaaaaaaa@",
+            "new": "Aaaaaaaaaa@",
+            "confirm": "Aaaaaaaaaa@"
+        },
+        "incorrectCurrent": {
+            "current": "Employer@1123",
+            "new": "Employer@123",
+            "confirm": "Employer@123"
+        },
+        "success": {
+            "current": "Employer@123",
+            "new": "Employer@123",
+            "confirm": "Employer@123"
+        }
+    },
+    "postJob": {
+        "valid": {
+            "companyName": "NPT Software",
+            "aboutCompany": "About Company",
+            "jobTitle": "Senior Developer",
+            "jobProvinceId": 57,
+            "jobDistrictId": 624,
+            "jobDetailAddress": "123 Main Street",
+            "salaryType": "RANGE",
+            "minSalary": 20,
+            "maxSalary": 1000,
+            "salaryUnit": "VND",
+            "jobDescription": "Develop and maintain software applications",
+            "requirement": "Bachelor degree in Computer Science",
+            "benefits": [
+                "TRAVEL_OPPORTUNITY",
+                "BONUS_GIFT"
+            ],
+            "benefit1": "Travel",
+            "benefit2": "Gift",
+            "education": "HIGH_SCHOOL",
+            "experience": "LESS_THAN_ONE_YEAR",
+            "jobLevel": "INTERN",
+            "jobType": "FULL_TIME",
+            "gender": "MALE",
+            "industries": [
+                1
+            ],
+            "ageType": "INPUT",
+            "minAge": 20,
+            "maxAge": 30,
+            "contactName": "Minh Quan",
+            "contactPhone": "0944928064",
+            "contactProvinceId": 57,
+            "contactDistrictId": 624,
+            "contactDetailAddress": "303 Nguyen Luong bang",
+            "description": "Description"
+        },
+        "invalid": {
+            "emptyCompanyName": "",
+            "emptyAboutCompany": "",
+            "emptyJobTitle": "",
+            "emptyMinMaxSalary": {
+                "minSalary": null,
+                "maxSalary": null
+            },
+            "minGreaterMaxSalary": {
+                "minSalary": 1000,
+                "maxSalary": 20
+            },
+            "negativeSalary": {
+                "minSalary": -20,
+                "maxSalary": 1000
+            },
+            "emptyJobDescription": "",
+            "emptyRequirement": "",
+            "emptyBenefits": [],
+            "emptyBenefitDescription": {
+                "benefit1": "",
+                "benefit2": ""
+            },
+            "emptyEducation": null,
+            "emptyExperience": null,
+            "emptyJobLevel": null,
+            "emptyJobType": null,
+            "emptyGender": null,
+            "emptyIndustries": [],
+            "emptyAgeType": null,
+            "emptyMinMaxAge": {
+                "minAge": null,
+                "maxAge": null
+            },
+            "minGreaterMaxAge": {
+                "minAge": 30,
+                "maxAge": 20
+            },
+            "negativeAge": {
+                "minAge": -20,
+                "maxAge": 30
+            },
+            "emptyContactName": "",
+            "emptyContactPhone": "",
+            "invalidContactPhone": ";12345",
+            "emptyContactDetailAddress": "",
+            "emptyDescription": ""
+        }
+    }
+}

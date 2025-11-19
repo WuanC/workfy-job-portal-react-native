@@ -1,200 +1,161 @@
 const { expect } = require('chai');
+const fs = require('fs');
+const path = require('path');
 
-describe('Post Job Screen', () => {
+global.currentSpecName = path.basename(__filename);
+// Load test data from JSON file
+const testDataPath = path.join(__dirname, 'data.json');
+const testData = JSON.parse(fs.readFileSync(testDataPath, 'utf8'));
+
+describe('Post Job', () => {
     before(async () => {
-        //await scrollDown();
-        const companyNameInput = await $('~companyNameInput');
-        await companyNameInput.waitForDisplayed({ timeout: 10000 });
-    });
-
-    // beforeEach(async () => {
-    //     await scrollToTop();
-    //     await driver.pause(1000);
-    // });
-
-    // ========== FILL SEQUENTIAL TESTS (Top to Bottom) ==========
-    it('Step 1: Fill company name', async () => {
         const companyNameInput = await $('~companyNameInput');
         await companyNameInput.waitForDisplayed({ timeout: 5000 });
+    });
+
+
+    // ========== FILL SEQUENTIAL TESTS (Top to Bottom) ==========
+    it('3.1 Empty company name', async () => {
+        const companyNameInput = await $('~companyNameInput');
+        await companyNameInput.waitForDisplayed({ timeout: 2000 });
         await companyNameInput.clearValue();
 
-        await companyNameInput.setValue('');
-        //expect(await companyNameInput.getText()).to.equal('');
-
-        await postJob({ companyName: '' });
+        await postJob({ companyName: testData.postJob.invalid.emptyCompanyName });
     });
 
 
-    it('Step 4: Fill company info and about company', async () => {
+    it('3.2 Empty about company', async () => {
         const companyNameInput = await $('~companyNameInput');
-        await companyNameInput.setValue('NPT Software');
-
-        // const companyWebsiteInput = await $('~companyWebsiteInput');
-        // await companyWebsiteInput.setValue('https://npt.com');
-
-        const aboutCompanyEditor = await $('~aboutCompanyEditor');
-        await aboutCompanyEditor.setValue('');
-
-        //expect(await aboutCompanyEditor.getText()).to.equal('About NPT Software Company');
-        await postJob({ aboutCompany: '' });
+        await companyNameInput.setValue(testData.postJob.valid.companyName);
+        await postJob({ aboutCompany: testData.postJob.invalid.emptyAboutCompany });
     });
-    it('Step 4: Fill company info and about company', async () => {
-        // const companyNameInput = await $('~companyNameInput');
-        // await companyNameInput.setValue('NPT Software');
-
-        // const companyWebsiteInput = await $('~companyWebsiteInput');
-        // await companyWebsiteInput.setValue('https://npt.com');
-
-        //expect(await aboutCompanyEditor.getText()).to.equal('About NPT Software Company');
-
-        await postJob({ aboutCompany: 'About Company' });
+    it('3.3 Emty job title', async () => {
+        await postJob({ aboutCompany: testData.postJob.valid.aboutCompany });
     });
 
-    it('Step 5: Fill company info and job title', async () => {
-        await scrollDown();
-        await scrollDown();
-        //expect(await jobTitleInput.getText()).to.equal('Senior Developer');
-
-        await postJob({ jobTitle: 'Senior Developer' });
+    it('3.4 Empty job province', async () => {
+        await fastScrollDown();
+        await fastScrollDown();
+        await postJob({ jobTitle: testData.postJob.valid.jobTitle });
     });
 
-    it('Step 6: Fill up to job province', async () => {
-        //await scrollDown();
-        // const provinceDropdown = await $('~provinceDropdown');
-        // await provinceDropdown.click();
-        // const provinceOption = await $('~province_1');
-        // await provinceOption.click();
-
-        //expect(await provinceDropdown.getText()).to.not.be.empty;
-        await postJob({ jobProvinceId: 57 });
+    it('3.5 Empty job district', async () => {
+        await postJob({ jobProvinceId: testData.postJob.valid.jobProvinceId });
     });
 
-    it('Step 7: Fill up to job district', async () => {
-
-        //expect(await districtDropdown.getText()).to.not.be.empty;
-        await postJob({ jobDistrictId: 624 });
+    it('3.6 Empty job detail address', async () => {
+        await postJob({ jobDistrictId: testData.postJob.valid.jobDistrictId });
     });
 
-    it('Step 8: Fill up to job detail address', async () => {
-
-        // expect(await jobDetailAddressInput.getText()).to.equal('123 Main Street');
-
-        await postJob({ jobDetailAddress: '123 Main Street' });
+    it('3.7 Empty salary type', async () => {
+        await postJob({ jobDetailAddress: testData.postJob.valid.jobDetailAddress });
     });
 
-    it('Step 9: Fill up to salary type', async () => {
-        await scrollDown();
-        await scrollDown();
-
-        //expect(await salaryTypeDropdown.getText()).to.include('RANGE');
-        await postJob({ salaryType: 'RANGE' });
+    it('3.8 Empty min - max salary', async () => {
+        await fastScrollDown();
+        await fastScrollDown();
+        await postJob({ salaryType: testData.postJob.valid.salaryType });
     });
 
-    it('Step 9: Fill up to salary type', async () => {
-        //expect(await salaryTypeDropdown.getText()).to.include('RANGE');
-        await postJob({ minSalary: 1000, maxSalary: 20, salaryUnit: "VND" });
+    it('3.9 Min salary not greater max salary', async () => {
+        const invalid = testData.postJob.invalid.minGreaterMaxSalary;
+        await postJob({ minSalary: invalid.minSalary, maxSalary: invalid.maxSalary, salaryUnit: testData.postJob.valid.salaryUnit });
     });
-    it('Step 9: Fill up to salary type', async () => {
-        //expect(await salaryTypeDropdown.getText()).to.include('RANGE');
-        await postJob({ minSalary: -20, maxSalary: 1000, salaryUnit: "VND" });
+    it('3.10 Min salary and max salary is not negative number', async () => {
+        const invalid = testData.postJob.invalid.negativeSalary;
+        await postJob({ minSalary: invalid.minSalary, maxSalary: invalid.maxSalary, salaryUnit: testData.postJob.valid.salaryUnit });
     });
-    it('Step 9: Fill up to salary type', async () => {
-        //expect(await salaryTypeDropdown.getText()).to.include('RANGE');
-        await postJob({ minSalary: 20, maxSalary: 1000, salaryUnit: "VND" });
+    it('3.11 Empty job description', async () => {
+        await postJob({ minSalary: testData.postJob.valid.minSalary, maxSalary: testData.postJob.valid.maxSalary, salaryUnit: testData.postJob.valid.salaryUnit });
     });
 
 
-    it('Step 12: Fill up to job description', async () => {
-        //expect(await jobDescriptionEditor.getText()).to.equal('Develop and maintain software applications');
-        await postJob({ jobDescription: 'Develop and maintain software applications' });
+    it('3.12 Empty job requirement', async () => {
+        await postJob({ jobDescription: testData.postJob.valid.jobDescription });
     });
 
-    it('Step 13: Fill up to requirement', async () => {
-
-        //expect(await requirementEditor.getText()).to.equal('Bachelor degree in Computer Science');
-        await postJob({ requirement: 'Bachelor degree in Computer Science' });
+    it('3.13 Empty benefits', async () => {
+        await postJob({ requirement: testData.postJob.valid.requirement });
     });
 
-    it('Step 14: Fill up to benefits', async () => {
+    it('3.14 Empty benefits description', async () => {
 
-        await scrollDown();
-        await scrollDown();
-
-        //expect(await benefitsMultiSelect.getText()).to.not.be.empty;
-
-        await postJob({ benefits: ['TRAVEL_OPPORTUNITY', 'BONUS_GIFT'] });
+        await fastScrollDown();
+        await fastScrollDown();
+        await postJob({ benefits: testData.postJob.valid.benefits });
     });
 
-    it('Step 14: Fill up to benefits', async () => {
-        //expect(await benefitsMultiSelect.getText()).to.not.be.empty;
-
-        await postJob({ benefits: ['TRAVEL_OPPORTUNITY', 'BONUS_GIFT'], benefit1: "Travel", benefit2: "Gift" });
+    it('3.14 Empty edutcation', async () => {
+        const valid = testData.postJob.valid;
+        await postJob({ benefits: testData.postJob.valid.benefits, benefit1: valid.benefit1, benefit2: valid.benefit2 });
     });
 
-    it('Step 15: Fill up to education', async () => {
+    it('3.15 Empty experience', async () => {
 
-        await scrollDown();
-        await scrollDown();
-        //expect(await educationDropdown.getText()).to.include('BACHELOR');
-
-        await postJob({ education: 'HIGH_SCHOOL' });
+        await fastScrollDown();
+        await fastScrollDown();
+        await postJob({ education: testData.postJob.valid.education });
     });
 
-    it('Step 16: Fill up to experience', async () => {
-        //expect(await experienceDropdown.getText()).to.include('1-3');
-
-        await postJob({ experience: 'LESS_THAN_ONE_YEAR' });
+    it('3.16 Empty job level', async () => {
+        await postJob({ experience: testData.postJob.valid.experience });
     });
-    it('Step 16: Fill up to jobLevel', async () => {
-        await postJob({ jobLevel: 'INTERN' });
+    it('3.18 Empty job type', async () => {
+        await postJob({ jobLevel: testData.postJob.valid.jobLevel });
     });
-    it('Step 16: Fill up to jobType', async () => {
-        await postJob({ jobType: 'FULL_TIME' });
+    it('3.19 Empty gender', async () => {
+        await postJob({ jobType: testData.postJob.valid.jobType });
     });
-    it('Step 16: Fill up to Gender', async () => {
-        await scrollDown();
-        await postJob({ gender: 'MALE' });
+    it('3.20 Empty industries', async () => {
+        await fastScrollDown();
+        await postJob({ gender: testData.postJob.valid.gender });
     });
-    it('Step 16: Fill up to industries', async () => {
-        await scrollDown();
-        await postJob({ industries: [1] });
+    it('3.21 Empty age type', async () => {
+        await fastScrollDown();
+        await postJob({ industries: testData.postJob.valid.industries });
     });
 
-    it('Step 16: Fill up to age', async () => {
-        await postJob({ ageType: 'INPUT' });
+    it('3.22 Min age and max age are not filled', async () => {
+        await postJob({ ageType: testData.postJob.valid.ageType });
     });
-    it('Step 16: Fill up to age', async () => {
-        await postJob({ minAge: 30, maxAge: 20 });
+    it('3.23 Min age is not greater than max age', async () => {
+        const invalid = testData.postJob.invalid.minGreaterMaxAge;
+        await postJob({ minAge: invalid.minAge, maxAge: invalid.maxAge });
     });
-    it('Step 16: Fill up to age', async () => {
-        await postJob({ minAge: -20, maxAge: 30 });
+    it('3.24 Min age and max age is not negative number', async () => {
+        const invalid = testData.postJob.invalid.negativeAge;
+        await postJob({ minAge: invalid.minAge, maxAge: invalid.maxAge });
     });
-    it('Step 16: Fill up to age', async () => {
-        await postJob({ minAge: 20, maxAge: 30 });
+    it('3.25 Empty contact name', async () => {
+        await postJob({ minAge: testData.postJob.valid.minAge, maxAge: testData.postJob.valid.maxAge });
     });
-    it('Step 16: Fill up to contact name', async () => {
-        await scrollDown();
-        await postJob({ contactName: 'Minh Quan' });
+    it('3.26 Empty contact phone', async () => {
+        await fastScrollDown();
+        await postJob({ contactName: testData.postJob.valid.contactName });
     });
-    it('Step 16: Fill up to contact phone', async () => {
-        await scrollDown();
-        await postJob({ contactPhone: ';12345' });
+    it('3.27 Contact phone is not phone number', async () => {
+        await fastScrollDown();
+        await postJob({ contactPhone: testData.postJob.invalid.invalidContactPhone });
     });
-    it('Step 16: Fill up to contact province', async () => {
-        await scrollDown();
-        await scrollDown();
-        await scrollDown();
-        await scrollDown();
-        await postJob({ contactProvinceId: 57 });
+    it('3.28 Empty contact province', async () => {
+        await fastScrollDown();
+        await postJob({ contactPhone: testData.postJob.valid.contactPhone });
     });
-    it('Step 16: Fill up to contact district', async () => {
-        await postJob({ contactDistrictId: 624 });
+    it('3.29 Empty contact district', async () => {
+        await fastScrollDown();
+        await fastScrollDown();
+        await fastScrollDown();
+        await fastScrollDown();
+        await postJob({ contactProvinceId: testData.postJob.valid.contactProvinceId });
     });
-    it('Step 16: Fill up to contact detail address', async () => {
-        await postJob({ contactDetailAddress: '303 Nguyen Luong bang' });
+    it('3.30 Empty contact detail address', async () => {
+        await postJob({ contactDistrictId: testData.postJob.valid.contactDistrictId });
     });
-    it('Step 16: Fill up to description', async () => {
-        await postJob({ description: 'Description' });
+    it('3.31 Empty contact description', async () => {
+        await postJob({ contactDetailAddress: testData.postJob.valid.contactDetailAddress });
+    });
+    it('3.32 Post success', async () => {
+        await postJob({ description: testData.postJob.valid.description });
     });
     // ======================
     // Helper function
@@ -203,7 +164,7 @@ describe('Post Job Screen', () => {
         // Company Name
         if (data.companyName !== undefined && data.companyName !== '') {
             const companyNameInput = await $('~companyNameInput');
-            await companyNameInput.waitForDisplayed({ timeout: 5000 });
+            await companyNameInput.waitForDisplayed({ timeout: 2000 });
             await companyNameInput.setValue(data.companyName);
         }
 
@@ -313,7 +274,7 @@ describe('Post Job Screen', () => {
 
         }
         if (data.benefits && data.benefits.length > 0
-            && data.benefit1 !== undefined && data.benefi1 !== ''
+            && data.benefit1 !== undefined && data.benefit1 !== ''
             && data.benefit2 !== undefined && data.benefit2 !== ''
         ) {
 
@@ -420,6 +381,7 @@ describe('Post Job Screen', () => {
         // Contact Province
         if (data.contactProvinceId) {
             const contactProvinceDropdown = await $('~contactProvinceDropdown');
+            await driver.pause(500);
             await contactProvinceDropdown.click();
             const contactProvinceOption = await $(`~contactProvince_${data.contactProvinceId}`);
             await contactProvinceOption.click();
@@ -428,6 +390,7 @@ describe('Post Job Screen', () => {
         // Contact District
         if (data.contactDistrictId) {
             const contactDistrictDropdown = await $('~contactDistrictDropdown');
+            await driver.pause(500);
             await contactDistrictDropdown.click();
             const contactDistrictOption = await $(`~contactDistrict_${data.contactDistrictId}`);
             await contactDistrictOption.click();
@@ -448,13 +411,16 @@ describe('Post Job Screen', () => {
         // Scroll to submit if needed
         const submitBtn = await $('~submitJobButton');
         // if (!(await submitBtn.isDisplayed())) {
-        //     await scrollDown();
+        //     await fastScrollDown();
         // }
 
         await submitBtn.click();
     }
 
-    async function scrollDown() {
+    async function newScroll() {
+        await driver.execute('mobile: scroll', { direction: 'down' });
+    }
+    async function fastScrollDown() {
         await driver.performActions([{
             type: 'pointer',
             id: 'finger1',
@@ -468,6 +434,5 @@ describe('Post Job Screen', () => {
             ]
         }]);
     }
-
 
 });

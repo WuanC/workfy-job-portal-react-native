@@ -26,6 +26,7 @@ import ConfirmEmailScreen from "../screens/Auth/ConfirmEmailScreen";
 
 import ExploreScreen from "../screens/JobSeeker/ExploreScreen";
 import MessageScreen from "../screens/JobSeeker/MessageScreen";
+import ConversationListScreen from "../screens/JobSeeker/ConversationListScreen";
 import SearchScreen from "../screens/JobSeeker/SearchScreen";
 import MyJobScreen from "../screens/JobSeeker/MyJobScreen";
 import CVScreen from "../screens/JobSeeker/CVScreen";
@@ -61,6 +62,8 @@ import ApplicationsByJobScreen from "../screens/Employer/ApplicationsByJobScreen
 import EmployerDetailApplication from "../screens/Employer/EmployerDetailApplication";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PostJobScreen2 from "../screens/Employer/PostJobScreen2";
+import EmployerConversationListScreen from "../screens/Employer/EmployerConversationListScreen";
+import EmployerChatScreen from "../screens/Employer/EmployerChatScreen";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -111,7 +114,7 @@ const EmployeeApplicationStackScreen = () => (
 
 const MessageStackScreen = () => (
   <MessageStack.Navigator screenOptions={{ headerShown: false }}>
-    <MessageStack.Screen name="MessageMain" component={MessageScreen} />
+    <MessageStack.Screen name="MessageMain" component={ConversationListScreen} />
     <MessageStack.Screen name="Chat" component={ChatScreen} />
   </MessageStack.Navigator>
 );
@@ -140,6 +143,7 @@ const EmployerJobStackScreen = () => (
     <MenuStack.Screen name="UpdateJob" component={UpdateJobScreen} />
     <MenuStack.Screen name="ApplicationsByJob" component={ApplicationsByJobScreen} />
     <MenuStack.Screen name="EmployerDetailApplication" component={EmployerDetailApplication} />
+    <MenuStack.Screen name="EmployerChat" component={EmployerChatScreen} />
   </MenuStack.Navigator>
 );
 
@@ -154,7 +158,13 @@ const EmployerMyCompanyStackScreen = () => (
     <MenuStack.Screen name="MyCompany" component={MyCompany} />
     <MenuStack.Screen name="UpdateCompanyInfo" component={UpdateCompanyInfo} />
     <MenuStack.Screen name="UpdateCompanyMedia" component={UpdateCompanyMedia} />
+  </MenuStack.Navigator>
+);
 
+const EmployerMessageStackScreen = () => (
+  <MenuStack.Navigator screenOptions={{ headerShown: false }}>
+    <MenuStack.Screen name="EmployerMessageMain" component={EmployerConversationListScreen} />
+    <MenuStack.Screen name="EmployerChat" component={EmployerChatScreen} />
   </MenuStack.Navigator>
 );
 
@@ -221,12 +231,12 @@ const MainAppEmployee = () => {
             return <Ionicons name="compass-outline" size={24} color={color} />;
           if (route.name === "SearchStack")
             return <Ionicons name="search-outline" size={24} color={color} />;
-          if (route.name === "NotificationStack")
-            return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
           if (route.name === "MyJobStack")
             return <MaterialIcons name="work-outline" size={24} color={color} />;
-          if (route.name === "CVStack")
-            return <Ionicons name="document-text-outline" size={24} color={color} />;
+          if (route.name === "MessageStack")
+            return <Ionicons name="chatbubbles-outline" size={24} color={color} />;
+          if (route.name === "NotificationStack")
+            return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
           if (route.name === "MenuStack")
             return <Ionicons name="menu-outline" size={24} color={color} />;
         },
@@ -235,8 +245,8 @@ const MainAppEmployee = () => {
       <Tab.Screen name="ExploreStack" component={ExploreStackScreen} options={{ title: t('navigation.explore') }} />
       <Tab.Screen name="SearchStack" component={SearchStackScreen} options={{ title: t('navigation.search') }} />
       <Tab.Screen name="MyJobStack" component={EmployeeApplicationStackScreen} options={{ title: t('navigation.myJobs') }} />
+      <Tab.Screen name="MessageStack" component={MessageStackScreen} options={{ title: t('navigation.messages') }} />
       <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: t('navigation.notifications') }} />
-      {/* <Tab.Screen name="CVStack" component={CVScreen} options={{ title: t('navigation.writeCV') }} /> */}
       <Tab.Screen name="MenuStack" component={MenuStackScreen} options={{ title: t('navigation.menu') }} />
     </Tab.Navigator>
   );
@@ -275,15 +285,14 @@ const MainAppEmployer = () => {
         tabBarIcon: ({ color }) => {
           if (route.name === "EmployerMyJobStack")
             return <MaterialIcons name="work-outline" size={24} color={color} />;
-          // if (route.name === "MyCandidateStack")
-          //   return <Ionicons name="document-text-outline" size={24} color={color} />;
+          if (route.name === "EmployerMessageStack")
+            return <Ionicons name="chatbubbles-outline" size={24} color={color} />;
           if (route.name === "NotificationStack")
             return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
-          if (route.name === "EmployerSetting")
-            return <Ionicons name="settings-outline" size={24} color={color} />;
-
           if (route.name === "MyCompanStack")
             return <Ionicons name="business-outline" size={24} color={color} />;
+          if (route.name === "EmployerSetting")
+            return <Ionicons name="settings-outline" size={24} color={color} />;
         },
       })}
     >
@@ -292,7 +301,7 @@ const MainAppEmployer = () => {
         tabBarAccessibilityLabel: 'jobTab',
         tabBarLabel: 'Jobs',
       }} />
-      {/* <Tab.Screen name="MyCandidateStack" component={EmployerCandidateStackScreen} options={{ title: t('navigation.candidates') }} /> */}
+      <Tab.Screen name="EmployerMessageStack" component={EmployerMessageStackScreen} options={{ title: t('navigation.messages') }} />
       <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: t('navigation.notifications') }} />
       <Tab.Screen name="MyCompanStack" component={EmployerMyCompanyStackScreen} options={{ title: t('navigation.company') }} />
       <Tab.Screen name="EmployerSetting" component={EmployerSettingScreen} options={{

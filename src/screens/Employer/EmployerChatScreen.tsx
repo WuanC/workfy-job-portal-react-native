@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
   Keyboard,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -28,14 +29,17 @@ import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAuth } from "../../context/AuthContext";
 
 type RouteParams = {
-  Chat: {
+  EmployerChat: {
     conversation: ConversationResponse;
   };
 };
 
-const ChatScreen: React.FC = () => {
+/**
+ * Màn hình chat cho Employer
+ */
+const EmployerChatScreen: React.FC = () => {
   const navigation = useNavigation();
-  const route = useRoute<RouteProp<RouteParams, "Chat">>();
+  const route = useRoute<RouteProp<RouteParams, "EmployerChat">>();
   const { conversation } = route.params;
   const { user } = useAuth();
 
@@ -43,14 +47,10 @@ const ChatScreen: React.FC = () => {
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [hasEmployerMessage, setHasEmployerMessage] = useState(conversation.hasEmployerMessage);
   const flatListRef = useRef<FlatList>(null);
 
   // WebSocket
   const { isConnected, sendMessage: sendMessageWS, onNewMessage } = useWebSocket();
-
-  const isEmployer = user?.role === "employer";
-  const canSendMessage = isEmployer || hasEmployerMessage;
 
   /**
    * Lưu tin nhắn vào AsyncStorage
@@ -59,8 +59,9 @@ const ChatScreen: React.FC = () => {
     try {
       const key = `chat_history_${conversation.id}`;
       await AsyncStorage.setItem(key, JSON.stringify(messages));
+      console.log("💾 [EmployerChat] Saved messages to storage:", messages.length);
     } catch (error) {
-      console.error("❌ [JobSeekerChat] Error saving messages:", error);
+      console.error("❌ [EmployerChat] Error saving messages:", error);
     }
   }, [conversation.id]);
 
@@ -73,11 +74,12 @@ const ChatScreen: React.FC = () => {
       const stored = await AsyncStorage.getItem(key);
       if (stored) {
         const messages = JSON.parse(stored);
+        console.log("📂 [EmployerChat] Loaded messages from storage:", messages.length);
         return messages;
       }
       return null;
     } catch (error) {
-      console.error("❌ [JobSeekerChat] Error loading from storage:", error);
+      console.error("❌ [EmployerChat] Error loading from storage:", error);
       return null;
     }
   }, [conversation.id]);
@@ -96,19 +98,16 @@ const ChatScreen: React.FC = () => {
         setLoading(false);
       }
 
+      console.log("📥 [EmployerChat] Loading messages for conversation:", conversation.id);
       const data = await getMessages(conversation.id);
+      console.log("✅ [EmployerChat] Loaded messages:", data.length);
       
       // Sắp xếp tin nhắn theo thời gian (cũ nhất lên trước)
       const sortedMessages = data.sort((a, b) => {
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       });
+      console.log("✅ [EmployerChat] Sorted messages:", sortedMessages.length);
       setMessages(sortedMessages);
-      
-      // Kiểm tra xem có tin nhắn từ employer không
-      const hasEmployerMsg = sortedMessages.some((m) => m.senderType === "EMPLOYER");
-      if (hasEmployerMsg && !hasEmployerMessage) {
-        setHasEmployerMessage(true);
-      }
       
       // Lưu vào AsyncStorage
       await saveMessagesToStorage(sortedMessages);
@@ -118,8 +117,8 @@ const ChatScreen: React.FC = () => {
         await markMessagesAsSeen(conversation.id);
       }
     } catch (error: any) {
-      console.error("❌ [JobSeekerChat] Error loading messages:", error);
-      console.error("❌ [JobSeekerChat] Error details:", error.response?.data);
+      console.error("❌ [EmployerChat] Error loading messages:", error);
+      console.error("❌ [EmployerChat] Error details:", error.response?.data);
       ToastService.error("Lỗi", "Không thể tải tin nhắn");
     } finally {
       setLoading(false);
@@ -136,11 +135,13 @@ const ChatScreen: React.FC = () => {
         setMessages((prev) => {
           // Kiểm tra xem tin nhắn đã tồn tại chưa (tránh duplicate)
           if (prev.some((m) => m.id === message.id)) {
+            console.log("⚠️ [EmployerChat] WebSocket message already exists, skipping:", message.id);
             return prev;
           }
           
           // Nếu là tin nhắn của mình, có thể đã được thêm qua REST API rồi
-          if (message.senderId.toString() === user?.id?.toString()) {
+          if (message.senderId.toString() === user?.id) {
+            console.log("ℹ️ [EmployerChat] Received own message from WebSocket:", message.id);
             
             // Xóa các tin nhắn tạm thời có nội dung giống nhau
             const messageTime = new Date(message.createdAt).getTime();
@@ -163,6 +164,7 @@ const ChatScreen: React.FC = () => {
             );
             
             if (hasMessageWithSameContent) {
+              console.log("⚠️ [EmployerChat] Message with same content exists (from REST API), skipping WebSocket message");
               saveMessagesToStorage(filteredMessages);
               return filteredMessages;
             }
@@ -179,18 +181,13 @@ const ChatScreen: React.FC = () => {
           return newMessages;
         });
 
-        // Nếu nhận được tin nhắn từ employer, cập nhật hasEmployerMessage
-        if (message.senderType === "EMPLOYER" && !hasEmployerMessage) {
-          setHasEmployerMessage(true);
-        }
-
         // Scroll to bottom
         setTimeout(() => {
           flatListRef.current?.scrollToEnd({ animated: true });
         }, 100);
 
         // Đánh dấu đã đọc nếu không phải tin nhắn của mình
-        if (message.senderId.toString() !== user?.id?.toString()) {
+        if (message.senderId.toString() !== user?.id) {
           markMessagesAsSeen(conversation.id).catch(console.error);
         }
       }
@@ -221,14 +218,6 @@ const ChatScreen: React.FC = () => {
   const handleSendMessage = async () => {
     if (!messageText.trim() || sending) return;
 
-    if (!canSendMessage) {
-      ToastService.warning(
-        "Không thể gửi tin nhắn",
-        "Chờ nhà tuyển dụng liên hệ với bạn trước"
-      );
-      return;
-    }
-
     const tempMessage = messageText.trim();
     setMessageText("");
     setSending(true);
@@ -238,7 +227,7 @@ const ChatScreen: React.FC = () => {
       id: Date.now(), // ID tạm thời
       conversationId: conversation.id,
       senderId: parseInt(user?.id || "0"),
-      senderType: "USER",
+      senderType: "EMPLOYER",
       senderName: user?.name || "You",
       senderAvatar: null,
       content: tempMessage,
@@ -254,20 +243,30 @@ const ChatScreen: React.FC = () => {
         return newMessages;
       });
 
+      console.log("📤 [EmployerChat] Sending message...", {
+        conversationId: conversation.id,
+        content: tempMessage,
+        isConnected
+      });
+      
       // Thử gửi qua WebSocket nếu connected (để realtime update)
       if (isConnected) {
         try {
           sendMessageWS(conversation.id, tempMessage);
+          console.log("✅ [EmployerChat] Message sent via WebSocket");
         } catch (wsError) {
-          console.warn("⚠️ [JobSeekerChat] WebSocket send failed:", wsError);
+          console.warn("⚠️ [EmployerChat] WebSocket send failed:", wsError);
         }
       }
       
       // LUÔN gửi qua REST API để đảm bảo message được lưu vào database
+      console.log("📤 [EmployerChat] Sending via REST API to ensure persistence...");
       const newMessage = await sendMessageAPI({
         conversationId: conversation.id,
         content: tempMessage,
       });
+      
+      console.log("✅ [EmployerChat] Message sent via REST API:", newMessage.id);
       
       // Xóa tin nhắn tạm và thêm tin nhắn thật từ API
       setMessages((prev) => {
@@ -276,6 +275,7 @@ const ChatScreen: React.FC = () => {
         
         // Kiểm tra xem tin nhắn thật đã tồn tại chưa (tránh duplicate từ WebSocket)
         if (filtered.some((m) => m.id === newMessage.id)) {
+          console.log("⚠️ [EmployerChat] Message already exists, skipping add:", newMessage.id);
           saveMessagesToStorage(filtered);
           return filtered;
         }
@@ -290,21 +290,13 @@ const ChatScreen: React.FC = () => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error: any) {
-      console.error("❌ [JobSeekerChat] Error sending message:", error);
-      console.error("❌ [JobSeekerChat] Error details:", error.response?.data || error.message);
+      console.error("❌ [EmployerChat] Error sending message:", error);
+      console.error("❌ [EmployerChat] Error details:", error.response?.data || error.message);
       
-      // Kiểm tra lỗi 403
-      if (error.response?.status === 403) {
-        ToastService.warning(
-          "Không thể gửi tin nhắn",
-          error.response?.data?.message || "Bạn chưa được phép gửi tin nhắn"
-        );
-      } else {
-        ToastService.error(
-          "Gửi tin nhắn thất bại",
-          "Vui lòng kiểm tra kết nối và thử lại"
-        );
-      }
+      ToastService.error(
+        "Gửi tin nhắn thất bại",
+        "Vui lòng kiểm tra kết nối và thử lại"
+      );
       
       // Xóa tin nhắn tạm thời nếu gửi thất bại
       setMessages((prev) => {
@@ -327,22 +319,59 @@ const ChatScreen: React.FC = () => {
     <View style={styles.emptyContainer}>
       <Ionicons name="chatbubbles-outline" size={64} color={colors.text.tertiary} />
       <Text style={styles.emptyText}>
-        {canSendMessage
-          ? "Hãy bắt đầu cuộc trò chuyện"
-          : "Chờ nhà tuyển dụng gửi tin nhắn đầu tiên"}
+        Bắt đầu cuộc trò chuyện với ứng viên
       </Text>
     </View>
   );
 
   /**
-   * Thông tin hiển thị header
+   * Render header với thông tin ứng viên
    */
-  const displayName = isEmployer
-    ? conversation.jobSeekerName
-    : conversation.employerName;
-  const displayAvatar = isEmployer
-    ? conversation.jobSeekerAvatar
-    : conversation.employerAvatar;
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={styles.backButton}
+      >
+        <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
+      </TouchableOpacity>
+
+      {/* Avatar */}
+      <View style={styles.avatarContainer}>
+        {conversation.jobSeekerAvatar ? (
+          <Image
+            source={{ uri: conversation.jobSeekerAvatar }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={[styles.avatar, styles.avatarPlaceholder]}>
+            <Text style={styles.avatarText}>
+              {conversation.jobSeekerName.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.headerInfo}>
+        <Text style={styles.headerName} numberOfLines={1}>
+          {conversation.jobSeekerName}
+        </Text>
+        <Text style={styles.headerJobTitle} numberOfLines={1}>
+          {conversation.jobTitle}
+        </Text>
+      </View>
+
+      <View style={styles.headerActions}>
+        <View style={styles.connectionIndicator}>
+          {isConnected ? (
+            <View style={styles.connectedDot} />
+          ) : (
+            <View style={styles.disconnectedDot} />
+          )}
+        </View>
+      </View>
+    </View>
+  );
 
   if (loading) {
     return (
@@ -359,32 +388,7 @@ const ChatScreen: React.FC = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 50}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.text.primary} />
-        </TouchableOpacity>
-
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerName} numberOfLines={1}>
-            {displayName}
-          </Text>
-          <Text style={styles.headerJobTitle} numberOfLines={1}>
-            {conversation.jobTitle}
-          </Text>
-        </View>
-
-        <View style={styles.connectionIndicator}>
-          {isConnected ? (
-            <View style={styles.connectedDot} />
-          ) : (
-            <View style={styles.disconnectedDot} />
-          )}
-        </View>
-      </View>
+      {renderHeader()}
 
       {/* Messages */}
       <FlatList
@@ -393,6 +397,7 @@ const ChatScreen: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
           const isOwn = item.senderId.toString() === user?.id?.toString();
+          console.log(`💬 [EmployerChatScreen] Message ${item.id}: senderId=${item.senderId}, userId=${user?.id}, isOwn=${isOwn}`);
           return (
             <MessageBubble
               message={item}
@@ -418,29 +423,21 @@ const ChatScreen: React.FC = () => {
       {/* Input container */}
       <View style={styles.inputContainer}>
         <TextInput
-          style={[
-            styles.textInput,
-            !canSendMessage && styles.textInputDisabled,
-          ]}
-          placeholder={
-            canSendMessage
-              ? "Nhập tin nhắn..."
-              : "Chờ nhà tuyển dụng liên hệ..."
-          }
+          style={styles.textInput}
+          placeholder="Nhập tin nhắn..."
           value={messageText}
           onChangeText={setMessageText}
           multiline
           maxLength={1000}
-          editable={canSendMessage && !sending}
+          editable={!sending}
         />
         <TouchableOpacity
           style={[
             styles.sendButton,
-            (!messageText.trim() || !canSendMessage || sending) &&
-              styles.sendButtonDisabled,
+            (!messageText.trim() || sending) && styles.sendButtonDisabled,
           ]}
           onPress={handleSendMessage}
-          disabled={!messageText.trim() || !canSendMessage || sending}
+          disabled={!messageText.trim() || sending}
         >
           {sending ? (
             <ActivityIndicator size="small" color={colors.primary.start} />
@@ -449,7 +446,7 @@ const ChatScreen: React.FC = () => {
               name="send"
               size={22}
               color={
-                messageText.trim() && canSendMessage
+                messageText.trim()
                   ? colors.primary.start
                   : colors.text.tertiary
               }
@@ -465,6 +462,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  chatContainer: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -490,6 +490,24 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
     padding: spacing.xs,
   },
+  avatarContainer: {
+    marginRight: spacing.sm,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  avatarPlaceholder: {
+    backgroundColor: colors.primary.start,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   headerInfo: {
     flex: 1,
   },
@@ -502,6 +520,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.text.secondary,
     marginTop: 2,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
   },
   connectionIndicator: {
     marginLeft: spacing.sm,
@@ -557,10 +580,6 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     backgroundColor: colors.background,
   },
-  textInputDisabled: {
-    backgroundColor: colors.border.light,
-    color: colors.text.tertiary,
-  },
   sendButton: {
     marginLeft: spacing.sm,
     padding: spacing.sm,
@@ -572,4 +591,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatScreen;
+export default EmployerChatScreen;

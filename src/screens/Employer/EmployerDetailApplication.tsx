@@ -25,6 +25,8 @@ import {
 } from "../../services/applicationService";
 import { Dropdown } from "react-native-element-dropdown";
 import { useI18n } from "../../hooks/useI18n";
+import { getConversationByApplicationId } from "../../services/messageService";
+import { ConversationResponse } from "../../types/type";
 
 type EmployeeDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -40,6 +42,8 @@ const EmployerDetailApplication = ({ route }: any) => {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [conversation, setConversation] = useState<ConversationResponse | null>(null);
+  const [loadingConversation, setLoadingConversation] = useState(false);
 
   useEffect(() => {
     const fetchApplicationById = async () => {
@@ -47,6 +51,14 @@ const EmployerDetailApplication = ({ route }: any) => {
         const data = await getApplicationById(applicationId);
         setApplication(data);
         setStatus(data.status);
+        
+        // Tải conversation cho application này
+        try {
+          const conv = await getConversationByApplicationId(applicationId);
+          setConversation(conv);
+        } catch (convErr) {
+          console.log("No conversation found for this application yet");
+        }
       } catch (err: any) {
         const msg = err?.message || "Không thể tải đơn xin việc. Vui lòng thử lại.";
         const { ToastService } = require("../../services/toastService");
@@ -75,6 +87,16 @@ const EmployerDetailApplication = ({ route }: any) => {
     }
   };
 
+  const handleOpenChat = () => {
+    if (conversation) {
+      // @ts-ignore - Navigate to EmployerChat screen with conversation data
+      navigation.navigate("EmployerChat", { conversation });
+    } else {
+      const { ToastService } = require("../../services/toastService");
+      ToastService.error("❌ Lỗi", "Chưa có cuộc trò chuyện với ứng viên này");
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loader}>
@@ -92,7 +114,12 @@ const EmployerDetailApplication = ({ route }: any) => {
           <Ionicons name="arrow-back" size={22} color="#000000ff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('application.viewApplication')}</Text>
-        <View />
+        {conversation && (
+          <TouchableOpacity onPress={handleOpenChat} style={styles.chatBtn}>
+            <Ionicons name="chatbubbles" size={22} color={colors.primary.start} />
+          </TouchableOpacity>
+        )}
+        {!conversation && <View />}
       </View>
 
       <ScrollView
@@ -171,6 +198,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   backBtn: { padding: 6 },
+  chatBtn: { padding: 6 },
   headerTitle: { fontSize: 18, fontWeight: "700", color: colors.text.primary },
 
   // --- Sections ---

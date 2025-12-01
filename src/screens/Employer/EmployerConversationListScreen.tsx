@@ -8,7 +8,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme/colors";
@@ -32,25 +32,27 @@ const EmployerConversationListScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "unread">("all");
 
   // WebSocket connection
-  const { isConnected, onNewMessage } = useWebSocket();
+  const { isConnected, onNewMessage, onSeenUpdate } = useWebSocket();
 
   /**
    * Load danh sách conversations
    */
-  const loadConversations = useCallback(async () => {
+  const loadConversations = useCallback(async (showLoading = false) => {
     try {
+      if (showLoading) {
+        setLoading(true);
+      }
       setError(null);
-      console.log("📥 [Employer] Loading conversations...");
       const data = await getConversations();
-      console.log("✅ [Employer] Loaded conversations:", data.length);
       // Sắp xếp theo thời gian update mới nhất
       const sortedData = data.sort((a, b) => {
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       });
       setConversations(sortedData);
+      console.log("✅ [Employer] Loaded conversations with unread status:", 
+        sortedData.map(c => ({ id: c.id, hasUnread: c.hasUnread })));
     } catch (err: any) {
       console.error("❌ [Employer] Error loading conversations:", err);
       const errorMsg = err.response?.status === 401 
@@ -64,19 +66,23 @@ const EmployerConversationListScreen: React.FC = () => {
   }, []);
 
   /**
-   * Xử lý tin nhắn mới từ WebSocket
+   * Xử lý tin nhắn mới từ WebSocket với unread info
    */
   useEffect(() => {
-    onNewMessage((message: MessageResponse) => {
+    onNewMessage((message: MessageResponse, unreadInfo?: any) => {
       setConversations((prev) => {
         const updatedConversations = prev.map((conv) => {
           if (conv.id === message.conversationId) {
+            // Kiểm tra xem có phải tin nhắn của mình không
+            const isOwnMessage = message.senderType === "EMPLOYER";
+            
             return {
               ...conv,
               lastMessage: message.content,
               lastMessageSenderId: message.senderId,
               lastMessageSenderType: message.senderType,
               updatedAt: message.createdAt,
+              hasUnread: isOwnMessage ? conv.hasUnread : true,
             };
           }
           return conv;
@@ -91,11 +97,35 @@ const EmployerConversationListScreen: React.FC = () => {
   }, [onNewMessage]);
 
   /**
-   * Load conversations khi mount
+   * Xử lý SEEN_UPDATE event từ WebSocket
    */
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    onSeenUpdate((event) => {
+    
+      setConversations((prev) => {
+        return prev.map((conv) => {
+          if (conv.id === event.conversationId) {
+            // Cập nhật hasUnread từ SEEN_UPDATE event
+            // Sử dụng unreadForEmployer vì đây là màn hình của Employer
+            return {
+              ...conv,
+              hasUnread: event.unread.unreadForEmployer > 0,
+            };
+          }
+          return conv;
+        });
+      });
+    });
+  }, [onSeenUpdate]);
+
+  /**
+
+   */
+  useFocusEffect(
+    useCallback(() => {
+      loadConversations(true);
+    }, [loadConversations])
+  );
 
   /**
    * Refresh handler
@@ -110,20 +140,21 @@ const EmployerConversationListScreen: React.FC = () => {
    */
   const handleConversationPress = useCallback(
     (conversation: ConversationResponse) => {
+      // Reset hasUnread về false khi vào conversation (optimistic update)
+      setConversations((prev) => 
+        prev.map((conv) => 
+          conv.id === conversation.id 
+            ? { ...conv, hasUnread: false }
+            : conv
+        )
+      );
+      
       navigation.navigate("EmployerChat", { conversation });
     },
     [navigation]
   );
 
-  /**
-   * Filter conversations
-   */
-  const filteredConversations = filter === "unread"
-    ? conversations.filter(conv => 
-        conv.lastMessageSenderId !== null && 
-        conv.lastMessageSenderType === "USER"
-      )
-    : conversations;
+
 
   /**
    * Render empty state
@@ -146,7 +177,7 @@ const EmployerConversationListScreen: React.FC = () => {
       <Ionicons name="alert-circle-outline" size={64} color={colors.error.start} />
       <Text style={styles.emptyTitle}>Có lỗi xảy ra</Text>
       <Text style={styles.emptySubtitle}>{error}</Text>
-      <TouchableOpacity style={styles.retryButton} onPress={loadConversations}>
+      <TouchableOpacity style={styles.retryButton} onPress={() => loadConversations(true)}>
         <Text style={styles.retryButtonText}>Thử lại</Text>
       </TouchableOpacity>
     </View>
@@ -179,32 +210,12 @@ const EmployerConversationListScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Filter Tabs */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[styles.filterTab, filter === "all" && styles.filterTabActive]}
-          onPress={() => setFilter("all")}
-        >
-          <Text style={[styles.filterText, filter === "all" && styles.filterTextActive]}>
-            Tất cả ({conversations.length})
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterTab, filter === "unread" && styles.filterTabActive]}
-          onPress={() => setFilter("unread")}
-        >
-          <Text style={[styles.filterText, filter === "unread" && styles.filterTextActive]}>
-            Chưa đọc ({conversations.filter(c => c.lastMessageSenderType === "USER").length})
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       {/* List */}
       {error ? (
         renderErrorState()
       ) : (
         <FlatList
-          data={filteredConversations}
+          data={conversations}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <ConversationCard
@@ -221,7 +232,7 @@ const EmployerConversationListScreen: React.FC = () => {
             />
           }
           contentContainerStyle={
-            filteredConversations.length === 0 ? styles.emptyListContainer : undefined
+            conversations.length === 0 ? styles.emptyListContainer : undefined
           }
         />
       )}
@@ -284,32 +295,6 @@ const styles = StyleSheet.create({
   connectionText: {
     fontSize: 12,
     color: colors.text.tertiary,
-  },
-  filterContainer: {
-    flexDirection: "row",
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
-  },
-  filterTab: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  filterTabActive: {
-    borderBottomColor: colors.primary.start,
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text.secondary,
-  },
-  filterTextActive: {
-    color: colors.primary.start,
   },
   emptyListContainer: {
     flexGrow: 1,

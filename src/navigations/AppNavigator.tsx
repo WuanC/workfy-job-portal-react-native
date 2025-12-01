@@ -9,10 +9,14 @@ import { TouchableOpacity, TouchableOpacityProps, Alert, View, ActivityIndicator
 import * as Linking from "expo-linking";
 import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUnreadCount } from "../services/notificationService";
+import { getConversations } from "../services/messageService";
 import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../hooks/useI18n";
+import { useWebSocket } from "../hooks/useWebSocket";
+import { ToastService } from "../services/toastService";
+import { MessageResponse } from "../types/type";
 
 // 🔗 Navigation Ref để điều hướng bên ngoài
 import { navigationRef } from "./NavigationRef";
@@ -64,6 +68,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import PostJobScreen2 from "../screens/Employer/PostJobScreen2";
 import EmployerConversationListScreen from "../screens/Employer/EmployerConversationListScreen";
 import EmployerChatScreen from "../screens/Employer/EmployerChatScreen";
+import UpdateProfileScreen from "../screens/JobSeeker/Menu&Settings/UpdateProfileScreen";
+import EmployerPostScreen from "../screens/Employer/EmployerPostScreen";
+import CreatePostScreen from "../screens/Employer/CreatePostScreen";
+import UpdatePostScreen from "../screens/Employer/UpdatePostScreen";
 
 // ✅ Tạo Stack và Tab
 const RootStack = createNativeStackNavigator();
@@ -125,6 +133,7 @@ const MenuStackScreen = () => (
     <MenuStack.Screen name="Setting" component={SettingScreen} />
     <MenuStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     <MenuStack.Screen name="ChangeEmail" component={ChangeEmailScreen} />
+    <MenuStack.Screen name="UpdateProfile" component={UpdateProfileScreen} />
   </MenuStack.Navigator>
 );
 
@@ -168,6 +177,14 @@ const EmployerMessageStackScreen = () => (
   </MenuStack.Navigator>
 );
 
+const EmployerPostStackScreen = () => (
+  <MenuStack.Navigator screenOptions={{ headerShown: false }}>
+    <MenuStack.Screen name="EmployerPost" component={EmployerPostScreen} />
+    <MenuStack.Screen name="CreatePost" component={CreatePostScreen} />
+    <MenuStack.Screen name="UpdatePost" component={UpdatePostScreen} />
+  </MenuStack.Navigator>
+);
+
 
 // ========== Component để hiển thị icon với badge ==========
 const TabBarIconWithBadge = ({
@@ -208,6 +225,18 @@ const MainAppEmployee = () => {
     refetchInterval: 30000, // Refetch mỗi 30 giây
   });
 
+  // Lấy số conversation chưa đọc (hasUnread = true)
+  const { data: unreadMessagesCount = 0 } = useQuery({
+    queryKey: ["messages", "unread-count"],
+    queryFn: async () => {
+      const conversations = await getConversations();
+      // Đếm số conversation có hasUnread = true
+      return conversations.filter(conv => conv.hasUnread === true).length;
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch mỗi 30 giây
+  });
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -234,7 +263,7 @@ const MainAppEmployee = () => {
           if (route.name === "MyJobStack")
             return <MaterialIcons name="work-outline" size={24} color={color} />;
           if (route.name === "MessageStack")
-            return <Ionicons name="chatbubbles-outline" size={24} color={color} />;
+            return <TabBarIconWithBadge iconName="chatbubbles-outline" color={color} badgeCount={unreadMessagesCount} />;
           if (route.name === "NotificationStack")
             return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
           if (route.name === "MenuStack")
@@ -264,6 +293,18 @@ const MainAppEmployer = () => {
     refetchInterval: 30000, // Refetch mỗi 30 giây
   });
 
+  // Lấy số conversation chưa đọc (hasUnread = true)
+  const { data: unreadMessagesCount = 0 } = useQuery({
+    queryKey: ["messages", "unread-count"],
+    queryFn: async () => {
+      const conversations = await getConversations();
+      // Đếm số conversation có hasUnread = true
+      return conversations.filter(conv => conv.hasUnread === true).length;
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch mỗi 30 giây
+  });
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -285,8 +326,10 @@ const MainAppEmployer = () => {
         tabBarIcon: ({ color }) => {
           if (route.name === "EmployerMyJobStack")
             return <MaterialIcons name="work-outline" size={24} color={color} />;
+          if (route.name === "EmployerPostStack")
+            return <Ionicons name="newspaper-outline" size={24} color={color} />;
           if (route.name === "EmployerMessageStack")
-            return <Ionicons name="chatbubbles-outline" size={24} color={color} />;
+            return <TabBarIconWithBadge iconName="chatbubbles-outline" color={color} badgeCount={unreadMessagesCount} />;
           if (route.name === "NotificationStack")
             return <TabBarIconWithBadge iconName="notifications-outline" color={color} badgeCount={unreadCount} />;
           if (route.name === "MyCompanStack")
@@ -300,6 +343,11 @@ const MainAppEmployer = () => {
         title: t('navigation.jobs'),
         tabBarAccessibilityLabel: 'jobTab',
         tabBarLabel: 'Jobs',
+      }} />
+      <Tab.Screen name="EmployerPostStack" component={EmployerPostStackScreen} options={{
+        title: 'Posts',
+        tabBarAccessibilityLabel: 'postTab',
+        tabBarLabel: 'Posts',
       }} />
       <Tab.Screen name="EmployerMessageStack" component={EmployerMessageStackScreen} options={{ title: t('navigation.messages') }} />
       <Tab.Screen name="NotificationStack" component={NotificationStackScreen} options={{ title: t('navigation.notifications') }} />
@@ -319,6 +367,50 @@ const AppNavigator = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const { t } = useI18n();
   const [isEmployer, setIsEmployer] = useState<boolean | null>(null);
+  const queryClient = useQueryClient();
+  
+  // WebSocket global listener cho toast notifications
+  const { onNewMessage } = useWebSocket();
+
+  // Đăng ký global WebSocket listener cho toast notifications
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    console.log("🌐 [AppNavigator] Setting up global WebSocket message listener for user:", user.id, "role:", user.role);
+    
+    onNewMessage((message: MessageResponse, unreadInfo?: any) => {
+      console.log("📩 [AppNavigator] Received message:", message);
+      
+      // Kiểm tra xem có phải tin nhắn của mình không
+      const isOwnMessage = (user.role === "employer" && message.senderType === "EMPLOYER") ||
+                          (user.role !== "employer" && message.senderType === "USER");
+      
+      // Hiển thị toast dựa trên role (chỉ khi không phải tin nhắn của mình)
+      if (!isOwnMessage) {
+        if (user.role === "employer" && message.senderType === "USER") {
+          console.log("🔔 [AppNavigator-Employer] Showing toast for message from USER:", message.senderName);
+          ToastService.info(
+            message.senderName || "Tin nhắn mới",
+            message.content.length > 50 
+              ? message.content.substring(0, 50) + "..." 
+              : message.content
+          );
+        } else if (user.role !== "employer" && message.senderType === "EMPLOYER") {
+          console.log("🔔 [AppNavigator-JobSeeker] Showing toast for message from EMPLOYER:", message.senderName);
+          ToastService.info(
+            message.senderName || "Tin nhắn mới",
+            message.content.length > 50 
+              ? message.content.substring(0, 50) + "..." 
+              : message.content
+          );
+        }
+        
+        // Invalidate unread count query để cập nhật badge ngay lập tức
+        console.log("🔄 [AppNavigator] Invalidating unread count query");
+        queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+      }
+    });
+  }, [isAuthenticated, user, onNewMessage, queryClient]);
 
   // Chỉ chạy 1 lần, không phụ thuộc loading
   useEffect(() => {

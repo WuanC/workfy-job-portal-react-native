@@ -81,9 +81,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           >
             {formatTime(message.createdAt)}
           </Text>
-          {isOwnMessage && (
-            <Text style={styles.seenText}>{message.seen ? "✓✓" : "✓"}</Text>
-          )}
         </View>
       </View>
     </View>

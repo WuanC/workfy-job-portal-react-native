@@ -24,7 +24,8 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLSchemes": [
-              "workify"
+              "workify",
+              "com.anonymous.workifyjobportalreactnative"
             ]
           }
         ]
@@ -42,6 +43,18 @@
           "data": [
             {
               "scheme": "workify"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "com.anonymous.workifyjobportalreactnative"
             }
           ],
           "category": [

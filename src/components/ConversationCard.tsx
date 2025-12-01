@@ -55,11 +55,17 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
   };
 
   // Kiểm tra xem có tin nhắn mới không (chưa đọc)
-  // Chỉ hiển thị unread nếu có unreadCount > 0 (từ backend hoặc local state)
-  const hasUnreadMessage = (conversation as any).unreadCount > 0;
-
+  const hasUnreadMessage = conversation.hasUnread;
+  console.log(`Conversation ID ${conversation.id} hasUnread:`, hasUnreadMessage);
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity 
+      style={[
+        styles.container,
+        hasUnreadMessage && styles.unreadContainer,
+      ]} 
+      onPress={onPress} 
+      activeOpacity={0.7}
+    >
       {/* Avatar */}
       <View style={styles.avatarContainer}>
         {displayAvatar ? (
@@ -77,7 +83,13 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
       {/* Content */}
       <View style={styles.contentContainer}>
         <View style={styles.headerRow}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text 
+            style={[
+              styles.name,
+              hasUnreadMessage && styles.unreadName,
+            ]} 
+            numberOfLines={1}
+          >
             {displayName}
           </Text>
           {conversation.updatedAt && (
@@ -85,7 +97,13 @@ export const ConversationCard: React.FC<ConversationCardProps> = ({
           )}
         </View>
 
-        <Text style={styles.jobTitle} numberOfLines={1}>
+        <Text 
+          style={[
+            styles.jobTitle,
+            hasUnreadMessage && styles.unreadJobTitle,
+          ]} 
+          numberOfLines={1}
+        >
           {conversation.jobTitle}
         </Text>
 
@@ -127,6 +145,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border.light,
     alignItems: "center",
+  },
+  unreadContainer: {
+    backgroundColor: "#f0f4ff",
   },
   avatarContainer: {
     position: "relative",
@@ -175,6 +196,9 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginRight: spacing.sm,
   },
+  unreadName: {
+    fontWeight: "700",
+  },
   time: {
     fontSize: 12,
     color: colors.text.tertiary,
@@ -183,6 +207,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.primary.start,
     marginBottom: spacing.xs,
+  },
+  unreadJobTitle: {
+    fontWeight: "600",
   },
   lastMessage: {
     fontSize: 14,

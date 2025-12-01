@@ -15,10 +15,12 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LOGO_IMG } from "../../utilities/constant";
 import Checkbox from "expo-checkbox";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { registerEmployee } from "../../services/authService";
 import { validateField } from "../../utilities/validation";
 import { useI18n } from "../../hooks/useI18n";
+import { Dropdown } from "react-native-element-dropdown";
+import { getAllIndustries, Industry } from "../../services/industryService";
 
 const JobSeekerRegisterScreen = ({ navigation }: any) => {
     const { t } = useI18n();
@@ -26,8 +28,22 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [industryId, setIndustryId] = useState<number | undefined>(undefined);
+    const [industries, setIndustries] = useState<Industry[]>([]);
     const [isChecked, setChecked] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchIndustries = async () => {
+            try {
+                const data = await getAllIndustries();
+                setIndustries(data);
+            } catch (error) {
+                console.error("Error fetching industries:", error);
+            }
+        };
+        fetchIndustries();
+    }, []);
 
     const handleRegister = async () => {
         const { ToastService } = require("../../services/toastService");
@@ -62,7 +78,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
 
         try {
             setLoading(true);
-            const res = await registerEmployee({ fullName, email, password, confirmPassword });
+            const res = await registerEmployee({ fullName, email, password, confirmPassword, industryId });
             const { ToastService } = require("../../services/toastService");
             ToastService.success(t('common.success'), res.message || t('auth.registerSuccess'));
             navigation.replace("ConfirmEmail", { email: email, role: "employee" });
@@ -134,6 +150,22 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                         />
                     </View>
 
+                    {/* Industry Dropdown */}
+                    <View style={styles.dropdownWrapper}>
+                        <Ionicons name="briefcase-outline" size={22} color="#94A3B8" style={styles.dropdownIcon} />
+                        <Dropdown
+                            data={industries}
+                            labelField="name"
+                            valueField="id"
+                            placeholder={t('auth.selectIndustry') || "Chọn ngành nghề (tùy chọn)"}
+                            value={industryId}
+                            onChange={(item) => setIndustryId(item.id)}
+                            style={styles.dropdown}
+                            placeholderStyle={styles.placeholderStyle}
+                            selectedTextStyle={styles.selectedTextStyle}
+                        />
+                    </View>
+
                     {/* Checkbox - Agree terms */}
                     <View style={styles.agreeContainer}>
                         <Checkbox
@@ -199,6 +231,32 @@ const styles = StyleSheet.create({
         marginVertical: 8,
         width: "100%",
         height: 48,
+    },
+    dropdownWrapper: {
+        flexDirection: "row",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: "#CBD5E1",
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        marginVertical: 8,
+        width: "100%",
+        backgroundColor: "#fff",
+    },
+    dropdown: {
+        flex: 1,
+        height: 48,
+    },
+    dropdownIcon: {
+        marginRight: 8,
+    },
+    placeholderStyle: {
+        color: "#94A3B8",
+        fontSize: 15,
+    },
+    selectedTextStyle: {
+        color: "#1E293B",
+        fontSize: 15,
     },
     icon: { marginRight: 8 },
     input: { 

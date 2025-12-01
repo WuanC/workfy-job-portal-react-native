@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation";
-import { Benefit, getJobById } from "../../services/jobService";
+import { Benefit, getJobById, getTopAttractiveJobs } from "../../services/jobService";
 import {
   getCompanySizeLabel,
   getEducationLevelLabel,
@@ -53,6 +53,7 @@ const JobDetailScreen = ({ route }: any) => {
   const [job, setJob] = useState<any>(null);
   const [isSavedJob, setIsSaveJob] = useState<boolean>(false)
   const [loading, setLoading] = useState(true);
+  const [similarJobs, setSimilarJobs] = useState<any[]>([]);
 
   // Header animation
   const HEADER_MAX_HEIGHT = 76;
@@ -86,7 +87,18 @@ const JobDetailScreen = ({ route }: any) => {
         const jobData = await getJobById(id);
         const isSavedJob = await checkJobSaved(id);
         setIsSaveJob(isSavedJob);
-        if (!cancelled) setJob(jobData);
+        if (!cancelled) {
+          setJob(jobData);
+          // Load similar jobs based on industry
+          if (jobData.industries && jobData.industries.length > 0) {
+            try {
+              const similar = await getTopAttractiveJobs(6, jobData.industries[0].id);
+              setSimilarJobs(similar.filter((j: any) => j.id !== id));
+            } catch (err) {
+              console.error("Lỗi load similar jobs:", err);
+            }
+          }
+        }
       } catch (err) {
         console.error("Lỗi load job:", err);
       } finally {
@@ -312,6 +324,65 @@ const JobDetailScreen = ({ route }: any) => {
               tagsStyles={htmlStyles}
             />
           </Section>
+
+          {/* Công việc tương tự */}
+          {similarJobs.length > 0 && (
+            <Section title={t('job.similarJobs') || "Công việc tương tự"}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingRight: 20 }}
+              >
+                {similarJobs.map((similarJob) => (
+                  <TouchableOpacity
+                    key={similarJob.id}
+                    style={styles.similarJobCard}
+                    onPress={() => {
+                      navigation.push("JobDetail", { id: similarJob.id });
+                    }}
+                  >
+                    <View style={styles.similarJobHeader}>
+                      <Image
+                        source={
+                          similarJob.author?.avatarUrl
+                            ? { uri: similarJob.author.avatarUrl }
+                            : require("../../../assets/App/companyLogoDefault.png")
+                        }
+                        style={styles.similarJobLogo}
+                      />
+                      <View style={styles.similarJobInfo}>
+                        <Text style={styles.similarJobTitle} numberOfLines={2}>
+                          {similarJob.jobTitle}
+                        </Text>
+                        <Text style={styles.similarJobCompany} numberOfLines={1}>
+                          {similarJob.companyName}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.similarJobFooter}>
+                      <View style={styles.similarJobRow}>
+                        <Ionicons name="location-outline" size={14} color="#666" />
+                        <Text style={styles.similarJobLocation} numberOfLines={1}>
+                          {similarJob.jobLocations[0]?.province?.name || "Không rõ"}
+                        </Text>
+                      </View>
+                      <View style={styles.similarJobRow}>
+                        <Ionicons name="cash-outline" size={14} color="#666" />
+                        <Text style={styles.similarJobSalary} numberOfLines={1}>
+                          {similarJob.salaryType === "RANGE"
+                            ? `${(similarJob.minSalary || 0).toLocaleString()}-${(similarJob.maxSalary || 0).toLocaleString()}`
+                            : similarJob.salaryType === "NEGOTIABLE"
+                            ? "Thỏa thuận"
+                            : "Cạnh tranh"}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </Section>
+          )}
+
           {/* Về công ty */}
           <Section title={t('company.aboutCompany')}>
             <TouchableOpacity
@@ -515,7 +586,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  section: { backgroundColor: "#fff", marginTop: 16, paddingHorizontal: 20, paddingVertical: 20 },
+  section: { backgroundColor: "#fff", marginTop: 16, paddingHorizontal: 20, paddingVertical: 18, paddingBottom: 24 },
   sectionTitle: { fontSize: 18, fontWeight: "800", marginBottom: 14, color: "#1a1a1a" },
 
   detailGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
@@ -538,6 +609,69 @@ const styles = StyleSheet.create({
   keywordContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   keywordTag: { backgroundColor: "#eef1ff", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   keywordText: { color: colors.primary.start, fontWeight: "600" },
+
+  similarJobCard: {
+    width: 280,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 14,
+    marginRight: 12,
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: "#eee",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  similarJobHeader: {
+    flexDirection: "row",
+    marginBottom: 12,
+  },
+  similarJobLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    marginRight: 10,
+  },
+  similarJobInfo: {
+    flex: 1,
+  },
+  similarJobTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 4,
+  },
+  similarJobCompany: {
+    fontSize: 13,
+    color: "#666",
+    fontWeight: "500",
+  },
+  similarJobFooter: {
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    paddingTop: 10,
+    gap: 6,
+  },
+  similarJobRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  similarJobLocation: {
+    fontSize: 12,
+    color: "#666",
+    marginLeft: 4,
+    flex: 1,
+  },
+  similarJobSalary: {
+    fontSize: 12,
+    color: colors.primary.start,
+    fontWeight: "600",
+    marginLeft: 4,
+    flex: 1,
+  },
 
   bottomBar: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 14, borderTopWidth: 1, borderTopColor: "#eee" },
   iconBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: "center", alignItems: "center", backgroundColor: "#f5f5f5" },

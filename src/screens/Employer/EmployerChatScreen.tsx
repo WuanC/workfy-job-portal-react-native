@@ -11,10 +11,10 @@ import {
   Platform,
   Image,
   Keyboard,
+  AppState,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { ToastService } from "../../services/toastService";
@@ -27,6 +27,7 @@ import {
 import { MessageBubble } from "../../components/MessageBubble";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAuth } from "../../context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 type RouteParams = {
   EmployerChat: {
@@ -42,47 +43,18 @@ const EmployerChatScreen: React.FC = () => {
   const route = useRoute<RouteProp<RouteParams, "EmployerChat">>();
   const { conversation } = route.params;
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const appState = useRef(AppState.currentState);
+  const isScreenFocused = useRef(true);
 
   // WebSocket
   const { isConnected, sendMessage: sendMessageWS, onNewMessage } = useWebSocket();
-
-  /**
-   * Lưu tin nhắn vào AsyncStorage
-   */
-  const saveMessagesToStorage = useCallback(async (messages: MessageResponse[]) => {
-    try {
-      const key = `chat_history_${conversation.id}`;
-      await AsyncStorage.setItem(key, JSON.stringify(messages));
-      console.log("💾 [EmployerChat] Saved messages to storage:", messages.length);
-    } catch (error) {
-      console.error("❌ [EmployerChat] Error saving messages:", error);
-    }
-  }, [conversation.id]);
-
-  /**
-   * Load tin nhắn từ AsyncStorage
-   */
-  const loadMessagesFromStorage = useCallback(async () => {
-    try {
-      const key = `chat_history_${conversation.id}`;
-      const stored = await AsyncStorage.getItem(key);
-      if (stored) {
-        const messages = JSON.parse(stored);
-        console.log("📂 [EmployerChat] Loaded messages from storage:", messages.length);
-        return messages;
-      }
-      return null;
-    } catch (error) {
-      console.error("❌ [EmployerChat] Error loading from storage:", error);
-      return null;
-    }
-  }, [conversation.id]);
 
   /**
    * Load tin nhắn từ server
@@ -90,13 +62,6 @@ const EmployerChatScreen: React.FC = () => {
   const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Load từ cache trước để hiển thị nhanh
-      const cachedMessages = await loadMessagesFromStorage();
-      if (cachedMessages && cachedMessages.length > 0) {
-        setMessages(cachedMessages);
-        setLoading(false);
-      }
 
       console.log("📥 [EmployerChat] Loading messages for conversation:", conversation.id);
       const data = await getMessages(conversation.id);
@@ -108,14 +73,8 @@ const EmployerChatScreen: React.FC = () => {
       });
       console.log("✅ [EmployerChat] Sorted messages:", sortedMessages.length);
       setMessages(sortedMessages);
-      
-      // Lưu vào AsyncStorage
-      await saveMessagesToStorage(sortedMessages);
 
-      // Đánh dấu đã đọc
-      if (sortedMessages.length > 0) {
-        await markMessagesAsSeen(conversation.id);
-      }
+      // KHÔNG đánh dấu đã đọc ở đây - sẽ được xử lý bởi useFocusEffect
     } catch (error: any) {
       console.error("❌ [EmployerChat] Error loading messages:", error);
       console.error("❌ [EmployerChat] Error details:", error.response?.data);
@@ -123,76 +82,7 @@ const EmployerChatScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [conversation.id, loadMessagesFromStorage, saveMessagesToStorage]);
-
-  /**
-   * Xử lý tin nhắn mới từ WebSocket
-   */
-  useEffect(() => {
-    onNewMessage((message: MessageResponse) => {
-      // Chỉ xử lý tin nhắn của conversation hiện tại
-      if (message.conversationId === conversation.id) {
-        setMessages((prev) => {
-          // Kiểm tra xem tin nhắn đã tồn tại chưa (tránh duplicate)
-          if (prev.some((m) => m.id === message.id)) {
-            console.log("⚠️ [EmployerChat] WebSocket message already exists, skipping:", message.id);
-            return prev;
-          }
-          
-          // Nếu là tin nhắn của mình, có thể đã được thêm qua REST API rồi
-          if (message.senderId.toString() === user?.id) {
-            console.log("ℹ️ [EmployerChat] Received own message from WebSocket:", message.id);
-            
-            // Xóa các tin nhắn tạm thời có nội dung giống nhau
-            const messageTime = new Date(message.createdAt).getTime();
-            const filteredMessages = prev.filter((m) => {
-              // Giữ lại nếu không phải tin tạm
-              if (m.id < 1000000000000) return true;
-              
-              // Xóa tin tạm nếu content giống và thời gian gần nhau (trong 10 giây)
-              const tempTime = new Date(m.createdAt).getTime();
-              const isSimilar = m.content === message.content && 
-                               Math.abs(messageTime - tempTime) < 10000;
-              return !isSimilar;
-            });
-            
-            // Nếu sau khi lọc vẫn có tin nhắn với ID khác nhau nhưng content giống nhau
-            // thì tin nhắn này đã được thêm qua REST API rồi, bỏ qua
-            const hasMessageWithSameContent = filteredMessages.some((m) => 
-              m.content === message.content &&
-              Math.abs(new Date(m.createdAt).getTime() - messageTime) < 5000
-            );
-            
-            if (hasMessageWithSameContent) {
-              console.log("⚠️ [EmployerChat] Message with same content exists (from REST API), skipping WebSocket message");
-              saveMessagesToStorage(filteredMessages);
-              return filteredMessages;
-            }
-            
-            // Nếu không có tin nhắn giống nhau, thêm vào
-            const newMessages = [...filteredMessages, message];
-            saveMessagesToStorage(newMessages);
-            return newMessages;
-          }
-          
-          // Tin nhắn từ người khác, thêm vào bình thường
-          const newMessages = [...prev, message];
-          saveMessagesToStorage(newMessages);
-          return newMessages;
-        });
-
-        // Scroll to bottom
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-
-        // Đánh dấu đã đọc nếu không phải tin nhắn của mình
-        if (message.senderId.toString() !== user?.id) {
-          markMessagesAsSeen(conversation.id).catch(console.error);
-        }
-      }
-    });
-  }, [conversation.id, onNewMessage, user?.id, saveMessagesToStorage]);
+  }, [conversation.id]);
 
   /**
    * Load messages khi mount
@@ -200,6 +90,36 @@ const EmployerChatScreen: React.FC = () => {
   useEffect(() => {
     loadMessages();
   }, [loadMessages]);
+
+  /**
+   * Đánh dấu đã đọc khi màn hình được focus
+   */
+  useFocusEffect(
+    useCallback(() => {
+      isScreenFocused.current = true;
+      console.log("👁️ [EmployerChat] Screen focused");
+
+      return () => {
+        isScreenFocused.current = false;
+        console.log("👁️ [EmployerChat] Screen unfocused");
+      };
+    }, [])
+  );
+
+  /**
+   * Đánh dấu đã đọc khi messages được load xong và màn hình đang focus
+   */
+  useEffect(() => {
+    if (!loading && messages.length > 0 && isScreenFocused.current && appState.current === 'active') {
+      console.log("📧 [EmployerChat] Messages loaded, marking as seen");
+      markMessagesAsSeen(conversation.id)
+        .then(() => {
+          console.log("✅ [EmployerChat] Marked as seen after loading");
+          queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+        })
+        .catch(console.error);
+    }
+  }, [loading, messages.length, conversation.id, queryClient]);
 
   /**
    * Scroll to bottom khi messages thay đổi
@@ -237,51 +157,34 @@ const EmployerChatScreen: React.FC = () => {
 
     try {
       // Thêm tin nhắn tạm thời ngay lập tức để UX mượt mà
-      setMessages((prev) => {
-        const newMessages = [...prev, tempMessageObj];
-        saveMessagesToStorage(newMessages);
-        return newMessages;
-      });
-
-      console.log("📤 [EmployerChat] Sending message...", {
-        conversationId: conversation.id,
-        content: tempMessage,
-        isConnected
-      });
+      setMessages((prev) => [...prev, tempMessageObj]);
       
       // Thử gửi qua WebSocket nếu connected (để realtime update)
       if (isConnected) {
         try {
           sendMessageWS(conversation.id, tempMessage);
-          console.log("✅ [EmployerChat] Message sent via WebSocket");
         } catch (wsError) {
-          console.warn("⚠️ [EmployerChat] WebSocket send failed:", wsError);
         }
       }
       
-      // LUÔN gửi qua REST API để đảm bảo message được lưu vào database
-      console.log("📤 [EmployerChat] Sending via REST API to ensure persistence...");
+     
       const newMessage = await sendMessageAPI({
         conversationId: conversation.id,
         content: tempMessage,
       });
       
-      console.log("✅ [EmployerChat] Message sent via REST API:", newMessage.id);
       
       // Xóa tin nhắn tạm và thêm tin nhắn thật từ API
       setMessages((prev) => {
-        // Xóa CÁCH tin nhắn tạm thời
+        // Xóa tin nhắn tạm thời
         const filtered = prev.filter((m) => m.id !== tempMessageObj.id);
         
         // Kiểm tra xem tin nhắn thật đã tồn tại chưa (tránh duplicate từ WebSocket)
         if (filtered.some((m) => m.id === newMessage.id)) {
-          console.log("⚠️ [EmployerChat] Message already exists, skipping add:", newMessage.id);
-          saveMessagesToStorage(filtered);
           return filtered;
         }
         
         const newMessages = [...filtered, newMessage];
-        saveMessagesToStorage(newMessages);
         return newMessages;
       });
 
@@ -290,20 +193,14 @@ const EmployerChatScreen: React.FC = () => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error: any) {
-      console.error("❌ [EmployerChat] Error sending message:", error);
-      console.error("❌ [EmployerChat] Error details:", error.response?.data || error.message);
-      
+
       ToastService.error(
         "Gửi tin nhắn thất bại",
         "Vui lòng kiểm tra kết nối và thử lại"
       );
       
       // Xóa tin nhắn tạm thời nếu gửi thất bại
-      setMessages((prev) => {
-        const filtered = prev.filter((m) => m.id !== tempMessageObj.id);
-        saveMessagesToStorage(filtered);
-        return filtered;
-      });
+      setMessages((prev) => prev.filter((m) => m.id !== tempMessageObj.id));
       
       // Khôi phục text nếu gửi thất bại
       setMessageText(tempMessage);
@@ -396,8 +293,7 @@ const EmployerChatScreen: React.FC = () => {
         data={messages}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const isOwn = item.senderId.toString() === user?.id?.toString();
-          console.log(`💬 [EmployerChatScreen] Message ${item.id}: senderId=${item.senderId}, userId=${user?.id}, isOwn=${isOwn}`);
+          const isOwn = item.senderType === "EMPLOYER";
           return (
             <MessageBubble
               message={item}

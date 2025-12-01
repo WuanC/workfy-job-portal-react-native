@@ -57,6 +57,11 @@ const SettingScreen = () => {
         {/* Nhóm: Tài khoản */}
         <Text style={styles.sectionTitle}>{t('profile.personalInfo')}</Text>
         <View style={styles.card}>
+          <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("UpdateProfile" as any)}>
+            <Ionicons name="person-outline" size={20} color="#333" style={styles.icon} />
+            <Text style={styles.itemText}>{t('profile.updateProfile')}</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("ChangePassword")}>
             <Ionicons name="key-outline" size={20} color="#333" style={styles.icon} />
             <Text style={styles.itemText}>{t('auth.resetPassword')}</Text>

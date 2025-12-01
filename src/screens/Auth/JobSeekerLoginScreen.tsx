@@ -19,6 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import { loginEmployer } from "../../services/authService";
 import { validateField } from "../../utilities/validation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { googleSignIn } from "../../services/googleAuthService";
 
 type MainNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -33,7 +34,61 @@ const JobSeekerLoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const navigation = useNavigation<MainNavigationProp>();
+
+  const handleGoogleLogin = async () => {
+    try {
+      setGoogleLoading(true);
+      console.log("🔐 [Login] Starting Google Sign In...");
+      
+      // Đặt flag isEmployer trước khi đăng nhập
+      await AsyncStorage.setItem("isEmployer", "false");
+      
+      // Gọi service Google Sign In
+      const authData = await googleSignIn();
+      
+      // Lưu tokens vào AsyncStorage
+      await AsyncStorage.setItem("accessToken", authData.accessToken);
+      await AsyncStorage.setItem("refreshToken", authData.refreshToken);
+      await AsyncStorage.setItem("role", "employee");
+      
+      console.log("✅ [Login] Google login successful");
+      ToastService.success(
+        t('auth.loginSuccess'), 
+        `${t('auth.welcomeBack')}, ${authData.user.fullName}!`
+      );
+      
+      // Reload user context và navigate
+      // AuthContext sẽ tự động load user từ token
+      navigation.replace("MainApp");
+    } catch (error: any) {
+      console.error("❌ [Login] Google login failed:", error);
+      
+      // Xử lý các lỗi cụ thể theo API docs
+      let errorMessage = t('auth.loginFailed');
+      
+      if (error.message === "Bạn đã hủy đăng nhập") {
+        errorMessage = error.message;
+      } else if (error.response?.status === 400) {
+        errorMessage = "Thiếu mã xác thực Google";
+      } else if (error.response?.status === 401) {
+        errorMessage = "Mã xác thực không hợp lệ hoặc đã hết hạn";
+      } else if (error.response?.status === 403) {
+        errorMessage = "Tài khoản Google đã được liên kết với tài khoản khác";
+      } else if (error.response?.status === 409) {
+        errorMessage = "Email đã được đăng ký với phương thức khác";
+      } else if (error.response?.status === 500) {
+        errorMessage = "Lỗi kết nối với Google. Vui lòng thử lại";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      ToastService.error(t('auth.loginFailed'), errorMessage);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -128,9 +183,15 @@ const JobSeekerLoginScreen = () => {
       </View>
 
       {/* Social Login */}
-      <TouchableOpacity style={styles.socialButton}>
+      <TouchableOpacity 
+        style={styles.socialButton}
+        onPress={handleGoogleLogin}
+        disabled={googleLoading}
+      >
         <Ionicons name="logo-google" size={24} color="#DB4437" />
-        <Text style={styles.socialText}>{t('auth.loginWithGoogle')}</Text>
+        <Text style={styles.socialText}>
+          {googleLoading ? "Đang đăng nhập..." : t('auth.loginWithGoogle')}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.socialButton}>

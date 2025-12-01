@@ -34,6 +34,7 @@
     "password": "Mật khẩu",
 
     "confirmPassword": "Xác nhận mật khẩu",
+    "selectIndustry": "Chọn ngành nghề (tùy chọn)",
     "forgotPassword": "Quên mật khẩu?",
     "resetPassword": "Đặt lại mật khẩu",
     "loginSuccess": "Đăng nhập thành công!",
@@ -218,6 +219,7 @@
     "profile": "Hồ sơ",
     "myProfile": "Hồ sơ của tôi",
     "editProfile": "Chỉnh sửa hồ sơ",
+    "updateProfile": "Cập nhật hồ sơ",
     "personalInfo": "Thông tin cá nhân",
     "workExperience": "Kinh nghiệm làm việc",
     "education": "Học vấn",
@@ -225,7 +227,23 @@
     "certificates": "Chứng chỉ",
     "cv": "CV của tôi",
     "uploadCV": "Tải CV lên",
-    "downloadCV": "Tải CV xuống"
+    "downloadCV": "Tải CV xuống",
+    "fullName": "Họ và tên",
+    "phone": "Số điện thoại",
+    "birthDate": "Ngày sinh",
+    "selectBirthDate": "Chọn ngày sinh",
+    "gender": "Giới tính",
+    "selectGender": "Chọn giới tính",
+    "male": "Nam",
+    "female": "Nữ",
+    "other": "Khác",
+    "industry": "Ngành nghề",
+    "selectIndustry": "Chọn ngành nghề",
+    "province": "Tỉnh/Thành phố",
+    "selectProvince": "Chọn tỉnh/thành phố",
+    "district": "Quận/Huyện",
+    "selectDistrict": "Chọn quận/huyện",
+    "detailAddress": "Địa chỉ chi tiết"
   },
   "cv": {
     "noCV": "Bạn chưa có CV",
@@ -557,5 +575,45 @@
       "OFFERED": "Đã gửi offer",
       "REJECTED": "Từ chối"
     }
+  },
+  "post": {
+    "myPosts": "Bài viết của tôi",
+    "postInformation": "Thông tin bài viết",
+    "createPost": "Tạo bài viết",
+    "editPost": "Chỉnh sửa bài viết",
+    "createNewPost": "Tạo bài viết mới",
+    "updatePost": "Cập nhật bài viết",
+    "title": "Tiêu đề",
+    "titlePlaceholder": "Nhập tiêu đề bài viết",
+    "excerpt": "Mô tả ngắn",
+    "excerptPlaceholder": "Nhập mô tả ngắn (tối đa 1000 ký tự)",
+    "category": "Danh mục",
+    "selectCategory": "Chọn danh mục",
+    "thumbnail": "Ảnh đại diện",
+    "selectThumbnail": "Chọn ảnh đại diện",
+    "clickToChange": "Nhấn để thay đổi ảnh",
+    "content": "Nội dung",
+    "contentPlaceholder": "Nhập nội dung bài viết...",
+    "createPostButton": "Tạo bài viết",
+    "updatePostButton": "Cập nhật bài viết",
+    "createSuccess": "Bài viết đã được tạo và đang chờ duyệt",
+    "updateSuccess": "Bài viết đã được cập nhật",
+    "deleteSuccess": "Bài viết đã được xóa",
+    "deleteConfirm": "Bạn có chắc chắn muốn xóa bài viết này?",
+    "status": {
+      "PENDING": "Chờ duyệt",
+      "PUBLIC": "Công khai",
+      "DRAFT": "Nháp"
+    },
+    "validation": {
+      "titleRequired": "Vui lòng nhập tiêu đề",
+      "excerptRequired": "Vui lòng nhập mô tả ngắn",
+      "contentRequired": "Vui lòng nhập nội dung",
+      "categoryRequired": "Vui lòng chọn danh mục",
+      "thumbnailRequired": "Vui lòng chọn ảnh đại diện"
+    },
+    "readingTime": "phút",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Ngày cập nhật"
   }
 }

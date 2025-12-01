@@ -310,11 +310,21 @@ export const getEmployerJobOpenings = async (
     }
   }
 };
-export const getTopAttractiveJobs = async (limit: number = 10) => {
+/**
+ * 📌 Lấy danh sách công việc hấp dẫn hàng đầu (top attractive jobs)
+ * Endpoint: GET /jobs/top-attractive
+ * Auth: Public
+ * @param limit - Số lượng công việc cần lấy (>=1, mặc định 10)
+ * @param industryId - ID ngành nghề (tùy chọn, >=1)
+ */
+export const getTopAttractiveJobs = async (limit: number = 10, industryId?: number) => {
     try {
-        const res = await apiInstance.get("/jobs/top-attractive", {
-            params: { limit },
-        });
+        const params: any = { limit };
+        if (industryId && industryId >= 1) {
+            params.industryId = industryId;
+        }
+
+        const res = await apiInstance.get("/jobs/top-attractive", { params });
 
         // Trả về danh sách công việc
         return res.data.data;
@@ -323,9 +333,36 @@ export const getTopAttractiveJobs = async (limit: number = 10) => {
 
         // Xử lý lỗi cụ thể
         if (error.response?.status === 400) {
-            throw new Error("Giá trị 'limit' không hợp lệ (phải >= 1).");
+            throw new Error("Giá trị 'limit' hoặc 'industryId' không hợp lệ.");
         }
 
         throw new Error("Không thể lấy danh sách công việc hấp dẫn.");
+    }
+};
+
+/**
+ * 📌 Lấy danh sách công việc cá nhân hóa (personalized jobs)
+ * Endpoint: GET /jobs/personalized
+ * Auth: Public (JWT optional)
+ * - Nếu đã đăng nhập và có industry => trả về jobs theo ngành
+ * - Nếu chưa đăng nhập hoặc không có industry => trả về jobs hấp dẫn (fallback)
+ */
+export const getPersonalizedJobs = async (limit: number = 10) => {
+    try {
+        const res = await apiInstance.get("/jobs/personalized", {
+            params: { limit },
+        });
+
+        // Trả về danh sách công việc
+        return res.data.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi lấy danh sách công việc cá nhân hóa:", error.response?.data || error.message);
+
+        // Xử lý lỗi cụ thể
+        if (error.response?.status === 400) {
+            throw new Error("Giá trị 'limit' không hợp lệ (phải >= 1).");
+        }
+
+        throw new Error("Không thể lấy danh sách công việc cá nhân hóa.");
     }
 };

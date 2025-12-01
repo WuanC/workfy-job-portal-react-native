@@ -86,3 +86,42 @@ export const updateEmployeeAvatar = async (uri: string) => {
     }
   }
 };
+
+/**
+ * 📌 Cập nhật thông tin cá nhân người dùng (JOB_SEEKER hoặc ADMIN)
+ * Endpoint: PUT /users/me
+ * Auth: Bearer Token
+ */
+export interface UpdateUserProfileRequest {
+  fullName: string;
+  phoneNumber?: string;
+  birthDate?: string; // format: "yyyy-MM-dd"
+  gender?: string;
+  provinceId?: number;
+  districtId?: number;
+  industryId?: number;
+  detailAddress?: string;
+}
+
+export const updateUserProfile = async (data: UpdateUserProfileRequest) => {
+  try {
+    const res = await apiInstance.put("/users/me", data);
+    return res.data.data; // { id, fullName, email, ... }
+  } catch (error: any) {
+    // Xử lý lỗi chi tiết
+    if (error.response?.status === 400) {
+      const apiMessage =
+        error.response?.data?.errors?.[0]?.message ||
+        error.response?.data?.message ||
+        "Dữ liệu không hợp lệ.";
+      throw new Error(apiMessage);
+    }
+
+    if (error.response?.status === 401) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+
+    console.error("❌ Lỗi cập nhật thông tin người dùng:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Không thể cập nhật thông tin.");
+  }
+};

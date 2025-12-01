@@ -19,8 +19,9 @@ import { useAuth } from "../../context/AuthContext"
 import { getLatestPosts } from "../../services/postService"
 import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { RootStackParamList } from "../../types/navigation"
-import { useNavigation } from "@react-navigation/native"
-import { getPopularIndustries, getTopAttractiveJobs } from "../../services/jobService"
+import { useNavigation, useFocusEffect } from "@react-navigation/native"
+import { getPopularIndustries, getPersonalizedJobs } from "../../services/jobService"
+import { useCallback } from "react"
 import { colors } from "../../theme/colors"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { getTopHiringEmployers } from "../../services/employerService"
@@ -37,53 +38,50 @@ const ExploreScreen = () => {
     const [industries, setIndustries] = useState<any[]>([])
     const [careerAdvice, setCareerAdvice] = useState<any[]>([])
     const [topCompanies, setTopCompanies] = useState<any[]>([])
-    const [topAttractiveJobs, setTopAttractiveJobs] = useState<any[]>([])
+    const [personalizedJobs, setPersonalizedJobs] = useState<any[]>([])
     const navigation = useNavigation<ExploreNavigationProp>()
 
+    const loadAllData = useCallback(async () => {
+        try {
+            const [posts, companies, jobs, industriesData] = await Promise.all([
+                getLatestPosts(5),
+                getTopHiringEmployers(10),
+                getPersonalizedJobs(12),
+                getPopularIndustries(10)
+            ])
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            const data = await getLatestPosts(5)
-            setCareerAdvice(data)
-        }
-        const fecthTopCompanies = async () => {
-            const datas = await getTopHiringEmployers(10)
-            setTopCompanies(datas)
-        }
-        const fetchTopAttractiveJobs = async () => {
-            const datas = await getTopAttractiveJobs(12)
-            setTopAttractiveJobs(datas)
-        }
-        const fetchIndustries = async () => {
-            try {
-                const data = await getPopularIndustries(10)
-                if (Array.isArray(data)) {
-                    const flatColors = [
-                        "#e0f2fe", // xanh nhạt
-                        "#fee2e2", // đỏ nhạt
-                        "#fef9c3", // vàng nhạt
-                        "#dcfce7", // xanh lá nhạt
-                        "#fae8ff", // tím nhạt
-                        "#f3f4f6", // xám nhạt
-                        "#ede9fe", // tím sáng
-                        "#fef3c7", // cam nhạt
-                    ]
+            setCareerAdvice(posts)
+            setTopCompanies(companies)
+            setPersonalizedJobs(jobs)
 
-                    const coloredIndustries = data.map((item: any, index: number) => ({
-                        ...item,
-                        color: flatColors[index % flatColors.length],
-                    }))
-                    setIndustries(coloredIndustries)
-                }
-            } catch (error) {
-                console.error("❌ Lỗi khi load ngành nghề phổ biến:", error)
+            if (Array.isArray(industriesData)) {
+                const flatColors = [
+                    "#e0f2fe", // xanh nhạt
+                    "#fee2e2", // đỏ nhạt
+                    "#fef9c3", // vàng nhạt
+                    "#dcfce7", // xanh lá nhạt
+                    "#fae8ff", // tím nhạt
+                    "#f3f4f6", // xám nhạt
+                    "#ede9fe", // tím sáng
+                    "#fef3c7", // cam nhạt
+                ]
+
+                const coloredIndustries = industriesData.map((item: any, index: number) => ({
+                    ...item,
+                    color: flatColors[index % flatColors.length],
+                }))
+                setIndustries(coloredIndustries)
             }
+        } catch (error) {
+            console.error("❌ Lỗi khi load dữ liệu:", error)
         }
-        fetchIndustries()
-        fetchPosts()
-        fecthTopCompanies()
-        fetchTopAttractiveJobs()
     }, [])
+
+    useFocusEffect(
+        useCallback(() => {
+            loadAllData()
+        }, [loadAllData])
+    )
 
 
     const renderJobCategory = (category: any) => (
@@ -187,7 +185,7 @@ const ExploreScreen = () => {
                 {/* Featured Jobs */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>{t('explore.recommendedJobs')}</Text>
-                    <FeaturedJobsSection featuredJobs={topAttractiveJobs} />
+                    <FeaturedJobsSection featuredJobs={personalizedJobs} />
                 </View>
 
                 {/* Top Companies */}

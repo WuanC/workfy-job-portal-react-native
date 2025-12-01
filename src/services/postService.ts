@@ -143,3 +143,69 @@ export const getRelatedPosts = async (id: number, limit = 5) => {
     }
 };
 
+// =============== EMPLOYER APIs ===============
+
+export type MyPostResponse = {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    title: string;
+    excerpt: string;
+    content: string;
+    contentText: string;
+    thumbnailUrl: string;
+    tags: string;
+    slug: string;
+    readingTimeMinutes: number;
+    category: Category;
+    status: "PENDING" | "PUBLIC" | "DRAFT";
+};
+
+export const getMyPosts = async (
+    pageNumber = 1,
+    pageSize = 10,
+    sorts = "createdAt:desc"
+): Promise<PaginatedResponse<MyPostResponse>> => {
+    try {
+        const res = await apiInstance.get("/posts/my", {
+            params: { pageNumber, pageSize, sorts },
+        });
+        return res.data.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi khi lấy danh sách bài viết của tôi:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+export const createPost = async (formData: FormData) => {
+    try {
+        // Don't set Content-Type header, let axios set it automatically with boundary
+        const res = await apiInstance.post("/posts", formData);
+        return res.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi khi tạo bài viết:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+export const updatePost = async (id: number, formData: FormData) => {
+    try {
+        // Don't set Content-Type header, let axios set it automatically with boundary
+        const res = await apiInstance.put(`/posts/${id}`, formData);
+        return res.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi khi cập nhật bài viết:", error.response?.data || error.message);
+        throw error;
+    }
+};
+
+export const deletePost = async (id: number) => {
+    try {
+        const res = await apiInstance.delete(`/posts/${id}`);
+        return res.data;
+    } catch (error: any) {
+        console.error("❌ Lỗi khi xóa bài viết:", error.response?.data || error.message);
+        throw error;
+    }
+};
+

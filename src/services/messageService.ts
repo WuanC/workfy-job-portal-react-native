@@ -10,10 +10,8 @@ import { ConversationResponse, MessageResponse, SendMessageRequest } from "../ty
  * Lấy danh sách tất cả conversations của user hiện tại
  */
 export const getConversations = async (): Promise<ConversationResponse[]> => {
-  console.log("🔍 Calling GET /conversations");
   try {
     const response = await apiInstance.get("/conversations");
-    console.log("✅ Conversations response:", response.data);
     return response.data.data;
   } catch (error: any) {
     console.error("❌ getConversations error:", error.response?.status, error.response?.data);
@@ -27,10 +25,16 @@ export const getConversations = async (): Promise<ConversationResponse[]> => {
 export const getConversationByApplicationId = async (
   applicationId: number
 ): Promise<ConversationResponse> => {
-  const response = await apiInstance.get(
-    `/conversations/application/${applicationId}`
-  );
-  return response.data.data;
+  console.log("🔍 Calling GET /conversations/application/" + applicationId);
+  try {
+    const response = await apiInstance.get(
+      `/conversations/application/${applicationId}`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("❌ getConversationByApplicationId error:", error.response?.status, error.response?.data);
+    throw error;
+  }
 };
 
 // ========== Messages ==========
@@ -41,11 +45,8 @@ export const getConversationByApplicationId = async (
 export const getMessages = async (
   conversationId: number
 ): Promise<MessageResponse[]> => {
-  console.log("🔍 Calling GET /messages/" + conversationId);
   try {
     const response = await apiInstance.get(`/messages/${conversationId}`);
-    console.log("✅ Messages response:", response.data);
-    console.log("✅ Number of messages:", response.data.data?.length || 0);
     return response.data.data || [];
   } catch (error: any) {
     console.error("❌ getMessages error:", error.response?.status, error.response?.data);
@@ -59,8 +60,15 @@ export const getMessages = async (
 export const sendMessage = async (
   data: SendMessageRequest
 ): Promise<MessageResponse> => {
-  const response = await apiInstance.post("/messages", data);
-  return response.data.data;
+  console.log("📤 Sending message via REST:", { conversationId: data.conversationId, contentLength: data.content.length });
+  try {
+    const response = await apiInstance.post("/messages", data);
+    console.log("✅ Message sent:", response.data);
+    return response.data.data;
+  } catch (error: any) {
+    console.error("❌ sendMessage error:", error.response?.status, error.response?.data);
+    throw error;
+  }
 };
 
 /**
@@ -69,5 +77,31 @@ export const sendMessage = async (
 export const markMessagesAsSeen = async (
   conversationId: number
 ): Promise<void> => {
-  await apiInstance.put(`/messages/${conversationId}/seen`);
+  try {
+    console.log("Marking messages as seen for conversationId:", conversationId);
+    await apiInstance.put(`/messages/${conversationId}/seen`);
+  } catch (error: any) {
+    console.error("❌ markMessagesAsSeen error:", error.response?.status, error.response?.data);
+    throw error;
+  }
+};
+
+/**
+ * Lấy tổng số tin nhắn chưa đọc của user hiện tại
+ * Workaround: Tính từ conversations vì endpoint /messages/unread-count có routing conflict với /messages/{conversationId}
+ * API spec: GET /api/v1/messages/unread-count (backend cần fix routing để endpoint này hoạt động)
+ */
+export const getUnreadMessagesCount = async (): Promise<number> => {
+  console.log("🔍 Calculating total unread count from conversations");
+  try {
+    const conversations = await getConversations();
+    // Tính tổng số tin nhắn chưa đọc từ tất cả conversations
+    const totalUnread = conversations.reduce((sum, conv) => {
+      return sum + (conv.unreadCount || 0);
+    }, 0);
+    return totalUnread;
+  } catch (error: any) {
+    console.error("❌ getUnreadMessagesCount error:", error.response?.status, error.response?.data);
+    return 0; // Trả về 0 nếu có lỗi
+  }
 };

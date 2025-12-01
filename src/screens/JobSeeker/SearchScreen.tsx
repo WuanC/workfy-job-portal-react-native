@@ -10,11 +10,12 @@ import {
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import SearchBar from "../../components/SearchBar";
 import JobCard from "../../components/JobCard";
 import { RootStackParamList } from "../../types/navigation";
+import { useCallback } from "react";
 import { colors, gradients } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import {
@@ -26,6 +27,7 @@ import {
   getAdvancedJobs,
 } from "../../services/jobService";
 import { useI18n } from "../../hooks/useI18n";
+import { useAuth } from "../../context/AuthContext";
 
 type FilterNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -36,6 +38,7 @@ const SearchScreen = ({ route }: any) => {
   const initialTab = route?.params?.initialTab || "jobs";
   const navigation = useNavigation<FilterNavigationProp>();
   const { t, isEnglish } = useI18n();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"jobs" | "industries">(initialTab);
   const [searchText, setSearchText] = useState("");
@@ -43,12 +46,37 @@ const SearchScreen = ({ route }: any) => {
   const [categoryJobs, setCategoryJobs] = useState<CategoryJob[]>([]);
   const [advanceFilter, setAdvanceFilter] = useState<AdvancedJobQuery>({
     sort: "createdAt",
+    industryIds: user?.industryId ? [user.industryId] : undefined,
   });
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 10;
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
+  // 🟢 Reload data when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      // Update filter with latest industryId from user
+      const updatedFilter = {
+        ...advanceFilter,
+        industryIds: user?.industryId ? [user.industryId] : undefined,
+      };
+      
+      // Update filter state if industryId has changed
+      if (JSON.stringify(advanceFilter.industryIds) !== JSON.stringify(updatedFilter.industryIds)) {
+        setAdvanceFilter(updatedFilter);
+      }
+      
+      if (activeTab === "jobs") {
+        setHasMore(true);
+        setPageNumber(1);
+        fetchFilteredJobs(updatedFilter, 1, false);
+      } else if (activeTab === "industries") {
+        fetchCategoryJobs();
+      }
+    }, [activeTab, user?.industryId])
+  );
 
   // 🟢 Gọi API job khi filter thay đổi
   useEffect(() => {

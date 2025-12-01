@@ -34,13 +34,16 @@ const ConversationListScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // WebSocket connection
-  const { isConnected, onNewMessage } = useWebSocket();
+  const { isConnected, onNewMessage, onSeenUpdate } = useWebSocket();
 
   /**
    * Load danh sách conversations
    */
-  const loadConversations = useCallback(async () => {
+  const loadConversations = useCallback(async (showLoading = false) => {
     try {
+      if (showLoading) {
+        setLoading(true);
+      }
       setError(null);
       const data = await getConversations();
       // Sắp xếp theo thời gian update mới nhất
@@ -48,6 +51,8 @@ const ConversationListScreen: React.FC = () => {
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       });
       setConversations(sortedData);
+      console.log("✅ Loaded conversations with unread counts:", 
+        sortedData.map(c => ({ id: c.id, hasUnread: c.hasUnread })));
     } catch (err: any) {
       console.error("❌ Error loading conversations:", err);
       console.error("❌ Error response:", err.response?.data);
@@ -63,19 +68,27 @@ const ConversationListScreen: React.FC = () => {
   }, []);
 
   /**
-   * Xử lý tin nhắn mới từ WebSocket
+   * Xử lý tin nhắn mới từ WebSocket với unread info
    */
   useEffect(() => {
-    onNewMessage((message: MessageResponse) => {
+    onNewMessage((message: MessageResponse, unreadInfo?: any) => {
+      console.log("📩 ConversationList received message:", message);
+      console.log("📊 Unread info from WebSocket:", unreadInfo);
+      
       setConversations((prev) => {
         const updatedConversations = prev.map((conv) => {
           if (conv.id === message.conversationId) {
+            // Kiểm tra xem có phải tin nhắn của mình không
+            const isOwnMessage = message.senderType === "USER";
+            
             return {
               ...conv,
               lastMessage: message.content,
               lastMessageSenderId: message.senderId,
               lastMessageSenderType: message.senderType,
               updatedAt: message.createdAt,
+              // Sử dụng unreadCount từ WebSocket event nếu có, nếu không thì tăng lên
+              unreadCount: unreadInfo?.unreadForRecipient ?? (isOwnMessage ? 0 : (conv.unreadCount || 0) + 1),
             };
           }
           return conv;
@@ -90,22 +103,38 @@ const ConversationListScreen: React.FC = () => {
   }, [onNewMessage]);
 
   /**
-   * Load conversations khi mount
+   * Xử lý SEEN_UPDATE event từ WebSocket
    */
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+    onSeenUpdate((event) => {
+      console.log("👁️ ConversationList received SEEN_UPDATE:", event);
+      
+      setConversations((prev) => {
+        return prev.map((conv) => {
+          if (conv.id === event.conversationId) {
+            // Cập nhật unreadCount từ SEEN_UPDATE event
+            // Sử dụng unreadForJobSeeker vì đây là màn hình của JobSeeker
+            return {
+              ...conv,
+              unreadCount: event.unread.unreadForJobSeeker,
+            };
+          }
+          return conv;
+        });
+      });
+    });
+  }, [onSeenUpdate]);
 
   /**
-   * Reload conversations khi quay lại màn hình (từ chat screen)
+   * Reload conversations khi quay lại màn hình (từ chat screen hoặc tab khác)
+   * để cập nhật unreadCount mới nhất từ server
    */
   useFocusEffect(
     useCallback(() => {
-      // Chỉ reload nếu không phải lần đầu tiên mount
-      if (!loading) {
-        loadConversations();
-      }
-    }, [loadConversations, loading])
+      console.log("🔄 ConversationListScreen focused - reloading conversations");
+      // Reload mỗi khi focus vào màn hình để lấy unreadCount mới nhất từ server
+      loadConversations(true);
+    }, [loadConversations])
   );
 
   /**
@@ -121,6 +150,15 @@ const ConversationListScreen: React.FC = () => {
    */
   const handleConversationPress = useCallback(
     (conversation: ConversationResponse) => {
+      // Reset unreadCount về 0 khi vào conversation (optimistic update)
+      setConversations((prev) => 
+        prev.map((conv) => 
+          conv.id === conversation.id 
+            ? { ...conv, unreadCount: 0 }
+            : conv
+        )
+      );
+      
       navigation.navigate("Chat", { conversation });
     },
     [navigation]
@@ -147,7 +185,7 @@ const ConversationListScreen: React.FC = () => {
       <Ionicons name="alert-circle-outline" size={64} color={colors.error.start} />
       <Text style={styles.emptyTitle}>Có lỗi xảy ra</Text>
       <Text style={styles.emptySubtitle}>{error}</Text>
-      <TouchableOpacity style={styles.retryButton} onPress={loadConversations}>
+      <TouchableOpacity style={styles.retryButton} onPress={() => loadConversations(true)}>
         <Text style={styles.retryButtonText}>Thử lại</Text>
       </TouchableOpacity>
     </View>

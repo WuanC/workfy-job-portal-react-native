@@ -10,10 +10,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  AppState,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { ToastService } from "../../services/toastService";
@@ -26,6 +26,7 @@ import {
 import { MessageBubble } from "../../components/MessageBubble";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAuth } from "../../context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 type RouteParams = {
   Chat: {
@@ -38,6 +39,7 @@ const ChatScreen: React.FC = () => {
   const route = useRoute<RouteProp<RouteParams, "Chat">>();
   const { conversation } = route.params;
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [messageText, setMessageText] = useState("");
@@ -45,6 +47,8 @@ const ChatScreen: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [hasEmployerMessage, setHasEmployerMessage] = useState(conversation.hasEmployerMessage);
   const flatListRef = useRef<FlatList>(null);
+  const appState = useRef(AppState.currentState);
+  const isScreenFocused = useRef(true);
 
   // WebSocket
   const { isConnected, sendMessage: sendMessageWS, onNewMessage } = useWebSocket();
@@ -53,48 +57,11 @@ const ChatScreen: React.FC = () => {
   const canSendMessage = isEmployer || hasEmployerMessage;
 
   /**
-   * Lưu tin nhắn vào AsyncStorage
-   */
-  const saveMessagesToStorage = useCallback(async (messages: MessageResponse[]) => {
-    try {
-      const key = `chat_history_${conversation.id}`;
-      await AsyncStorage.setItem(key, JSON.stringify(messages));
-    } catch (error) {
-      console.error("❌ [JobSeekerChat] Error saving messages:", error);
-    }
-  }, [conversation.id]);
-
-  /**
-   * Load tin nhắn từ AsyncStorage
-   */
-  const loadMessagesFromStorage = useCallback(async () => {
-    try {
-      const key = `chat_history_${conversation.id}`;
-      const stored = await AsyncStorage.getItem(key);
-      if (stored) {
-        const messages = JSON.parse(stored);
-        return messages;
-      }
-      return null;
-    } catch (error) {
-      console.error("❌ [JobSeekerChat] Error loading from storage:", error);
-      return null;
-    }
-  }, [conversation.id]);
-
-  /**
    * Load tin nhắn từ server
    */
   const loadMessages = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Load từ cache trước để hiển thị nhanh
-      const cachedMessages = await loadMessagesFromStorage();
-      if (cachedMessages && cachedMessages.length > 0) {
-        setMessages(cachedMessages);
-        setLoading(false);
-      }
 
       const data = await getMessages(conversation.id);
       
@@ -109,14 +76,8 @@ const ChatScreen: React.FC = () => {
       if (hasEmployerMsg && !hasEmployerMessage) {
         setHasEmployerMessage(true);
       }
-      
-      // Lưu vào AsyncStorage
-      await saveMessagesToStorage(sortedMessages);
 
-      // Đánh dấu đã đọc
-      if (sortedMessages.length > 0) {
-        await markMessagesAsSeen(conversation.id);
-      }
+      // KHÔNG đánh dấu đã đọc ở đây - sẽ được xử lý bởi useFocusEffect
     } catch (error: any) {
       console.error("❌ [JobSeekerChat] Error loading messages:", error);
       console.error("❌ [JobSeekerChat] Error details:", error.response?.data);
@@ -124,78 +85,7 @@ const ChatScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [conversation.id, loadMessagesFromStorage, saveMessagesToStorage]);
-
-  /**
-   * Xử lý tin nhắn mới từ WebSocket
-   */
-  useEffect(() => {
-    onNewMessage((message: MessageResponse) => {
-      // Chỉ xử lý tin nhắn của conversation hiện tại
-      if (message.conversationId === conversation.id) {
-        setMessages((prev) => {
-          // Kiểm tra xem tin nhắn đã tồn tại chưa (tránh duplicate)
-          if (prev.some((m) => m.id === message.id)) {
-            return prev;
-          }
-          
-          // Nếu là tin nhắn của mình, có thể đã được thêm qua REST API rồi
-          if (message.senderId.toString() === user?.id?.toString()) {
-            
-            // Xóa các tin nhắn tạm thời có nội dung giống nhau
-            const messageTime = new Date(message.createdAt).getTime();
-            const filteredMessages = prev.filter((m) => {
-              // Giữ lại nếu không phải tin tạm
-              if (m.id < 1000000000000) return true;
-              
-              // Xóa tin tạm nếu content giống và thời gian gần nhau (trong 10 giây)
-              const tempTime = new Date(m.createdAt).getTime();
-              const isSimilar = m.content === message.content && 
-                               Math.abs(messageTime - tempTime) < 10000;
-              return !isSimilar;
-            });
-            
-            // Nếu sau khi lọc vẫn có tin nhắn với ID khác nhau nhưng content giống nhau
-            // thì tin nhắn này đã được thêm qua REST API rồi, bỏ qua
-            const hasMessageWithSameContent = filteredMessages.some((m) => 
-              m.content === message.content &&
-              Math.abs(new Date(m.createdAt).getTime() - messageTime) < 5000
-            );
-            
-            if (hasMessageWithSameContent) {
-              saveMessagesToStorage(filteredMessages);
-              return filteredMessages;
-            }
-            
-            // Nếu không có tin nhắn giống nhau, thêm vào
-            const newMessages = [...filteredMessages, message];
-            saveMessagesToStorage(newMessages);
-            return newMessages;
-          }
-          
-          // Tin nhắn từ người khác, thêm vào bình thường
-          const newMessages = [...prev, message];
-          saveMessagesToStorage(newMessages);
-          return newMessages;
-        });
-
-        // Nếu nhận được tin nhắn từ employer, cập nhật hasEmployerMessage
-        if (message.senderType === "EMPLOYER" && !hasEmployerMessage) {
-          setHasEmployerMessage(true);
-        }
-
-        // Scroll to bottom
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-
-        // Đánh dấu đã đọc nếu không phải tin nhắn của mình
-        if (message.senderId.toString() !== user?.id?.toString()) {
-          markMessagesAsSeen(conversation.id).catch(console.error);
-        }
-      }
-    });
-  }, [conversation.id, onNewMessage, user?.id, saveMessagesToStorage]);
+  }, [conversation.id, hasEmployerMessage]);
 
   /**
    * Load messages khi mount
@@ -205,15 +95,47 @@ const ChatScreen: React.FC = () => {
   }, [loadMessages]);
 
   /**
-   * Scroll to bottom khi messages thay đổi
+   * Đánh dấu đã đọc khi màn hình được focus
+   */
+  useFocusEffect(
+    useCallback(() => {
+      isScreenFocused.current = true;
+      console.log("👁️ [JobSeekerChat] Screen focused");
+
+      return () => {
+        isScreenFocused.current = false;
+        console.log("👁️ [JobSeekerChat] Screen unfocused");
+      };
+    }, [])
+  );
+
+  /**
+   * Đánh dấu đã đọc khi messages được load xong và màn hình đang focus
+   */
+  useEffect(() => {
+    if (!loading && messages.length > 0 && isScreenFocused.current && appState.current === 'active') {
+      console.log("📧 [JobSeekerChat] Messages loaded, marking as seen");
+      markMessagesAsSeen(conversation.id)
+        .then(() => {
+          console.log("✅ [JobSeekerChat] Marked as seen after loading");
+          queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+        })
+        .catch(console.error);
+    }
+  }, [loading, messages.length, conversation.id, queryClient]);
+
+  /**
+   * Scroll to bottom khi messages thay đổi hoặc sau khi load xong
    */
   useEffect(() => {
     if (messages.length > 0 && !loading) {
-      setTimeout(() => {
+      // Delay để đảm bảo FlatList đã render xong
+      const timer = setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: false });
       }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [messages.length, loading]);
+  }, [messages, loading]);
 
   /**
    * Gửi tin nhắn
@@ -248,11 +170,7 @@ const ChatScreen: React.FC = () => {
 
     try {
       // Thêm tin nhắn tạm thời ngay lập tức để UX mượt mà
-      setMessages((prev) => {
-        const newMessages = [...prev, tempMessageObj];
-        saveMessagesToStorage(newMessages);
-        return newMessages;
-      });
+      setMessages((prev) => [...prev, tempMessageObj]);
 
       // Thử gửi qua WebSocket nếu connected (để realtime update)
       if (isConnected) {
@@ -271,17 +189,15 @@ const ChatScreen: React.FC = () => {
       
       // Xóa tin nhắn tạm và thêm tin nhắn thật từ API
       setMessages((prev) => {
-        // Xóa CÁCH tin nhắn tạm thời
+        // Xóa tin nhắn tạm thời
         const filtered = prev.filter((m) => m.id !== tempMessageObj.id);
         
         // Kiểm tra xem tin nhắn thật đã tồn tại chưa (tránh duplicate từ WebSocket)
         if (filtered.some((m) => m.id === newMessage.id)) {
-          saveMessagesToStorage(filtered);
           return filtered;
         }
         
         const newMessages = [...filtered, newMessage];
-        saveMessagesToStorage(newMessages);
         return newMessages;
       });
 
@@ -307,11 +223,7 @@ const ChatScreen: React.FC = () => {
       }
       
       // Xóa tin nhắn tạm thời nếu gửi thất bại
-      setMessages((prev) => {
-        const filtered = prev.filter((m) => m.id !== tempMessageObj.id);
-        saveMessagesToStorage(filtered);
-        return filtered;
-      });
+      setMessages((prev) => prev.filter((m) => m.id !== tempMessageObj.id));
       
       // Khôi phục text nếu gửi thất bại
       setMessageText(tempMessage);
@@ -392,7 +304,9 @@ const ChatScreen: React.FC = () => {
         data={messages}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => {
-          const isOwn = item.senderId.toString() === user?.id?.toString();
+          const isOwn = isEmployer 
+            ? item.senderType === "EMPLOYER" 
+            : item.senderType === "USER";
           return (
             <MessageBubble
               message={item}
@@ -406,13 +320,22 @@ const ChatScreen: React.FC = () => {
           messages.length === 0 && styles.emptyMessagesContainer,
         ]}
         onContentSizeChange={() => {
-          if (messages.length > 0) {
+          if (messages.length > 0 && !loading) {
             flatListRef.current?.scrollToEnd({ animated: false });
+          }
+        }}
+        onLayout={() => {
+          // Scroll to bottom khi FlatList layout xong
+          if (messages.length > 0 && !loading) {
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }, 100);
           }
         }}
         onScrollBeginDrag={() => Keyboard.dismiss()}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        maintainVisibleContentPosition={null}
       />
 
       {/* Input container */}

@@ -17,6 +17,12 @@ export interface TokenResponse {
         email: string;
         role: string;
         status: string;
+        industry?: {
+            id: number;
+            name: string;
+            engName: string;
+            description: string | null;
+        };
     };
 }
 
@@ -73,6 +79,7 @@ export const registerEmployee = async (payload: {
     email: string;
     password: string;
     confirmPassword: string;
+    industryId?: number;
 }) => {
     try {
         const res = await apiInstance.post("/users/sign-up", payload);

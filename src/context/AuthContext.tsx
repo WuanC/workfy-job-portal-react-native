@@ -10,10 +10,12 @@ type User = {
     name: string;
     email: string;
     role: Role;
+    industryId?: number;
 };
 
 type AuthContextType = {
     user: User | null;
+    setUser: (user: User | null) => void;
     loading: boolean;
     isAuthenticated: boolean;
     loginEmployeeAuth: (email: string, password: string) => Promise<void>;
@@ -23,6 +25,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
+    setUser: () => {},
     loading: true,
     isAuthenticated: false,
     loginEmployeeAuth: async () => { },
@@ -49,7 +52,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     console.log("employee")
                     const user = await getProfile();
                     console.log("employee2")
-                    setUser({ ...user, role });
+                    const industryId = user.industry?.id;
+                    setUser({ ...user, role, industryId });
                 }
                 else if (role === "employer") {
                     const employer = await getEmployerProfile()
@@ -57,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }
             } catch (err: any) {
                 setUser(null)
-                await AsyncStorage.multiRemove(["accessToken", "refreshToken", "role"]);
+                await AsyncStorage.multiRemove(["accessToken", "refreshToken", "role", "industryId"]);
             }
         }
         setLoading(false);
@@ -76,11 +80,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             const res = await loginUser({ email, password });
-            const { accessToken, refreshToken } = res;
+            const { accessToken, refreshToken, data } = res;
 
             await AsyncStorage.setItem("accessToken", accessToken);
             await AsyncStorage.setItem("refreshToken", refreshToken);
             await AsyncStorage.setItem("role", "employee");
+            
+            // Lưu industryId nếu có
+            if (data.industry?.id) {
+                await AsyncStorage.setItem("industryId", data.industry.id.toString());
+            }
+            
             await loadUser();
         } catch (err) {
             console.error("Employee login failed:", err);
@@ -122,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (err) {
             console.error("Error when logging out:", err);
         } finally {
-            await AsyncStorage.multiRemove(["accessToken", "refreshToken", "role"]);
+            await AsyncStorage.multiRemove(["accessToken", "refreshToken", "role", "industryId"]);
             setUser(null);
         }
     };
@@ -131,6 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         <AuthContext.Provider
             value={{
                 user,
+                setUser,
                 loading,
                 isAuthenticated: !!user,
                 loginEmployeeAuth,

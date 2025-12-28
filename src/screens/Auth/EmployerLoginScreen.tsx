@@ -76,6 +76,7 @@ const EmployerLoginScreen = () => {
                     testID="emailInput"
                     accessibilityLabel="emailInput"
                     placeholder={t('auth.enterEmail')}
+                    placeholderTextColor="#6B7280"
                     style={styles.input}
                     value={email}
                     onChangeText={setEmail}
@@ -91,6 +92,7 @@ const EmployerLoginScreen = () => {
                     testID="passwordInput"
                     accessibilityLabel="passwordInput"
                     placeholder={t('auth.enterPassword')}
+                    placeholderTextColor="#6B7280"
                     secureTextEntry={true}
                     style={styles.input}
                     value={password}

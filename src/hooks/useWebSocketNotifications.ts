@@ -10,7 +10,7 @@ import apiInstance from '../api/apiInstance';
 const getWebSocketUrl = (): string => {
   // Lấy base URL từ API instance (http://192.168.0.102:8080/workify/api/v1)
   // Tách ra để lấy base: http://192.168.0.102:8080/workify
-  const apiBaseUrl = apiInstance.defaults.baseURL || 'http://192.168.0.102:8080/workify/api/v1';
+  const apiBaseUrl = apiInstance.defaults.baseURL || 'http://192.168.0.100:8080/workify/api/v1';
   
   // Tách base URL: loại bỏ /api/v1 và thêm /ws
   // Nếu baseURL không có /api/v1, giả sử nó đã là base URL

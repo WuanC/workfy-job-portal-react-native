@@ -439,11 +439,9 @@ const PostJobScreen = () => {
                   actions.alignLeft,
                   actions.alignCenter,
                   actions.alignRight,
-                  actions.alignFull,
                   actions.insertBulletsList,
                   actions.insertOrderedList,
                   actions.undo,
-                  actions.redo,
                 ]}
                 iconTint="#555"
                 selectedIconTint="#007AFF"
@@ -545,65 +543,82 @@ const PostJobScreen = () => {
 
             {/* --- Nếu chọn “Trên” --- */}
             {salaryType === "GREATER_THAN" && (
-              <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
-                <TextInput
-                  placeholderTextColor={"#999"}
-                  style={[styles.input, { flex: 1 }]}
-                  placeholder="Nhập mức lương tối thiểu"
-                  keyboardType="numeric"
-                  value={minSalary?.toString() ?? ""}   // number -> string
-                  onChangeText={(text) => {
-                    setMinSalary(text ? parseFloat(text) : null);
-                  }}
-                />
-                <Dropdown
-                  data={getEnumOptions(SalaryUnit)}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Đơn vị"
-                  value={salaryUnit}
-                  onChange={(item) => setSalaryUnit(item.value)}
-                  style={[styles.dropdown, { flex: 1 }]}
-                  placeholderStyle={styles.placeholder}
-                  selectedTextStyle={styles.selectedText}
-                />
+              <View style={styles.salaryInputContainer}>
+                <View style={styles.salaryInputRow}>
+                  <TextInput
+                    placeholderTextColor={"#999"}
+                    style={styles.salaryInput}
+                    placeholder="Nhập mức lương tối thiểu"
+                    keyboardType="numeric"
+                    value={minSalary?.toString() ?? ""}   // number -> string
+                    onChangeText={(text) => {
+                      setMinSalary(text ? parseFloat(text) : null);
+                    }}
+                  />
+                </View>
+                <View style={styles.salaryUnitRow}>
+                  <Dropdown
+                    data={getEnumOptions(SalaryUnit)}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Chọn đơn vị"
+                    value={salaryUnit}
+                    onChange={(item) => setSalaryUnit(item.value)}
+                    style={styles.salaryUnitDropdown}
+                    placeholderStyle={styles.placeholder}
+                    selectedTextStyle={styles.selectedText}
+                  />
+                </View>
               </View>
             )}
 
             {/* --- Nếu chọn “Trong khoảng” --- */}
             {salaryType === "RANGE" && (
-              <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16, gap: 8 }}>
-                <TextInput
-                  placeholderTextColor={"#999"}
-                  style={[styles.input, { flex: 1 }]}
-                  placeholder="Min"
-                  keyboardType="numeric"
-                  value={minSalary?.toString() ?? ""}   // number -> string
-                  onChangeText={(text) => {
-                    setMinSalary(text ? parseFloat(text) : null);
-                  }}
-                />
-                <TextInput
-                  placeholderTextColor={"#999"}
-                  style={[styles.input, { flex: 1 }]}
-                  placeholder="Max"
-                  keyboardType="numeric"
-                  value={maxSalary?.toString() ?? ""}   // number -> string
-                  onChangeText={(text) => {
-                    setMaxSalary(text ? parseFloat(text) : null);
-                  }}
-                />
-                <Dropdown
-                  data={getEnumOptions(SalaryUnit)}
-                  labelField="label"
-                  valueField="value"
-                  placeholder="Đơn vị"
-                  value={salaryUnit}
-                  onChange={(item) => setSalaryUnit(item.value)}
-                  style={[styles.dropdown, { flex: 1 }]}
-                  placeholderStyle={styles.placeholder}
-                  selectedTextStyle={styles.selectedText}
-                />
+              <View style={styles.salaryInputContainer}>
+                <View style={styles.salaryRangeRow}>
+                  <View style={styles.salaryRangeInputWrapper}>
+                    <Text style={styles.salaryRangeLabel}>Tối thiểu</Text>
+                    <TextInput
+                      placeholderTextColor={"#999"}
+                      style={styles.salaryRangeInput}
+                      placeholder="Min"
+                      keyboardType="numeric"
+                      value={minSalary?.toString() ?? ""}   // number -> string
+                      onChangeText={(text) => {
+                        setMinSalary(text ? parseFloat(text) : null);
+                      }}
+                    />
+                  </View>
+                  <View style={styles.salaryRangeSeparator}>
+                    <Text style={styles.salaryRangeSeparatorText}>—</Text>
+                  </View>
+                  <View style={styles.salaryRangeInputWrapper}>
+                    <Text style={styles.salaryRangeLabel}>Tối đa</Text>
+                    <TextInput
+                      placeholderTextColor={"#999"}
+                      style={styles.salaryRangeInput}
+                      placeholder="Max"
+                      keyboardType="numeric"
+                      value={maxSalary?.toString() ?? ""}   // number -> string
+                      onChangeText={(text) => {
+                        setMaxSalary(text ? parseFloat(text) : null);
+                      }}
+                    />
+                  </View>
+                </View>
+                <View style={styles.salaryUnitRow}>
+                  <Dropdown
+                    data={getEnumOptions(SalaryUnit)}
+                    labelField="label"
+                    valueField="value"
+                    placeholder="Chọn đơn vị"
+                    value={salaryUnit}
+                    onChange={(item) => setSalaryUnit(item.value)}
+                    style={styles.salaryUnitDropdown}
+                    placeholderStyle={styles.placeholder}
+                    selectedTextStyle={styles.selectedText}
+                  />
+                </View>
               </View>
             )}
 
@@ -618,11 +633,9 @@ const PostJobScreen = () => {
                   actions.alignLeft,
                   actions.alignCenter,
                   actions.alignRight,
-                  actions.alignFull,
                   actions.insertBulletsList,
                   actions.insertOrderedList,
                   actions.undo,
-                  actions.redo,
                 ]}
                 iconTint="#555"
                 selectedIconTint="#007AFF"
@@ -654,11 +667,9 @@ const PostJobScreen = () => {
                   actions.alignLeft,
                   actions.alignCenter,
                   actions.alignRight,
-                  actions.alignFull,
                   actions.insertBulletsList,
                   actions.insertOrderedList,
                   actions.undo,
-                  actions.redo,
                 ]}
                 iconTint="#555"
                 selectedIconTint="#007AFF"
@@ -1029,11 +1040,9 @@ const PostJobScreen = () => {
                   actions.alignLeft,
                   actions.alignCenter,
                   actions.alignRight,
-                  actions.alignFull,
                   actions.insertBulletsList,
                   actions.insertOrderedList,
                   actions.undo,
-                  actions.redo,
                 ]}
                 iconTint="#555"
                 selectedIconTint="#007AFF"
@@ -1297,5 +1306,86 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#ffffff",
+  },
+  // Salary input styles
+  salaryInputContainer: {
+    marginHorizontal: 16,
+    marginTop: 8,
+  },
+  salaryInputRow: {
+    marginBottom: 12,
+  },
+  salaryInput: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#ffffff",
+    fontSize: 16,
+    color: "#111827",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    height: 52,
+  },
+  salaryUnitRow: {
+    marginTop: 4,
+  },
+  salaryUnitDropdown: {
+    height: 52,
+    borderColor: "#d1d5db",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#ffffff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  salaryRangeRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginBottom: 12,
+  },
+  salaryRangeInputWrapper: {
+    flex: 1,
+  },
+  salaryRangeLabel: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginBottom: 6,
+    fontWeight: "500",
+  },
+  salaryRangeInput: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#ffffff",
+    fontSize: 16,
+    color: "#111827",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    height: 52,
+  },
+  salaryRangeSeparator: {
+    paddingHorizontal: 8,
+    paddingBottom: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  salaryRangeSeparatorText: {
+    fontSize: 18,
+    color: "#9ca3af",
+    fontWeight: "600",
   },
 });

@@ -106,43 +106,31 @@ const CreatePostScreen = () => {
 
       setLoading(true);
 
-      // Create FormData
-      const formData: any = new FormData();
-      
-      // Add post data as JSON - must be sent as a file/blob in multipart
+      // Prepare post data
       const postData = {
         title: title.trim(),
         excerpt: excerpt.trim(),
         content: content.trim(),
         categoryId: categoryId,
+        status: "PENDING" as const, // Fixed status for employer
       };
-      
-      // Create a file-like object for JSON part
-      const jsonBlob = {
-        uri: 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(postData)),
-        type: 'application/json',
-        name: 'post.json'
-      };
-      
-      formData.append("post", jsonBlob);
 
-      // Add thumbnail - React Native requires specific format
+      // Prepare thumbnail file
       const uriParts = thumbnail.uri.split(".");
       const fileType = uriParts[uriParts.length - 1];
       
-      formData.append("thumbnail", {
+      const thumbnailFile = {
         uri: thumbnail.uri,
         name: `thumbnail.${fileType}`,
-        type: `image/${fileType}`,
-      });
+        mimeType: `image/${fileType}`,
+      };
       
-      console.log("📦 FormData being sent:", {
+      console.log("📦 Data being sent:", {
         post: postData,
-        thumbnailUri: thumbnail.uri,
-        thumbnailType: `image/${fileType}`
+        thumbnail: thumbnailFile
       });
 
-      const response = await createPost(formData);
+      const response = await createPost(postData, thumbnailFile);
 
       if (response.status === 201) {
         const { ToastService } = require("../../services/toastService");
@@ -192,7 +180,7 @@ const CreatePostScreen = () => {
               {t('post.title')} <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              placeholderTextColor={"#999"}
+              placeholderTextColor="#6B7280"
               style={styles.input}
               placeholder={t('post.titlePlaceholder')}
               value={title}
@@ -204,7 +192,7 @@ const CreatePostScreen = () => {
               {t('post.excerpt')} <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
-              placeholderTextColor={"#999"}
+              placeholderTextColor="#6B7280"
               style={[styles.input, styles.textArea]}
               placeholder={t('post.excerptPlaceholder')}
               value={excerpt}

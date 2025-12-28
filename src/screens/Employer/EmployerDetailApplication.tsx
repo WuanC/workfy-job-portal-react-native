@@ -163,6 +163,7 @@ const EmployerDetailApplication = ({ route }: any) => {
             multiline
             numberOfLines={6}
             placeholder={t('profile.cv')}
+            placeholderTextColor="#6B7280"
             value={application?.coverLetter || ""}
             editable={false} // 👈 nếu bạn muốn chỉ xem chứ không sửa thì để false
             scrollEnabled

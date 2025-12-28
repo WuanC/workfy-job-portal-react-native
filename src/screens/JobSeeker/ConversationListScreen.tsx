@@ -16,6 +16,7 @@ import { spacing } from "../../theme/spacing";
 import { ConversationResponse, MessageResponse } from "../../types/type";
 import { getConversations } from "../../services/messageService";
 import { ConversationCard } from "../../components/ConversationCard";
+import { WebSocketStatusBanner } from "../../components/WebSocketStatusBanner";
 import { useWebSocket } from "../../hooks/useWebSocket";
 
 type RootStackParamList = {
@@ -34,7 +35,7 @@ const ConversationListScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // WebSocket connection
-  const { isConnected, onNewMessage, onSeenUpdate } = useWebSocket();
+  const { isConnected, onNewMessage, onSeenUpdate, connect: reconnectWS } = useWebSocket();
 
   /**
    * Load danh sách conversations
@@ -75,32 +76,10 @@ const ConversationListScreen: React.FC = () => {
       console.log("📩 ConversationList received message:", message);
       console.log("📊 Unread info from WebSocket:", unreadInfo);
       
-      setConversations((prev) => {
-        const updatedConversations = prev.map((conv) => {
-          if (conv.id === message.conversationId) {
-            // Kiểm tra xem có phải tin nhắn của mình không
-            const isOwnMessage = message.senderType === "USER";
-            
-            return {
-              ...conv,
-              lastMessage: message.content,
-              lastMessageSenderId: message.senderId,
-              lastMessageSenderType: message.senderType,
-              updatedAt: message.createdAt,
-              // Sử dụng unreadCount từ WebSocket event nếu có, nếu không thì tăng lên
-              unreadCount: unreadInfo?.unreadForRecipient ?? (isOwnMessage ? 0 : (conv.unreadCount || 0) + 1),
-            };
-          }
-          return conv;
-        });
-
-        // Sắp xếp lại theo thời gian mới nhất
-        return updatedConversations.sort((a, b) => {
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        });
-      });
+      // Reload conversations để lấy dữ liệu mới nhất từ server
+      loadConversations(false);
     });
-  }, [onNewMessage]);
+  }, [onNewMessage, loadConversations]);
 
   /**
    * Xử lý SEEN_UPDATE event từ WebSocket
@@ -205,6 +184,13 @@ const ConversationListScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* WebSocket Status Banner */}
+      <WebSocketStatusBanner 
+        isConnected={isConnected} 
+        onReconnect={reconnectWS}
+        message="Chat WebSocket: Đang kết nối..."
+      />
+      
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tin nhắn</Text>

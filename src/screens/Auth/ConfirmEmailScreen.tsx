@@ -111,7 +111,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    padding: 24,
     justifyContent: "center",
   },
   card: {

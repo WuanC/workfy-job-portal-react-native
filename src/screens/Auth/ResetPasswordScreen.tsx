@@ -103,7 +103,7 @@ const ResetPasswordScreen = ({ route }: any) => {
                     <TextInput
                         style={styles.input}
                         placeholder={t('auth.otpCode')}
-                        placeholderTextColor="#999"
+                        placeholderTextColor="#6B7280"
                         value={code}
                         onChangeText={setCode}
                         keyboardType="numeric"
@@ -112,7 +112,7 @@ const ResetPasswordScreen = ({ route }: any) => {
                     <TextInput
                         style={styles.input}
                         placeholder={t('auth.newPassword')}
-                        placeholderTextColor="#999"
+                        placeholderTextColor="#6B7280"
                         value={newPassword}
                         onChangeText={setNewPassword}
                         secureTextEntry

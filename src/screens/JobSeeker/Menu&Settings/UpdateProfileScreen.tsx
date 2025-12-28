@@ -211,6 +211,7 @@ const UpdateProfileScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder={t("profile.fullName")}
+                            placeholderTextColor="#6B7280"
                             value={fullName}
                             onChangeText={setFullName}
                         />
@@ -222,6 +223,7 @@ const UpdateProfileScreen = () => {
                         <TextInput
                             style={styles.input}
                             placeholder={t("profile.phone")}
+                            placeholderTextColor="#6B7280"
                             keyboardType="phone-pad"
                             value={phoneNumber}
                             onChangeText={setPhoneNumber}
@@ -332,6 +334,7 @@ const UpdateProfileScreen = () => {
                         <TextInput
                             style={[styles.input, styles.textArea]}
                             placeholder={t("profile.detailAddress")}
+                            placeholderTextColor="#6B7280"
                             value={detailAddress}
                             onChangeText={setDetailAddress}
                             multiline

@@ -3052,6 +3052,30 @@ curl -X PATCH \
 
 ---
 
+
+### 5.10 Tạo bài viết (Mobile)
+- **URL**: `/api/v1/posts/mobile`
+- **Method**: `POST`
+- **Auth**: `ADMIN`, `EMPLOYER`
+- **Content-Type**: `multipart/form-data`
+- **Header**: `User-Agent` (Must be mobile)
+- **Body**:
+    - `post`: JSON String of PostRequest
+    - `thumbnail`: File (Image)
+- **Response**: `201 Created`
+
+### 5.11 Cập nhật bài viết (Mobile)
+- **URL**: `/api/v1/posts/mobile/{id}`
+- **Method**: `PUT`
+- **Auth**: `ADMIN`, `EMPLOYER`
+- **Content-Type**: `multipart/form-data`
+- **Header**: `User-Agent` (Must be mobile)
+- **Body**:
+    - `post`: JSON String of PostRequest
+    - `thumbnail`: File (Image, optional)
+- **Response**: `200 OK`
+
+
 ## 6) Tỉnh thành (Provinces)
 
 ### 5.10 Lấy bài viết của chính employer (My posts)

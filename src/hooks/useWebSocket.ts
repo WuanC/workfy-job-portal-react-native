@@ -5,6 +5,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MessageResponse, WebSocketMessageEvent, WebSocketSeenUpdateEvent } from "../types/type";
 import apiInstance from "../api/apiInstance";
 
+// 🔹 SINGLETON - Shared state cho tất cả components
+let sharedClient: Client | null = null;
+let sharedIsConnected = false;
+let connectionPromise: Promise<void> | null = null;
+const messageCallbacks = new Set<(message: MessageResponse, unreadInfo?: any) => void>();
+const seenUpdateCallbacks = new Set<(event: WebSocketSeenUpdateEvent) => void>();
+const stateListeners = new Set<(connected: boolean) => void>();
+
 // 🔹 Helper function để lấy WebSocket URL từ API base URL
 const getWebSocketUrl = (): string => {
   // Lấy base URL từ API instance
@@ -37,230 +45,186 @@ interface UseWebSocketReturn {
 
 /**
  * Custom hook để quản lý WebSocket connection cho chat realtime
+ * Sử dụng Singleton pattern - chỉ 1 connection cho toàn app
  */
 export const useWebSocket = (): UseWebSocketReturn => {
-  const [isConnected, setIsConnected] = useState(false);
-  const clientRef = useRef<Client | null>(null);
-  const messageCallbackRef = useRef<((message: MessageResponse, unreadInfo?: any) => void) | null>(null);
-  const seenUpdateCallbackRef = useRef<((event: WebSocketSeenUpdateEvent) => void) | null>(null);
+  const [isConnected, setIsConnected] = useState(sharedIsConnected);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
+
+  // Đăng ký listener để nhận state updates
+  useEffect(() => {
+    stateListeners.add(setIsConnected);
+    return () => {
+      stateListeners.delete(setIsConnected);
+    };
+  }, []);
 
   /**
    * Kết nối WebSocket
    */
   const connect = useCallback(async () => {
-    try {
-      // Lấy WebSocket URL động từ API base URL
-      const WS_BASE_URL = getWebSocketUrl();
-      
-      // console.log("🔌 [useWebSocket] ========================================");
-      // console.log("🔌 [useWebSocket] Starting WebSocket connection...");
-      // console.log("🔌 [useWebSocket] WS URL:", WS_BASE_URL);
-      // console.log("🔌 [useWebSocket] ========================================");
-      
-      // Lấy access token
-      const token = await AsyncStorage.getItem("accessToken");
-      if (!token) {
-        console.error("❌ [useWebSocket] Không có access token, không thể kết nối WebSocket");
-        return;
-      }
-      // console.log("🔑 [useWebSocket] Access token found:", token.substring(0, 30) + "...");
+    // Nếu đã connected hoặc đang connect, dùng lại connection
+    if (sharedClient?.connected) {
+      console.log("🔌 [useWebSocket] Already connected, reusing connection");
+      setIsConnected(true);
+      return;
+    }
 
-      // Tạo SockJS instance với error handling
-      // console.log("🔌 [useWebSocket] Creating SockJS instance...");
-      const socket = new SockJS(WS_BASE_URL);
+    if (connectionPromise) {
+      console.log("🔌 [useWebSocket] Connection in progress, waiting...");
+      await connectionPromise;
+      setIsConnected(sharedIsConnected);
+      return;
+    }
+
+    console.log("🔌 [useWebSocket] Starting NEW connection...");
+
+    connectionPromise = (async () => {
+      try {
+        const WS_BASE_URL = getWebSocketUrl();
+        console.log("🔌 [useWebSocket] WS URL:", WS_BASE_URL);
+        
+        const token = await AsyncStorage.getItem("accessToken");
+        if (!token) {
+          console.error("❌ [useWebSocket] No access token");
+          connectionPromise = null;
+          return;
+        }
+        console.log("🔑 [useWebSocket] Token found");
+
+        const socket = new SockJS(WS_BASE_URL);
       
       // Log SockJS events
-      socket.onopen = () => {
-        // console.log("✅ [useWebSocket] SockJS connection opened");
-      };
-      
-      socket.onerror = (error: any) => {
-        console.error("❌ [useWebSocket] SockJS error:", error);
-      };
-      
-      socket.onclose = (event: any) => {
-        // console.log("🔌 [useWebSocket] SockJS connection closed:", event);
-      };
+        socket.onopen = () => {
+          console.log("✅ [useWebSocket] SockJS opened");
+        };
+        
+        socket.onerror = (error: any) => {
+          console.error("❌ [useWebSocket] SockJS error:", error);
+        };
 
-      // Tạo STOMP client
-      // console.log("🔌 [useWebSocket] Creating STOMP client...");
-      const stompClient = new Client({
-        webSocketFactory: () => socket as any,
-        connectHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-        debug: (str) => {
-          // console.log("🔌 [STOMP DEBUG]:", str);
-        },
-        reconnectDelay: 5000,
-        heartbeatIncoming: 4000,
-        heartbeatOutgoing: 4000,
-        onConnect: () => {
-          // console.log("========================================");
-          // console.log("✅ [useWebSocket] WebSocket CONNECTED successfully!");
-          // console.log("✅ [useWebSocket] Client state:", {
-          //   connected: stompClient.connected,
-          //   active: stompClient.active,
-          // });
-          // console.log("========================================");
-          setIsConnected(true);
-          reconnectAttempts.current = 0;
-
-          // Subscribe để nhận tin nhắn
-          const subscription = stompClient.subscribe("/user/queue/messages", (message) => {
-            try {
-              const event = JSON.parse(message.body);
-              // console.log("📩 [useWebSocket] Raw event received:", JSON.stringify(event, null, 2));
-              // console.log("📩 [useWebSocket] Event type:", event.type);
-              
-              if (event.type === "MESSAGE") {
-                const messageEvent = event as WebSocketMessageEvent;
-                // console.log("📩 [useWebSocket] MESSAGE event:", messageEvent.message);
-                // console.log("📩 [useWebSocket] Message conversationId:", messageEvent.message?.conversationId);
-                // console.log("📩 [useWebSocket] Unread info:", messageEvent.unread);
-                // console.log("📩 [useWebSocket] Callback exists:", !!messageCallbackRef.current);
-                
-                // Gọi callback với message và unread info
-                if (messageCallbackRef.current) {
-                  // console.log("📩 [useWebSocket] Calling message callback...");
-                  messageCallbackRef.current(messageEvent.message, messageEvent.unread);
-                  // console.log("✅ [useWebSocket] Message callback completed");
-                } else {
-                  // console.warn("⚠️ [useWebSocket] No message callback registered!");
-                }
-              } else if (event.type === "SEEN_UPDATE") {
-                const seenEvent = event as WebSocketSeenUpdateEvent;
-                // console.log("👁️ [useWebSocket] SEEN_UPDATE event:", seenEvent);
-                
-                // Gọi callback cho seen update
-                if (seenUpdateCallbackRef.current) {
-                  seenUpdateCallbackRef.current(seenEvent);
-                }
-              } else {
-                // console.warn("⚠️ [useWebSocket] Unknown event type:", event.type);
-              }
-            } catch (error) {
-              console.error("❌ [useWebSocket] Error parsing message:", error);
-              console.error("❌ [useWebSocket] Raw message body:", message.body);
+        console.log("🔌 [useWebSocket] Creating STOMP client...");
+        const stompClient = new Client({
+          webSocketFactory: () => socket as any,
+          connectHeaders: {
+            Authorization: `Bearer ${token}`,
+          },
+          debug: (str) => {
+            if (str.includes('CONNECTED')) {
+              console.log("🔌 [STOMP]:", str);
             }
-          });
-          // console.log("✅ [useWebSocket] Subscribed to /user/queue/messages");
-          // console.log("✅ [useWebSocket] Subscription ID:", subscription.id);
-        },
-        onDisconnect: () => {
-          // console.log("========================================");
-          // console.log("❌ [useWebSocket] WebSocket DISCONNECTED");
-          // console.log("❌ [useWebSocket] Disconnect state:", {
-          //   reconnectAttempts: reconnectAttempts.current,
-          //   maxReconnectAttempts,
-          // });
-          // console.log("========================================");
-          setIsConnected(false);
-          
-          // Thử reconnect
-          if (reconnectAttempts.current < maxReconnectAttempts) {
-            reconnectAttempts.current += 1;
-            // console.log(`🔄 [useWebSocket] Reconnecting... (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`);
-            
-            reconnectTimeoutRef.current = setTimeout(() => {
-              connect();
-            }, 5000 * reconnectAttempts.current);
-          } else {
-            console.error("❌ [useWebSocket] Max reconnect attempts reached!");
-          }
-        },
-        onStompError: (frame) => {
-          // console.error("========================================");
-          console.error("❌ [useWebSocket] STOMP ERROR!");
-          // console.error("❌ Error message:", frame.headers["message"]);
-          // console.error("❌ Error details:", frame.body);
-          // console.error("❌ Full frame:", JSON.stringify(frame, null, 2));
-          // console.error("========================================");
-        },
-        onWebSocketClose: (event) => {
-          // console.log("========================================");
-          // console.log("🔌 [useWebSocket] WebSocket close event:", {
-          //   code: event.code,
-          //   reason: event.reason,
-          //   wasClean: event.wasClean,
-          // });
-          // console.log("========================================");
-        },
-        onWebSocketError: (event) => {
-          // console.error("========================================");
-          console.error("❌ [useWebSocket] WebSocket ERROR event:", event);
-          // console.error("========================================");
-        },
-      });
+          },
+          reconnectDelay: 5000,
+          heartbeatIncoming: 4000,
+          heartbeatOutgoing: 4000,
+          onConnect: () => {
+            console.log("✅ [useWebSocket] STOMP CONNECTED!");
+            sharedIsConnected = true;
+            stateListeners.forEach(listener => listener(true));
+            reconnectAttempts.current = 0;
 
-      // Activate connection
-      // console.log("🔌 [useWebSocket] Activating STOMP client...");
-      stompClient.activate();
-      clientRef.current = stompClient;
-      // console.log("✅ [useWebSocket] STOMP client activated");
-    } catch (error) {
-      console.error("❌ Error connecting WebSocket:", error);
-    }
+            // Subscribe để nhận tin nhắn
+            stompClient.subscribe("/user/queue/messages", (message) => {
+              try {
+                const event = JSON.parse(message.body);
+                
+                if (event.type === "MESSAGE") {
+                  const messageEvent = event as WebSocketMessageEvent;
+                  // Gọi TẤT CẢ callbacks đã đăng ký
+                  messageCallbacks.forEach(callback => {
+                    try {
+                      callback(messageEvent.message, messageEvent.unread);
+                    } catch (err) {
+                      console.error("❌ [useWebSocket] Callback error:", err);
+                    }
+                  });
+                } else if (event.type === "SEEN_UPDATE") {
+                  const seenEvent = event as WebSocketSeenUpdateEvent;
+                  // Gọi TẤT CẢ callbacks đã đăng ký
+                  seenUpdateCallbacks.forEach(callback => {
+                    try {
+                      callback(seenEvent);
+                    } catch (err) {
+                      console.error("❌ [useWebSocket] Callback error:", err);
+                    }
+                  });
+                }
+              } catch (error) {
+                console.error("❌ [useWebSocket] Error parsing message:", error);
+              }
+            });
+            console.log("✅ [useWebSocket] Subscribed to /user/queue/messages");
+          },
+          onDisconnect: () => {
+            console.log("❌ [useWebSocket] DISCONNECTED");
+            sharedIsConnected = false;
+            stateListeners.forEach(listener => listener(false));
+            
+            // Thử reconnect
+            if (reconnectAttempts.current < maxReconnectAttempts) {
+              reconnectAttempts.current += 1;
+              console.log(`🔄 [useWebSocket] Reconnecting... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
+              
+              reconnectTimeoutRef.current = setTimeout(() => {
+                connectionPromise = null;
+                connect();
+              }, 5000 * reconnectAttempts.current);
+            } else {
+              console.error("❌ [useWebSocket] Max reconnect attempts reached!");
+            }
+          },
+          onStompError: (frame) => {
+            console.error("❌ [useWebSocket] STOMP ERROR:", frame.headers["message"]);
+            sharedIsConnected = false;
+            stateListeners.forEach(listener => listener(false));
+          },
+        });
+
+        console.log("🔌 [useWebSocket] Activating STOMP...");
+        stompClient.activate();
+        sharedClient = stompClient;
+        console.log("✅ [useWebSocket] STOMP activated");
+      } catch (error) {
+        console.error("❌ [useWebSocket] Connection error:", error);
+        connectionPromise = null;
+      }
+    })();
+
+    await connectionPromise;
   }, []);
 
   /**
-   * Ngắt kết nối WebSocket
+   * Ngắt kết nối WebSocket (chỉ khi cần thiết)
    */
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    
-    if (clientRef.current?.active) {
-      clientRef.current.deactivate();
-      clientRef.current = null;
-      setIsConnected(false);
-      // console.log("🔌 WebSocket disconnected manually");
-    }
+    // Singleton: Không disconnect khi component unmount
+    console.log("🔌 [useWebSocket] Component unmounting, keeping connection alive");
   }, []);
 
   /**
    * Gửi tin nhắn qua WebSocket
    */
   const sendMessage = useCallback((conversationId: number, content: string) => {
-    // console.log("🔍 [useWebSocket] sendMessage called:", {
-    //   conversationId,
-    //   content,
-    //   clientExists: !!clientRef.current,
-    //   clientConnected: clientRef.current?.connected,
-    //   clientActive: clientRef.current?.active,
-    // });
-
-    if (!clientRef.current?.connected) {
-      // console.warn("⚠️ [useWebSocket] WebSocket not connected, cannot send message");
-      // console.warn("⚠️ [useWebSocket] State:", {
-      //   clientExists: !!clientRef.current,
-      //   isActive: clientRef.current?.active,
-      //   isConnected: clientRef.current?.connected,
-      // });
+    if (!sharedClient?.connected) {
+      console.warn("⚠️ [useWebSocket] WebSocket not connected");
       return;
     }
 
     try {
-      const payload = {
-        conversationId,
-        content,
-      };
-      // console.log("📤 [useWebSocket] Publishing to /app/chat.sendMessage:", payload);
-      
-      clientRef.current.publish({
+      const payload = { conversationId, content };
+      sharedClient.publish({
         destination: "/app/chat.sendMessage",
         body: JSON.stringify(payload),
       });
-      
-      // console.log("✅ [useWebSocket] Message sent successfully via WebSocket");
+      console.log("✅ [useWebSocket] Message sent");
     } catch (error) {
       console.error("❌ [useWebSocket] Error sending message:", error);
-      // console.error("❌ [useWebSocket] Error details:", JSON.stringify(error, null, 2));
     }
   }, []);
 
@@ -268,15 +232,24 @@ export const useWebSocket = (): UseWebSocketReturn => {
    * Đăng ký callback để nhận tin nhắn mới
    */
   const onNewMessage = useCallback((callback: (message: MessageResponse, unreadInfo?: any) => void) => {
-    // console.log("🔔 [useWebSocket] Registering message callback");
-    messageCallbackRef.current = callback;
+    console.log("🔔 [useWebSocket] Registering message callback");
+    messageCallbacks.add(callback);
+    // Cleanup khi component unmount
+    return () => {
+      messageCallbacks.delete(callback);
+    };
   }, []);
 
   /**
    * Đăng ký callback để nhận seen update events
    */
   const onSeenUpdate = useCallback((callback: (event: WebSocketSeenUpdateEvent) => void) => {
-    seenUpdateCallbackRef.current = callback;
+    console.log("👁️ [useWebSocket] Registering seen update callback");
+    seenUpdateCallbacks.add(callback);
+    // Cleanup khi component unmount
+    return () => {
+      seenUpdateCallbacks.delete(callback);
+    };
   }, []);
 
   /**

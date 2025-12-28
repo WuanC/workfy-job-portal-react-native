@@ -115,6 +115,7 @@ const UpdateCompanyMedia = () => {
                   placeholder={t('company.companyWebsite')}
                   style={styles.input}
                   value={link}
+                  placeholderTextColor="#6B7280"
                   autoCapitalize="none"
                   onChangeText={(t) => handleWebsiteChange(index, t)}
                 />
@@ -147,6 +148,7 @@ const UpdateCompanyMedia = () => {
                   placeholder={`https://${item.label.toLowerCase()}.com/...`}
                   style={styles.input}
                   value={item.value}
+                  placeholderTextColor="#6B7280"
                   autoCapitalize="none"
                   onChangeText={item.set}
                 />
@@ -225,11 +227,12 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    borderRadius: borderRadius.lg,
+    borderRadius: 10,
     paddingHorizontal: spacing.sm,
     height: 50,
     marginBottom: spacing.sm,
+        backgroundColor: "#ffffffff",
+        borderWidth: 1,
   },
   input: {
     flex: 1,

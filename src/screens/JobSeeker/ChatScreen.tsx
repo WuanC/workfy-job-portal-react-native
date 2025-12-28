@@ -24,6 +24,7 @@ import {
   markMessagesAsSeen,
 } from "../../services/messageService";
 import { MessageBubble } from "../../components/MessageBubble";
+import { WebSocketStatusBanner } from "../../components/WebSocketStatusBanner";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAuth } from "../../context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,7 +52,7 @@ const ChatScreen: React.FC = () => {
   const isScreenFocused = useRef(true);
 
   // WebSocket
-  const { isConnected, sendMessage: sendMessageWS, onNewMessage } = useWebSocket();
+  const { isConnected, sendMessage: sendMessageWS, onNewMessage, connect: reconnectWS } = useWebSocket();
 
   const isEmployer = user?.role === "employer";
   const canSendMessage = isEmployer || hasEmployerMessage;
@@ -95,18 +96,81 @@ const ChatScreen: React.FC = () => {
   }, [loadMessages]);
 
   /**
+   * Lắng nghe tin nhắn mới từ WebSocket
+   */
+  useEffect(() => {
+    if (!onNewMessage) return;
+
+    const handleNewMessage = (newMessage: MessageResponse) => {
+      console.log("📨 [JobSeekerChat] New message received:", newMessage);
+      
+      // Chỉ xử lý tin nhắn thuộc conversation hiện tại
+      if (newMessage.conversationId === conversation.id) {
+        console.log("✅ [JobSeekerChat] Adding new message to current conversation");
+        
+        setMessages((prev) => {
+          // Kiểm tra xem tin nhắn đã tồn tại chưa (tránh duplicate)
+          if (prev.some((m) => m.id === newMessage.id)) {
+            console.log("⚠️ [JobSeekerChat] Message already exists, skipping");
+            return prev;
+          }
+          
+          const updatedMessages = [...prev, newMessage];
+          console.log("📬 [JobSeekerChat] Total messages:", updatedMessages.length);
+          return updatedMessages;
+        });
+
+        // Kiểm tra và cập nhật hasEmployerMessage nếu tin nhắn từ employer
+        if (newMessage.senderType === "EMPLOYER" && !hasEmployerMessage) {
+          console.log("✅ [JobSeekerChat] Enabling reply - received first employer message");
+          setHasEmployerMessage(true);
+        }
+
+        // Scroll to bottom khi có tin nhắn mới
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+
+        // Đánh dấu đã đọc ngay lập tức nếu màn hình đang focus
+        if (isScreenFocused.current && appState.current === 'active') {
+          markMessagesAsSeen(conversation.id)
+            .then(() => {
+              console.log("✅ [JobSeekerChat] Marked new message as seen");
+              queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+            })
+            .catch(console.error);
+        }
+      }
+    };
+
+    // Đăng ký listener
+    onNewMessage(handleNewMessage);
+
+    // Không cần cleanup vì useWebSocket đã xử lý
+  }, [onNewMessage, conversation.id, hasEmployerMessage, queryClient]);
+
+  /**
    * Đánh dấu đã đọc khi màn hình được focus
    */
   useFocusEffect(
     useCallback(() => {
       isScreenFocused.current = true;
       console.log("👁️ [JobSeekerChat] Screen focused");
+      
+      // Đánh dấu đã đọc ngay khi focus
+      markMessagesAsSeen(conversation.id)
+        .then(() => {
+          console.log("✅ [JobSeekerChat] Marked as seen on focus");
+          // Invalidate unread count để cập nhật badge
+          queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+        })
+        .catch(console.error);
 
       return () => {
         isScreenFocused.current = false;
         console.log("👁️ [JobSeekerChat] Screen unfocused");
       };
-    }, [])
+    }, [conversation.id, queryClient])
   );
 
   /**
@@ -271,6 +335,13 @@ const ChatScreen: React.FC = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 50}
     >
+      {/* WebSocket Status Banner */}
+      <WebSocketStatusBanner 
+        isConnected={isConnected} 
+        onReconnect={reconnectWS}
+        message="WebSocket: Đang kết nối..."
+      />
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -345,6 +416,7 @@ const ChatScreen: React.FC = () => {
             styles.textInput,
             !canSendMessage && styles.textInputDisabled,
           ]}
+          placeholderTextColor="#6B7280"
           placeholder={
             canSendMessage
               ? "Nhập tin nhắn..."

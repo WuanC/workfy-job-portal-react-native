@@ -115,6 +115,7 @@ const ChangePasswordScreen = () => {
             value={oldPassword}
             onChangeText={setOldPassword}
             placeholder={t('menu.enterPassword')}
+            placeholderTextColor="#6B7280"
           />
           <TouchableOpacity
             onPress={() => setShowOld(!showOld)}
@@ -140,6 +141,7 @@ const ChangePasswordScreen = () => {
             value={newPassword}
             onChangeText={setNewPassword}
             placeholder={t('menu.newPassword')}
+            placeholderTextColor="#6B7280"
           />
           <TouchableOpacity
             onPress={() => setShowNew(!showNew)}
@@ -162,6 +164,7 @@ const ChangePasswordScreen = () => {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder={t('menu.confirmPassword')}
+            placeholderTextColor="#6B7280"
           />
           <TouchableOpacity
             onPress={() => setShowConfirm(!showConfirm)}

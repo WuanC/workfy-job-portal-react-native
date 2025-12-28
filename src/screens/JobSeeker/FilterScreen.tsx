@@ -482,6 +482,7 @@ const FilterScreen = ({ route }: any) => {
                   <TextInput
                     style={styles.input}
                     placeholder={t('filter.minSalaryPlaceholder')}
+                    placeholderTextColor="#6B7280"
                     keyboardType="numeric"
                     value={minSalary?.toString() || ""}
                     onChangeText={(text) => setMinSalary(text ? Number(text) : null)}
@@ -493,6 +494,7 @@ const FilterScreen = ({ route }: any) => {
                   <TextInput
                     style={styles.input}
                     placeholder={t('filter.maxSalaryPlaceholder')}
+                    placeholderTextColor="#6B7280"
                     keyboardType="numeric"
                     value={maxSalary?.toString() || ""}
                     onChangeText={(text) => setMaxSalary(text ? Number(text) : null)}

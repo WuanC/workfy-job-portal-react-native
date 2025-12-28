@@ -406,7 +406,6 @@ const JobDetailScreen = ({ route }: any) => {
                   <Text style={styles.companyMeta}>{getCompanySizeLabel(job.companySize)}</Text>
                 </View>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </TouchableOpacity>
 
             {/* {job.aboutCompany && (
@@ -432,9 +431,6 @@ const JobDetailScreen = ({ route }: any) => {
 
         {/* Bottom Bar */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={24} color={colors.primary.start} />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={handleToggleSave}>
             <Ionicons
               name={isSavedJob ? "heart" : "heart-outline"}

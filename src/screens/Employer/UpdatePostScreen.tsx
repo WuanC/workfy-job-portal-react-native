@@ -29,12 +29,15 @@ const UpdatePostScreen = () => {
   const { t } = useI18n();
   const richEditorRef = useRef<RichEditor>(null);
 
+
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const isInitialLoad = useRef(true);
   const postId = route.params?.id;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  
+
   // Form fields
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -71,14 +74,14 @@ const UpdatePostScreen = () => {
       // Fetch post data from my posts
       const response = await getMyPosts(1, 100); // Get all posts to find the one we need
       const post = response.items.find((p: any) => p.id === postId);
-      
+
       if (post) {
         setTitle(post.title);
         setExcerpt(post.excerpt);
         setContent(post.content);
         setCategoryId(post.category.id);
         setCurrentThumbnailUrl(post.thumbnailUrl);
-        
+
         // Set content in rich editor
         setTimeout(() => {
           richEditorRef.current?.setContentHTML(post.content);
@@ -143,45 +146,35 @@ const UpdatePostScreen = () => {
 
       setSubmitting(true);
 
-      // Create FormData
-      const formData: any = new FormData();
-      
-      // Add post data as JSON - must be sent as a file/blob in multipart
+      // Prepare post data
       const postData = {
         title: title.trim(),
         excerpt: excerpt.trim(),
         content: content.trim(),
         categoryId: categoryId,
+        status: "PENDING" as const, // Fixed status for employer
       };
-      
-      // Create a file-like object for JSON part
-      const jsonBlob = {
-        uri: 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(postData)),
-        type: 'application/json',
-        name: 'post.json'
-      };
-      
-      formData.append("post", jsonBlob);
 
-      // Add thumbnail if changed
+      // Prepare thumbnail file if changed
+      let thumbnailFile = undefined;
       if (thumbnail) {
         const uriParts = thumbnail.uri.split(".");
         const fileType = uriParts[uriParts.length - 1];
-        
-        formData.append("thumbnail", {
+
+        thumbnailFile = {
           uri: thumbnail.uri,
           name: `thumbnail.${fileType}`,
-          type: `image/${fileType}`,
-        });
+          mimeType: `image/${fileType}`,
+        };
       }
-      
-      console.log("📦 FormData being sent:", {
+
+      console.log("📦 Data being sent:", {
         post: postData,
-        thumbnailUri: thumbnail?.uri,
+        thumbnail: thumbnailFile,
         hasThumbnail: !!thumbnail
       });
 
-      const response = await updatePost(postId, formData);
+      const response = await updatePost(postId, postData, thumbnailFile);
 
       if (response.status === 200) {
         const { ToastService } = require("../../services/toastService");
@@ -197,7 +190,17 @@ const UpdatePostScreen = () => {
       setSubmitting(false);
     }
   };
+  useEffect(() => {
+    if (isEditorReady && content && isInitialLoad.current) {
+      richEditorRef.current?.setContentHTML(content);
+      isInitialLoad.current = false;
+    }
+  }, [isEditorReady, content]);
 
+
+  const handleEditorReady = () => {
+    setIsEditorReady(true);
+  };
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -311,7 +314,6 @@ const UpdatePostScreen = () => {
                   actions.insertBulletsList,
                   actions.insertOrderedList,
                   actions.undo,
-                  actions.redo,
                 ]}
                 iconTint="#555"
                 selectedIconTint="#007AFF"
@@ -324,6 +326,7 @@ const UpdatePostScreen = () => {
                 style={styles.editor}
                 placeholder={t('post.contentPlaceholder')}
                 initialHeight={250}
+                editorInitializedCallback={() => handleEditorReady()}
                 onChange={(text) => setContent(text)}
               />
             </View>
@@ -351,9 +354,9 @@ const UpdatePostScreen = () => {
 export default UpdatePostScreen;
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f9fafb" 
+  container: {
+    flex: 1,
+    backgroundColor: "#f9fafb"
   },
   loadingContainer: {
     flex: 1,
@@ -382,11 +385,11 @@ const styles = StyleSheet.create({
     elevation: 2,
     position: "relative",
   },
-  iconButton: { 
-    padding: 8, 
-    borderRadius: 999, 
-    backgroundColor: "#f3f4f6", 
-    zIndex: 100 
+  iconButton: {
+    padding: 8,
+    borderRadius: 999,
+    backgroundColor: "#f3f4f6",
+    zIndex: 100
   },
   headerTitle: {
     position: "absolute",
@@ -409,22 +412,22 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  title: { 
-    fontSize: 20, 
-    fontWeight: "600", 
-    color: "#1f2937", 
-    marginVertical: 8, 
-    paddingHorizontal: 16 
+  title: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1f2937",
+    marginVertical: 8,
+    paddingHorizontal: 16
   },
-  label: { 
-    fontSize: 14, 
-    fontWeight: "500", 
-    marginTop: 16, 
-    color: "#374151", 
-    paddingHorizontal: 16 
+  label: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginTop: 16,
+    color: "#374151",
+    paddingHorizontal: 16
   },
-  required: { 
-    color: "#ef4444" 
+  required: {
+    color: "#ef4444"
   },
   input: {
     borderWidth: 1,
@@ -576,9 +579,9 @@ const styles = StyleSheet.create({
   submitBtnDisabled: {
     opacity: 0.6,
   },
-  submitText: { 
-    color: "#ffffff", 
-    fontWeight: "600", 
-    fontSize: 16 
+  submitText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 16
   },
 });

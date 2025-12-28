@@ -132,6 +132,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="mail-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.companyEmail')}
+                            placeholderTextColor="#6B7280"
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
@@ -145,6 +146,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.enterPassword')}
+                            placeholderTextColor="#6B7280"
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
@@ -158,6 +160,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.confirmPassword')}
+                            placeholderTextColor="#6B7280"
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
@@ -171,6 +174,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="business-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.companyName')}
+                            placeholderTextColor="#6B7280"
                             value={companyName}
                             onChangeText={setCompanyName}
                             style={styles.input}
@@ -198,6 +202,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="person-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.contactPerson')}
+                            placeholderTextColor="#6B7280"
                             value={contactPerson}
                             onChangeText={setContactPerson}
                             style={styles.input}
@@ -209,6 +214,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="call-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.phoneNumber')}
+                            placeholderTextColor="#6B7280"
                             keyboardType="phone-pad"
                             value={phone}
                             onChangeText={setPhone}
@@ -253,6 +259,7 @@ const EmployerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="home-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.detailAddress')}
+                            placeholderTextColor="#6B7280"
                             value={address}
                             onChangeText={setAddress}
                             style={styles.input}

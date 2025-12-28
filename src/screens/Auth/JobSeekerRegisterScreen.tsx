@@ -105,6 +105,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="person-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.enterFullName')}
+                            placeholderTextColor="#6B7280"
                             value={fullName}
                             onChangeText={setFullName}
                             style={styles.input}
@@ -116,6 +117,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="mail-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.enterEmail')}
+                            placeholderTextColor="#6B7280"
                             keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
@@ -129,6 +131,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.enterPassword')}
+                            placeholderTextColor="#6B7280"
                             secureTextEntry
                             value={password}
                             onChangeText={setPassword}
@@ -142,6 +145,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                         <Ionicons name="lock-closed-outline" size={22} color="#94A3B8" style={styles.icon} />
                         <TextInput
                             placeholder={t('auth.confirmPassword')}
+                            placeholderTextColor="#6B7280"
                             secureTextEntry
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
@@ -163,6 +167,7 @@ const JobSeekerRegisterScreen = ({ navigation }: any) => {
                             style={styles.dropdown}
                             placeholderStyle={styles.placeholderStyle}
                             selectedTextStyle={styles.selectedTextStyle}
+                            autoScroll={false}
                         />
                     </View>
 
@@ -259,8 +264,8 @@ const styles = StyleSheet.create({
         fontSize: 15,
     },
     icon: { marginRight: 8 },
-    input: { 
-        flex: 1, 
+    input: {
+        flex: 1,
         paddingVertical: 10,
         color: "#1E293B",
         fontSize: 15
@@ -272,15 +277,15 @@ const styles = StyleSheet.create({
         width: "100%",
     },
     checkbox: { marginRight: 8, marginTop: 3 },
-    agreeText: { 
-        flex: 1, 
-        color: "#475569", 
-        fontSize: 14, 
-        lineHeight: 20 
+    agreeText: {
+        flex: 1,
+        color: "#475569",
+        fontSize: 14,
+        lineHeight: 20
     },
-    link: { 
-        color: "#2563EB", 
-        fontWeight: "600" 
+    link: {
+        color: "#2563EB",
+        fontWeight: "600"
     },
     button: {
         backgroundColor: "#2563EB",
@@ -290,10 +295,10 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 10,
     },
-    buttonText: { 
-        color: "#fff", 
-        fontSize: 16, 
-        fontWeight: "600" 
+    buttonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600"
     },
     bottomLinks: {
         marginTop: 20,

@@ -2,12 +2,12 @@
   "expo": {
     "name": "workify-job-portal-react-native",
     "slug": "workify-job-portal-react-native",
-    "owner": "bo11082007",
+    "owner": "gon28032004",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "scheme": "workify",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -32,6 +32,7 @@
       }
     },
     "android": {
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -69,13 +70,24 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "gradlePluginVersion": "8.5.2",
+            "kotlinVersion": "1.9.24",
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34
+          }
+        }
+      ],
+      "expo-web-browser"
+    ],
     "extra": {
       "eas": {
-        "projectId": "5cfd5b41-f4e7-4612-acf8-aaa4b63a69b5"
+        "projectId": "8645e237-846b-4178-966d-59db5607a502"
       }
-    },
-    "plugins": [
-      "expo-web-browser"
-    ]
+    }
   }
 }

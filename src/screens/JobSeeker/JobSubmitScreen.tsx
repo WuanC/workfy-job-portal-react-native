@@ -214,6 +214,7 @@ const JobSubmitScreen = ({ route }: any) => {
           </Text>
           <TextInput
             placeholder="Nhập số điện thoại"
+            placeholderTextColor="#6B7280"
             style={styles.input}
             keyboardType="phone-pad"
             value={phoneNumber}
@@ -308,6 +309,7 @@ const JobSubmitScreen = ({ route }: any) => {
             <TextInput
               style={[styles.editor, { textAlignVertical: 'top' }]}
               placeholder="Nhập thư xin việc..."
+              placeholderTextColor="#6B7280"
               multiline
               value={coverContent}
               onChangeText={setCoverContent}

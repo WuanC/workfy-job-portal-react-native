@@ -71,6 +71,7 @@ const ForgotPasswordScreen = ({ route }: any) => {
                 <TextInput
                     style={styles.input}
                     placeholder={t('auth.enterEmail')}
+                    placeholderTextColor="#6B7280"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"

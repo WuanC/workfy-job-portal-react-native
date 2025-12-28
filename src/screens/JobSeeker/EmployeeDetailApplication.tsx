@@ -150,6 +150,7 @@ const EmployeeDetailApplication = ({ route }: any) => {
             multiline
             numberOfLines={6}
             placeholder={t('application.noCoverLetter')}
+            placeholderTextColor="#6B7280"
             value={coverLetter || ""}
             editable={false}
             scrollEnabled

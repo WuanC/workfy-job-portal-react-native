@@ -177,10 +177,37 @@ export const getMyPosts = async (
     }
 };
 
-export const createPost = async (formData: FormData) => {
+export const createPost = async (
+    postData: {
+        title: string;
+        content: string;
+        excerpt?: string;
+        tags?: string;
+        categoryId: number;
+        status?: "PENDING";
+    },
+    thumbnail?: any
+) => {
     try {
-        // Don't set Content-Type header, let axios set it automatically with boundary
-        const res = await apiInstance.post("/posts", formData);
+        const formData = new FormData();
+
+        // Phần JSON "post"
+        formData.append("post", JSON.stringify(postData));
+
+        // Phần file "thumbnail" (nếu có)
+        if (thumbnail) {
+            formData.append("thumbnail", {
+                uri: thumbnail.uri,
+                name: thumbnail.name,
+                type: thumbnail.mimeType || "image/jpeg",
+            } as any);
+        }
+
+        const res = await apiInstance.post("/posts/mobile", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            }
+        });
         return res.data;
     } catch (error: any) {
         console.error("❌ Lỗi khi tạo bài viết:", error.response?.data || error.message);
@@ -188,10 +215,38 @@ export const createPost = async (formData: FormData) => {
     }
 };
 
-export const updatePost = async (id: number, formData: FormData) => {
+export const updatePost = async (
+    id: number,
+    postData: {
+        title: string;
+        content: string;
+        excerpt?: string;
+        tags?: string;
+        categoryId: number;
+        status?: "DRAFT" | "PENDING" | "PUBLIC";
+    },
+    thumbnail?: any
+) => {
     try {
-        // Don't set Content-Type header, let axios set it automatically with boundary
-        const res = await apiInstance.put(`/posts/${id}`, formData);
+        const formData = new FormData();
+
+        // Phần JSON "post"
+        formData.append("post", JSON.stringify(postData));
+
+        // Phần file "thumbnail" (nếu có)
+        if (thumbnail) {
+            formData.append("thumbnail", {
+                uri: thumbnail.uri,
+                name: thumbnail.name,
+                type: thumbnail.mimeType || "image/jpeg",
+            } as any);
+        }
+
+        const res = await apiInstance.put(`/posts/mobile/${id}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            }
+        });
         return res.data;
     } catch (error: any) {
         console.error("❌ Lỗi khi cập nhật bài viết:", error.response?.data || error.message);

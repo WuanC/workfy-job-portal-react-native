@@ -128,7 +128,7 @@ export default function BlogScreen() {
                     <TextInput
                         style={styles.searchInput}
                         placeholder={t('blog.searchPlaceholder') || "Tìm kiếm bài viết..."}
-                        placeholderTextColor="#9ca3af"
+                        placeholderTextColor="#6B7280"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         returnKeyType="search"

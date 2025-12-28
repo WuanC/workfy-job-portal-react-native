@@ -234,7 +234,8 @@ const MainAppEmployee = () => {
       return conversations.filter(conv => conv.hasUnread === true).length;
     },
     enabled: isAuthenticated,
-    refetchInterval: 30000, // Refetch mỗi 30 giây
+    refetchInterval: 10000, // Refetch mỗi 10 giây
+    staleTime: 0, // Luôn coi dữ liệu là cũ để refetch
   });
 
   return (
@@ -242,8 +243,14 @@ const MainAppEmployee = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,
+        tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: colors.primary.start,
         tabBarInactiveTintColor: colors.text.tertiary,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          marginTop: 2,
+          marginBottom: 0,
+        },
         tabBarStyle: {
           height: 60,
           paddingBottom: spacing.sm,
@@ -299,19 +306,30 @@ const MainAppEmployer = () => {
     queryFn: async () => {
       const conversations = await getConversations();
       // Đếm số conversation có hasUnread = true
-      return conversations.filter(conv => conv.hasUnread === true).length;
+      const count = conversations.filter(conv => conv.hasUnread === true).length;
+    
+      return count;
     },
     enabled: isAuthenticated,
-    refetchInterval: 30000, // Refetch mỗi 30 giây
+    refetchInterval: 10000, // Refetch mỗi 10 giây
+    staleTime: 0, // Luôn coi dữ liệu là cũ để refetch
   });
+
+  
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,
+        tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: colors.primary.start,
         tabBarInactiveTintColor: colors.text.tertiary,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          marginTop: 2,
+          marginBottom: 0,
+        },
         tabBarStyle: {
           height: 60,
           paddingBottom: spacing.sm,
@@ -370,46 +388,93 @@ const AppNavigator = () => {
   const queryClient = useQueryClient();
   
   // WebSocket global listener cho toast notifications
-  const { onNewMessage } = useWebSocket();
+  const { onNewMessage, isConnected: isWebSocketConnected } = useWebSocket();
+  const [showConnectionStatus, setShowConnectionStatus] = useState(true);
+
+  // Auto-hide connection status sau khi connected
+  useEffect(() => {
+    if (isWebSocketConnected) {
+      const timer = setTimeout(() => {
+        setShowConnectionStatus(false);
+      }, 3000); // Ẩn sau 3 giây
+      
+      return () => clearTimeout(timer);
+    } else {
+      setShowConnectionStatus(true); // Hiện lại khi disconnect
+    }
+  }, [isWebSocketConnected]);
+
+  // Auto-hide connection status sau khi connected
+  useEffect(() => {
+    if (isWebSocketConnected) {
+      const timer = setTimeout(() => {
+        setShowConnectionStatus(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowConnectionStatus(true);
+    }
+  }, [isWebSocketConnected]);
 
   // Đăng ký global WebSocket listener cho toast notifications
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
-    console.log("🌐 [AppNavigator] Setting up global WebSocket message listener for user:", user.id, "role:", user.role);
+    console.log("🌐 [AppNavigator] Setting up global WebSocket message listener");
+    console.log("🌐 [AppNavigator] User:", user.id, "Role:", user.role);
     
-    onNewMessage((message: MessageResponse, unreadInfo?: any) => {
-      console.log("📩 [AppNavigator] Received message:", message);
+    const handleNewMessage = (message: MessageResponse, unreadInfo?: any) => {
+      console.log("📩 [AppNavigator] New message received:", {
+        id: message.id,
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        senderType: message.senderType,
+        senderName: message.senderName,
+        content: message.content.substring(0, 50)
+      });
+      
+      // Normalize roles để so sánh
+      const userRole = user.role?.toUpperCase() || '';
+      const messageSenderType = message.senderType?.toUpperCase() || '';
       
       // Kiểm tra xem có phải tin nhắn của mình không
-      const isOwnMessage = (user.role === "employer" && message.senderType === "EMPLOYER") ||
-                          (user.role !== "employer" && message.senderType === "USER");
+      // User EMPLOYER gửi message EMPLOYER -> own message
+      // User EMPLOYEE/USER gửi message EMPLOYEE/USER -> own message  
+      const isOwnMessage = userRole === 'EMPLOYER' 
+        ? messageSenderType === 'EMPLOYER'
+        : (messageSenderType === 'EMPLOYEE' || messageSenderType === 'USER');
       
-      // Hiển thị toast dựa trên role (chỉ khi không phải tin nhắn của mình)
+      console.log("🔍 [AppNavigator] Check:", {
+        userRole,
+        messageSenderType,
+        isOwnMessage
+      });
+      
+      // LUÔN invalidate unread count để cập nhật badge
+      console.log("🔄 [AppNavigator] Invalidating unread count query");
+      queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+      
+      // Hiển thị toast chỉ khi KHÔNG phải tin nhắn của mình
       if (!isOwnMessage) {
-        if (user.role === "employer" && message.senderType === "USER") {
-          console.log("🔔 [AppNavigator-Employer] Showing toast for message from USER:", message.senderName);
-          ToastService.info(
-            message.senderName || "Tin nhắn mới",
-            message.content.length > 50 
-              ? message.content.substring(0, 50) + "..." 
-              : message.content
-          );
-        } else if (user.role !== "employer" && message.senderType === "EMPLOYER") {
-          console.log("🔔 [AppNavigator-JobSeeker] Showing toast for message from EMPLOYER:", message.senderName);
-          ToastService.info(
-            message.senderName || "Tin nhắn mới",
-            message.content.length > 50 
-              ? message.content.substring(0, 50) + "..." 
-              : message.content
-          );
-        }
-        
-        // Invalidate unread count query để cập nhật badge ngay lập tức
-        console.log("🔄 [AppNavigator] Invalidating unread count query");
-        queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+        console.log("🔔 [AppNavigator] Showing toast for message from:", message.senderName);
+        ToastService.info(
+          message.senderName || "Tin nhắn mới",
+          message.content.length > 50 
+            ? message.content.substring(0, 50) + "..." 
+            : message.content
+        );
+      } else {
+        console.log("⏩ [AppNavigator] Skipping toast - own message");
       }
-    });
+    };
+
+    // Đăng ký listener
+    onNewMessage(handleNewMessage);
+
+    // Cleanup
+    return () => {
+      console.log("🧹 [AppNavigator] Cleaning up WebSocket listener");
+    };
   }, [isAuthenticated, user, onNewMessage, queryClient]);
 
   // Chỉ chạy 1 lần, không phụ thuộc loading
@@ -452,6 +517,24 @@ const AppNavigator = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1, backgroundColor: "#000000" }} edges={["top", "left", "right", "bottom"]}>
+          {/* WebSocket Connection Status Banner */}
+          {isAuthenticated && showConnectionStatus && (
+            <View style={styles.connectionBanner}>
+              <View style={styles.connectionContent}>
+                {isWebSocketConnected ? (
+                  <>
+                    <View style={styles.connectedDot} />
+                    <Text style={styles.connectionText}>Chat WebSocket Connected</Text>
+                  </>
+                ) : (
+                  <>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.connectionText}>Connecting to Chat...</Text>
+                  </>
+                )}
+              </View>
+            </View>
+          )}
           <NavigationContainer>
             <RootStack.Navigator
               screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#000000" } }}
@@ -527,7 +610,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: -12,
     top: -8,
-    backgroundColor: '#ff3b30', // Màu đỏ rõ ràng
+    backgroundColor: '#ff3b30',
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -552,6 +635,30 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     lineHeight: 13,
     textAlign: 'center',
+  },
+  connectionBanner: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    zIndex: 9999,
+  },
+  connectionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  connectedDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
+    marginRight: 8,
+  },
+  connectionText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '500',
+    marginLeft: 8,
   },
 });
 

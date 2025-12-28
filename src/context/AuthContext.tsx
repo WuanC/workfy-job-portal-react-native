@@ -15,6 +15,7 @@ type User = {
 
 type AuthContextType = {
     user: User | null;
+
     setUser: (user: User | null) => void;
     loading: boolean;
     isAuthenticated: boolean;

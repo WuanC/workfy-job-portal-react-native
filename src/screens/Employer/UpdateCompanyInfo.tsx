@@ -237,11 +237,9 @@ const UpdateCompanyInfo = ({ route }: any) => {
                 actions.alignLeft,
                 actions.alignCenter,
                 actions.alignRight,
-                actions.alignFull,
                 actions.insertBulletsList,
                 actions.insertOrderedList,
                 actions.undo,
-                actions.redo,
               ]}
               iconTint="#555"
               selectedIconTint="#007AFF"

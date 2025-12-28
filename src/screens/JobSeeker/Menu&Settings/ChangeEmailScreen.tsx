@@ -47,6 +47,7 @@ const ChangeEmailScreen = () => {
                         value={password}
                         onChangeText={setPassword}
                         placeholder={t('menu.enterPassword')}
+                        placeholderTextColor="#6B7280"
                     />
                     <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
@@ -68,6 +69,7 @@ const ChangeEmailScreen = () => {
                         value={newEmail}
                         onChangeText={setNewEmail}
                         placeholder={t('menu.enterNewEmail')}
+                        placeholderTextColor="#6B7280"
                         keyboardType="email-address"
                     />
                 </View>
@@ -80,6 +82,7 @@ const ChangeEmailScreen = () => {
                         value={confirmEmail}
                         onChangeText={setConfirmEmail}
                         placeholder={t('menu.reenterNewEmail')}
+                        placeholderTextColor="#6B7280"
                         keyboardType="email-address"
                     />
                 </View>

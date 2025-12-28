@@ -16,6 +16,7 @@ import { spacing } from "../../theme/spacing";
 import { ConversationResponse, MessageResponse } from "../../types/type";
 import { getConversations } from "../../services/messageService";
 import { ConversationCard } from "../../components/ConversationCard";
+import { WebSocketStatusBanner } from "../../components/WebSocketStatusBanner";
 import { useWebSocket } from "../../hooks/useWebSocket";
 
 type RootStackParamList = {
@@ -34,7 +35,7 @@ const EmployerConversationListScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // WebSocket connection
-  const { isConnected, onNewMessage, onSeenUpdate } = useWebSocket();
+  const { isConnected, onNewMessage, onSeenUpdate, connect: reconnectWS } = useWebSocket();
 
   /**
    * Load danh sách conversations
@@ -51,8 +52,6 @@ const EmployerConversationListScreen: React.FC = () => {
         return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       });
       setConversations(sortedData);
-      console.log("✅ [Employer] Loaded conversations with unread status:", 
-        sortedData.map(c => ({ id: c.id, hasUnread: c.hasUnread })));
     } catch (err: any) {
       console.error("❌ [Employer] Error loading conversations:", err);
       const errorMsg = err.response?.status === 401 
@@ -197,6 +196,13 @@ const EmployerConversationListScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* WebSocket Status Banner */}
+      <WebSocketStatusBanner 
+        isConnected={isConnected} 
+        onReconnect={reconnectWS}
+        message="Chat WebSocket: Đang kết nối..."
+      />
+      
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>

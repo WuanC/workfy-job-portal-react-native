@@ -103,7 +103,7 @@ const EmployerSettingScreen = () => {
             accessibilityLabel="currentPasswordInput"
             style={styles.input}
             placeholder={t('auth.password')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#6B7280"
             secureTextEntry
             value={currentPassword}
             onChangeText={setCurrentPassword}
@@ -113,7 +113,7 @@ const EmployerSettingScreen = () => {
             accessibilityLabel="newPasswordInput"
             style={styles.input}
             placeholder={t('auth.password')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#6B7280"
             secureTextEntry
             value={newPassword}
             onChangeText={setNewPassword}
@@ -123,7 +123,7 @@ const EmployerSettingScreen = () => {
             accessibilityLabel="confirmPasswordInput"
             style={styles.input}
             placeholder={t('auth.confirmPassword')}
-            placeholderTextColor="#aaa"
+            placeholderTextColor="#6B7280"
             secureTextEntry
             value={confirmPassword}
             onChangeText={setConfirmPassword}

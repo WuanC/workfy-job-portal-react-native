@@ -25,6 +25,7 @@ import {
   markMessagesAsSeen,
 } from "../../services/messageService";
 import { MessageBubble } from "../../components/MessageBubble";
+import { WebSocketStatusBanner } from "../../components/WebSocketStatusBanner";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAuth } from "../../context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,7 +55,7 @@ const EmployerChatScreen: React.FC = () => {
   const isScreenFocused = useRef(true);
 
   // WebSocket
-  const { isConnected, sendMessage: sendMessageWS, onNewMessage } = useWebSocket();
+  const { isConnected, sendMessage: sendMessageWS, onNewMessage, connect: reconnectWS } = useWebSocket();
 
   /**
    * Load tin nhắn từ server
@@ -92,18 +93,75 @@ const EmployerChatScreen: React.FC = () => {
   }, [loadMessages]);
 
   /**
+   * Lắng nghe tin nhắn mới từ WebSocket
+   */
+  useEffect(() => {
+    if (!onNewMessage) return;
+
+    const handleNewMessage = (newMessage: MessageResponse) => {
+      console.log("📨 [EmployerChat] New message received:", newMessage);
+      
+      // Chỉ xử lý tin nhắn thuộc conversation hiện tại
+      if (newMessage.conversationId === conversation.id) {
+        console.log("✅ [EmployerChat] Adding new message to current conversation");
+        
+        setMessages((prev) => {
+          // Kiểm tra xem tin nhắn đã tồn tại chưa (tránh duplicate)
+          if (prev.some((m) => m.id === newMessage.id)) {
+            console.log("⚠️ [EmployerChat] Message already exists, skipping");
+            return prev;
+          }
+          
+          const updatedMessages = [...prev, newMessage];
+          console.log("📬 [EmployerChat] Total messages:", updatedMessages.length);
+          return updatedMessages;
+        });
+
+        // Scroll to bottom khi có tin nhắn mới
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+
+        // Đánh dấu đã đọc ngay lập tức nếu màn hình đang focus
+        if (isScreenFocused.current && appState.current === 'active') {
+          markMessagesAsSeen(conversation.id)
+            .then(() => {
+              console.log("✅ [EmployerChat] Marked new message as seen");
+              queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+            })
+            .catch(console.error);
+        }
+      }
+    };
+
+    // Đăng ký listener
+    onNewMessage(handleNewMessage);
+
+    // Không cần cleanup vì useWebSocket đã xử lý
+  }, [onNewMessage, conversation.id, queryClient]);
+
+  /**
    * Đánh dấu đã đọc khi màn hình được focus
    */
   useFocusEffect(
     useCallback(() => {
       isScreenFocused.current = true;
       console.log("👁️ [EmployerChat] Screen focused");
+      
+      // Đánh dấu đã đọc ngay khi focus
+      markMessagesAsSeen(conversation.id)
+        .then(() => {
+          console.log("✅ [EmployerChat] Marked as seen on focus");
+          // Invalidate unread count để cập nhật badge
+          queryClient.invalidateQueries({ queryKey: ["messages", "unread-count"] });
+        })
+        .catch(console.error);
 
       return () => {
         isScreenFocused.current = false;
         console.log("👁️ [EmployerChat] Screen unfocused");
       };
-    }, [])
+    }, [conversation.id, queryClient])
   );
 
   /**
@@ -285,6 +343,13 @@ const EmployerChatScreen: React.FC = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 50}
     >
+      {/* WebSocket Status Banner */}
+      <WebSocketStatusBanner 
+        isConnected={isConnected} 
+        onReconnect={reconnectWS}
+        message="WebSocket: Đang kết nối..."
+      />
+      
       {renderHeader()}
 
       {/* Messages */}
@@ -321,6 +386,7 @@ const EmployerChatScreen: React.FC = () => {
         <TextInput
           style={styles.textInput}
           placeholder="Nhập tin nhắn..."
+          placeholderTextColor="#6B7280"
           value={messageText}
           onChangeText={setMessageText}
           multiline

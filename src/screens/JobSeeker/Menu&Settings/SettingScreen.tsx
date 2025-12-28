@@ -67,25 +67,8 @@ const SettingScreen = () => {
             <Text style={styles.itemText}>{t('auth.resetPassword')}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.item} onPress={() => navigation.navigate("ChangeEmail")}>
-            <Ionicons name="mail-outline" size={20} color="#333" style={styles.icon} />
-            <Text style={styles.itemText}>{t('auth.email')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.item, styles.itemLast]}>
-            <Ionicons name="remove-circle-outline" size={20} color="#333" style={styles.icon} />
-            <Text style={styles.itemText}>{t('common.delete')} {t('profile.profile')}</Text>
-          </TouchableOpacity>
         </View>
 
-        {/* Nhóm: Thông báo */}
-        <Text style={styles.sectionTitle}>{t('settings.notifications')}</Text>
-        <View style={styles.card}>
-          <TouchableOpacity style={[styles.item, styles.itemLast]}>
-            <Ionicons name="mail-outline" size={20} color="#333" style={styles.icon} />
-            <Text style={styles.itemText}>{t('settings.notifications')} {t('auth.email')}</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </View>
   );

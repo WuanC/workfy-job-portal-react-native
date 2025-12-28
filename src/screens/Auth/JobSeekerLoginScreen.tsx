@@ -41,33 +41,33 @@ const JobSeekerLoginScreen = () => {
     try {
       setGoogleLoading(true);
       console.log("🔐 [Login] Starting Google Sign In...");
-      
+
       // Đặt flag isEmployer trước khi đăng nhập
       await AsyncStorage.setItem("isEmployer", "false");
-      
+
       // Gọi service Google Sign In
       const authData = await googleSignIn();
-      
+
       // Lưu tokens vào AsyncStorage
       await AsyncStorage.setItem("accessToken", authData.accessToken);
       await AsyncStorage.setItem("refreshToken", authData.refreshToken);
       await AsyncStorage.setItem("role", "employee");
-      
+
       console.log("✅ [Login] Google login successful");
       ToastService.success(
-        t('auth.loginSuccess'), 
+        t('auth.loginSuccess'),
         `${t('auth.welcomeBack')}, ${authData.user.fullName}!`
       );
-      
+
       // Reload user context và navigate
       // AuthContext sẽ tự động load user từ token
       navigation.replace("MainApp");
     } catch (error: any) {
       console.error("❌ [Login] Google login failed:", error);
-      
+
       // Xử lý các lỗi cụ thể theo API docs
       let errorMessage = t('auth.loginFailed');
-      
+
       if (error.message === "Bạn đã hủy đăng nhập") {
         errorMessage = error.message;
       } else if (error.response?.status === 400) {
@@ -83,7 +83,7 @@ const JobSeekerLoginScreen = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       ToastService.error(t('auth.loginFailed'), errorMessage);
     } finally {
       setGoogleLoading(false);
@@ -126,6 +126,7 @@ const JobSeekerLoginScreen = () => {
         <Ionicons name="mail-outline" size={22} color="#888" style={styles.icon} />
         <TextInput
           placeholder={t('auth.enterEmail')}
+          placeholderTextColor="#6B7280"
           style={styles.input}
           value={email}
           onChangeText={setEmail}
@@ -139,25 +140,25 @@ const JobSeekerLoginScreen = () => {
         <Ionicons name="lock-closed-outline" size={22} color="#888" style={styles.icon} />
         <TextInput
           placeholder={t('auth.enterPassword')}
+          placeholderTextColor="#6B7280"
           secureTextEntry={true}
-          style={styles.input}
+          style={[styles.input]}
           value={password}
           onChangeText={setPassword}
           autoCapitalize="none"
         />
-        <MaterialIcons name="visibility" size={22} color="#888" style={styles.iconRight} />
       </View>
 
       {/* Remember & Forgot */}
       <View style={styles.row}>
         <View style={styles.rememberContainer}>
-          <Checkbox
+          {/* <Checkbox
             value={isChecked}
             onValueChange={setChecked}
             color={isChecked ? "#2563EB" : undefined}
             style={styles.checkbox}
           />
-          <Text style={styles.remember}>{t('auth.rememberMe')}</Text>
+          <Text style={styles.remember}>{t('auth.rememberMe')}</Text> */}
         </View>
         <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword", { isEmployee: true })}>
           <Text style={styles.forgot}>{t('auth.forgotPassword')}</Text>
@@ -183,7 +184,7 @@ const JobSeekerLoginScreen = () => {
       </View>
 
       {/* Social Login */}
-      <TouchableOpacity 
+      {/* <TouchableOpacity
         style={styles.socialButton}
         onPress={handleGoogleLogin}
         disabled={googleLoading}
@@ -197,7 +198,7 @@ const JobSeekerLoginScreen = () => {
       <TouchableOpacity style={styles.socialButton}>
         <Ionicons name="logo-linkedin" size={24} color="#0077B5" />
         <Text style={styles.socialText}>{t('auth.loginWithLinkedIn')}</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* 🆕 Signup and Employer login */}
       <View style={styles.bottomLinks}>
@@ -257,6 +258,11 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingVertical: 10,
+    color: "#1E293B",
+    fontSize: 15,
+  },
+  passwordInput: {
+    //color: '#1F2937',
   },
   row: {
     flexDirection: "row",
